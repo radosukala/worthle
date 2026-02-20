@@ -25,12 +25,21 @@ export const metadata: Metadata = {
     url: "https://worthle.dev",
     siteName: "Worthle",
     type: "website",
+    images: [
+      {
+        url: "https://worthle.dev/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "worthle.dev",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "worthle.dev — Know Your Worth",
     description:
       "A Wordle-style skill game for developers. 20 rounds. No signup.",
+    images: ["https://worthle.dev/og.jpg"],
   },
 };
 
