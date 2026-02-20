@@ -24,6 +24,7 @@ export function Results({ identity, fingerprint, answers, mode }: ResultsProps) 
   const [showSalary, setShowSalary] = useState(false);
   const [result, setResult] = useState<GameResult | null>(null);
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
+  const [showSentiment, setShowSentiment] = useState(false);
   const [consentDone, setConsentDone] = useState(false);
 
   // Trigger chart reveal after 1 second
@@ -59,6 +60,8 @@ export function Results({ identity, fingerprint, answers, mode }: ResultsProps) 
         identity,
         shareId: Math.random().toString(36).substring(2, 10),
       });
+      // Delay sentiment prompt so user can see their salary
+      setTimeout(() => setShowSentiment(true), 2000);
     },
     [fingerprint, identity]
   );
@@ -110,8 +113,8 @@ export function Results({ identity, fingerprint, answers, mode }: ResultsProps) 
               </p>
             </motion.div>
 
-            {/* Full mode: salary reveal */}
-            {mode === "full" && showSalary && !result && (
+            {/* Full mode: salary reveal (stays visible after selection) */}
+            {mode === "full" && showSalary && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -126,12 +129,12 @@ export function Results({ identity, fingerprint, answers, mode }: ResultsProps) 
               </motion.div>
             )}
 
-            {/* Salary revealed — show sentiment prompt */}
-            {mode === "full" && result && result.salaryRange && !sentiment && (
+            {/* Sentiment prompt — delayed after salary reveal */}
+            {mode === "full" && showSentiment && !sentiment && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.5, duration: 0.4 }}
+                transition={{ duration: 0.4 }}
                 className="mt-4"
               >
                 <SentimentPrompt onSelect={handleSentiment} />
