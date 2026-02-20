@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "ts-fs-001",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the hydration bug.",
+    "code": "export default function Banner() {\n  return (\n    <div className=\"banner\">\n      <p>Current time: {new Date().toLocaleTimeString()}</p>\n      <p>Welcome to our site!</p>\n    </div>\n  );\n}",
+    "options": [
+      "Date() output differs between server and client, causing hydration mismatch",
+      "toLocaleTimeString() is not available in Node.js server environments",
+      "className should be class in server-rendered HTML"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-002",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this API route return?",
+    "code": "// app/api/user/route.ts\nimport { NextResponse } from 'next/server';\n\nexport async function GET(request: Request) {\n  const url = new URL(request.url);\n  const id = url.searchParams.get('id');\n  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });\n  const user = { id, name: 'Ada', createdAt: new Date() };\n  return NextResponse.json(user);\n}",
+    "options": [
+      "400 error because searchParams requires parseInt",
+      "JSON with id, name, and createdAt as a Date object",
+      "JSON with id, name, and createdAt as an ISO string"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-003",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this server component slow?",
+    "code": "// app/dashboard/page.tsx\nexport default async function Dashboard() {\n  const users = await prisma.user.findMany();\n  const posts = await prisma.post.findMany();\n  const comments = await prisma.comment.findMany();\n\n  return (\n    <div>\n      <UserCount count={users.length} />\n      <PostCount count={posts.length} />\n      <CommentCount count={comments.length} />\n    </div>\n  );\n}",
+    "options": [
+      "Three sequential queries -- should use Promise.all for parallel execution",
+      "findMany without select fetches all columns unnecessarily",
+      "Server components cannot call Prisma directly without a data layer"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-004",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does the form lose data on submit?",
+    "code": "'use client';\nexport default function ContactForm() {\n  async function handleSubmit(formData: FormData) {\n    'use server';\n    const name = formData.get('name');\n    await saveContact({ name: name as string });\n  }\n  const [msg, setMsg] = useState('');\n\n  return (\n    <form action={handleSubmit}>\n      <input name=\"name\" />\n      <button type=\"submit\">Send</button>\n      <p>{msg}</p>\n    </form>\n  );\n}",
+    "options": [
+      "formData.get returns FormDataEntryValue, not string",
+      "Cannot define 'use server' inside a 'use client' component",
+      "useState is incompatible with server action form submissions"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-005",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What did this refactor improve?",
+    "code": "// BEFORE:\nexport default async function ProductPage({ params }: Props) {\n  const product = await getProduct(params.id);\n  const reviews = await getReviews(params.id);\n  return <Product data={product} reviews={reviews} />;\n}\n\n// AFTER:\nexport default async function ProductPage({ params }: Props) {\n  const productPromise = getProduct(params.id);\n  const reviewsPromise = getReviews(params.id);\n  const product = await productPromise;\n  return <Product data={product} reviewsPromise={reviewsPromise} />;\n}",
+    "options": [
+      "Reviews load in parallel and can stream in via Suspense",
+      "Product data is cached while reviews are always fresh",
+      "Moved reviews fetch to the client to reduce server load"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-006",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which caching strategy works best here?",
+    "code": "// Product page with price that changes hourly\n// Option A:\nexport const revalidate = 3600;\n\n// Option B:\nexport const dynamic = 'force-dynamic';\n\n// Option C:\nimport { unstable_cache } from 'next/cache';\nconst getProduct = unstable_cache(\n  async (id: string) => prisma.product.findUnique({ where: { id } }),\n  ['product'],\n  { revalidate: 3600 }\n);",
+    "options": [
+      "A -- simple ISR revalidation at the page level",
+      "B -- always fresh data with no stale content risk",
+      "C -- granular cache per product with tag-based invalidation"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-007",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this tRPC mutation fail silently?",
+    "code": "'use client';\nimport { trpc } from '~/utils/trpc';\n\nexport function LikeButton({ postId }: { postId: string }) {\n  const utils = trpc.useUtils();\n  const like = trpc.post.like.useMutation();\n\n  return (\n    <button onClick={() => {\n      like.mutate({ postId });\n      utils.post.getById.invalidate({ id: postId });\n    }}>\n      Like\n    </button>\n  );\n}",
+    "options": [
+      "useMutation needs an error boundary to surface failures",
+      "like.mutate should be awaited with mutateAsync",
+      "invalidate runs before mutate completes -- use onSuccess callback"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-008",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the data integrity bug.",
+    "code": "// app/actions/transfer.ts\n'use server';\nexport async function transfer(fromId: string, toId: string, amount: number) {\n  const from = await prisma.account.findUnique({ where: { id: fromId } });\n  if (!from || from.balance < amount) throw new Error('Insufficient funds');\n  await prisma.account.update({\n    where: { id: fromId },\n    data: { balance: { decrement: amount } },\n  });\n  await prisma.account.update({\n    where: { id: toId },\n    data: { balance: { increment: amount } },\n  });\n}",
+    "options": [
+      "Two separate updates without a transaction -- partial failure leaves inconsistent state",
+      "balance check races with the decrement -- another request can overdraw",
+      "Both: no transaction and race condition on balance check"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-009",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this middleware change fix?",
+    "code": "// BEFORE: middleware.ts\nexport function middleware(request: NextRequest) {\n  const token = request.cookies.get('session');\n  if (!token) return NextResponse.redirect(new URL('/login', request.url));\n}\nexport const config = { matcher: ['/((?!_next|api|login).*)'] };\n\n// AFTER: middleware.ts\nexport function middleware(request: NextRequest) {\n  const token = request.cookies.get('session');\n  if (!token) return NextResponse.redirect(new URL('/login', request.url));\n}\nexport const config = { matcher: ['/((?!_next|api|login|favicon|public).*)'] };",
+    "options": [
+      "Prevents redirect loops on static asset and public file requests",
+      "Allows API routes to bypass authentication checks",
+      "Fixes a regex bug that was matching _next/static paths"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-010",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which approach handles real-time updates at scale?",
+    "code": "// Option A: Client polling\nconst { data } = useSWR('/api/messages', fetcher, {\n  refreshInterval: 1000,\n});\n\n// Option B: Server-Sent Events\napp.get('/api/stream', (req, res) => {\n  res.writeHead(200, { 'Content-Type': 'text/event-stream' });\n  const sub = pubsub.subscribe('messages', (msg) => {\n    res.write(`data: ${JSON.stringify(msg)}\\n\\n`);\n  });\n  req.on('close', () => pubsub.unsubscribe(sub));\n});",
+    "options": [
+      "A -- polling is simpler and works behind all load balancers",
+      "B -- SSE uses one connection per client with server-push efficiency",
+      "Both are equivalent for fewer than 1000 concurrent users"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-011",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What renders on first load?",
+    "code": "// app/posts/page.tsx (Server Component)\nimport { Suspense } from 'react';\nimport PostList from './PostList';\n\nexport default function Page() {\n  return (\n    <main>\n      <h1>Blog</h1>\n      <Suspense fallback={<p>Loading posts...</p>}>\n        <PostList />\n      </Suspense>\n    </main>\n  );\n}\n// PostList is an async server component that fetches from DB",
+    "options": [
+      "\"Blog\" heading with \"Loading posts...\" until PostList resolves",
+      "Blank page until PostList finishes fetching from the database",
+      "\"Blog\" heading only -- Suspense is client-side only"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-012",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why does this page feel slow on navigation?",
+    "code": "'use client';\nimport { useEffect, useState } from 'react';\n\nexport default function UserProfile({ userId }: { userId: string }) {\n  const [user, setUser] = useState(null);\n  const [posts, setPosts] = useState([]);\n  const [followers, setFollowers] = useState([]);\n\n  useEffect(() => {\n    fetch(`/api/user/${userId}`).then(r => r.json()).then(setUser);\n  }, [userId]);\n  useEffect(() => {\n    if (user) fetch(`/api/posts?uid=${userId}`).then(r => r.json()).then(setPosts);\n  }, [user]);\n  useEffect(() => {\n    if (user) fetch(`/api/followers?uid=${userId}`).then(r => r.json()).then(setFollowers);\n  }, [user]);\n\n  return <div>{/* render all data */}</div>;\n}",
+    "options": [
+      "Three separate useState calls cause three sequential re-renders",
+      "Waterfall: posts and followers wait for user fetch to complete",
+      "Missing AbortController causes stale responses on fast navigation"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-013",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this server action return wrong data?",
+    "code": "// app/actions.ts\n'use server';\nimport { revalidatePath } from 'next/cache';\n\nexport async function addTodo(title: string) {\n  await prisma.todo.create({ data: { title } });\n  // Bug: client still shows old list after adding\n}\n\n// app/todos/page.tsx\nexport default async function TodosPage() {\n  const todos = await prisma.todo.findMany();\n  return <TodoList todos={todos} />;\n}",
+    "options": [
+      "Missing revalidatePath('/todos') after the mutation",
+      "Server actions cannot call Prisma directly",
+      "findMany result is cached indefinitely by default in Next.js"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-014",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the security issue in this API route.",
+    "code": "// app/api/admin/users/route.ts\nimport { getServerSession } from 'next-auth';\n\nexport async function DELETE(request: Request) {\n  const session = await getServerSession();\n  if (!session) return new Response('Unauthorized', { status: 401 });\n  const { userId } = await request.json();\n  await prisma.user.delete({ where: { id: userId } });\n  return Response.json({ deleted: true });\n}",
+    "options": [
+      "request.json() can throw on malformed body without try/catch",
+      "DELETE requests should use URL params, not request body",
+      "Checks authentication but not authorization -- any logged-in user can delete"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-015",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "diff",
+    "prompt": "What architecture problem does this solve?",
+    "code": "// BEFORE: app/dashboard/page.tsx\nexport default async function Dashboard() {\n  const user = await getUser();\n  const analytics = await getAnalytics(user.id);\n  const notifications = await getNotifications(user.id);\n  return <DashboardUI user={user} analytics={analytics} notifs={notifications} />;\n}\n\n// AFTER: app/dashboard/page.tsx\nexport default async function Dashboard() {\n  const user = await getUser();\n  return (\n    <DashboardShell user={user}>\n      <Suspense fallback={<AnalyticsSkeleton />}>\n        <Analytics userId={user.id} />\n      </Suspense>\n      <Suspense fallback={<NotifSkeleton />}>\n        <Notifications userId={user.id} />\n      </Suspense>\n    </DashboardShell>\n  );\n}",
+    "options": [
+      "Enables progressive streaming -- fast shell with parallel data loading",
+      "Moves data fetching to client components for better interactivity",
+      "Reduces server memory by splitting into smaller components"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-016",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does the client component receive?",
+    "code": "// app/page.tsx (Server Component)\nimport ClientWidget from './ClientWidget';\n\nexport default async function Page() {\n  const data = await prisma.product.findUnique({\n    where: { id: '1' },\n    include: { reviews: true },\n  });\n  return <ClientWidget product={data} />;\n}\n\n// ClientWidget.tsx\n'use client';\nexport default function ClientWidget({ product }: { product: any }) {\n  console.log(typeof product.reviews[0].createdAt);\n  return <div>{product.name}</div>;\n}",
+    "options": [
+      "\"object\" -- Date instances are preserved through React Server Components",
+      "\"string\" -- Date objects are serialized to strings across the server/client boundary",
+      "Runtime error -- Prisma models are not serializable"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-017",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does optimistic update flash then revert?",
+    "code": "'use client';\nimport { useOptimistic } from 'react';\nimport { toggleLike } from './actions';\n\nexport function LikeButton({ liked, postId }: Props) {\n  const [optimisticLiked, setOptimisticLiked] = useOptimistic(liked);\n\n  return (\n    <form action={async () => {\n      setOptimisticLiked(!optimisticLiked);\n      await toggleLike(postId);\n    }}>\n      <button>{optimisticLiked ? 'Unlike' : 'Like'}</button>\n    </form>\n  );\n}",
+    "options": [
+      "useOptimistic requires a reducer function as second argument",
+      "Server action doesn't call revalidatePath, so the page reverts to stale server state",
+      "optimisticLiked is stale in the closure -- should reference liked instead"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-018",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "Why does this query degrade as data grows?",
+    "code": "// app/api/feed/route.ts\nexport async function GET(request: Request) {\n  const { searchParams } = new URL(request.url);\n  const cursor = searchParams.get('cursor');\n  const posts = await prisma.post.findMany({\n    where: { published: true },\n    orderBy: { createdAt: 'desc' },\n    skip: cursor ? 1 : 0,\n    cursor: cursor ? { id: cursor } : undefined,\n    take: 20,\n    include: { author: true, _count: { select: { likes: true } } },\n  });\n  return Response.json(posts);\n}",
+    "options": [
+      "Cursor pagination is fine but include with _count triggers a subquery per row",
+      "createdAt needs a compound index with published for efficient filtered ordering",
+      "skip: 1 with cursor fetches one extra row on every paginated request"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-019",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this refactor optimize?",
+    "code": "// BEFORE: app/products/page.tsx\nimport Image from 'next/image';\nexport default async function Products() {\n  const products = await getProducts();\n  return products.map(p => (\n    <div key={p.id}>\n      <Image src={p.image} width={400} height={300} alt={p.name} />\n      <p>{p.name} - ${p.price}</p>\n    </div>\n  ));\n}\n\n// AFTER: app/products/page.tsx\nimport Image from 'next/image';\nexport default async function Products() {\n  const products = await getProducts();\n  return products.map((p, i) => (\n    <div key={p.id}>\n      <Image src={p.image} width={400} height={300} alt={p.name}\n        priority={i < 2} loading={i < 2 ? 'eager' : 'lazy'} />\n      <p>{p.name} - ${p.price}</p>\n    </div>\n  ));\n}\n",
+    "options": [
+      "Reduces initial bundle size by code-splitting product images",
+      "First two images load eagerly for LCP; rest lazy-load for bandwidth savings",
+      "Enables static image optimization at build time for above-the-fold content"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-020",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 1,
+    "type": "scales",
+    "prompt": "Which rendering strategy fits a blog?",
+    "code": "// Option A: Static Generation\nexport async function generateStaticParams() {\n  const posts = await prisma.post.findMany({ select: { slug: true } });\n  return posts.map(p => ({ slug: p.slug }));\n}\n\n// Option B: Server-Side Rendering\nexport const dynamic = 'force-dynamic';\n\n// Option C: Client-Side Rendering\n'use client';\nconst { data } = useSWR(`/api/posts/${slug}`, fetcher);",
+    "options": [
+      "A -- static generation gives fastest TTFB for content that changes rarely",
+      "B -- SSR ensures content is always fresh on every request",
+      "C -- client rendering avoids server costs entirely"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-021",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What status code is returned?",
+    "code": "// app/api/health/route.ts\nimport { NextResponse } from 'next/server';\n\nexport async function GET() {\n  return NextResponse.json({ status: 'ok' });\n}",
+    "options": [
+      "200 with JSON body { status: 'ok' }",
+      "204 No Content because no status was explicitly set",
+      "500 because no try/catch wraps the handler"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-022",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Why does this list flicker on reorder?",
+    "code": "'use client';\nexport function TodoList({ todos }: { todos: Todo[] }) {\n  return (\n    <ul>\n      {todos.map((todo, index) => (\n        <li key={index}>\n          <input type=\"checkbox\" checked={todo.done} />\n          <span>{todo.title}</span>\n        </li>\n      ))}\n    </ul>\n  );\n}",
+    "options": [
+      "Using index as key causes React to remount items when order changes",
+      "Checkbox needs an onChange handler to be a controlled component",
+      "todos.map should be wrapped in React.memo to prevent re-renders"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-023",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this query return null?",
+    "code": "// app/api/post/[slug]/route.ts\nexport async function GET(\n  request: Request,\n  { params }: { params: { slug: string } }\n) {\n  const post = await prisma.post.findUnique({\n    where: { id: params.slug },\n  });\n  return Response.json(post);\n}",
+    "options": [
+      "findUnique requires select or include to return data",
+      "Querying by id with a slug value -- should use where: { slug: params.slug }",
+      "params.slug is undefined until awaited in Next.js App Router"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-024",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "Why is this component slow to render?",
+    "code": "'use client';\nexport function SearchResults({ items }: { items: Product[] }) {\n  const [query, setQuery] = useState('');\n\n  const filtered = items.filter(item =>\n    item.name.toLowerCase().includes(query.toLowerCase())\n  );\n\n  return (\n    <div>\n      <input value={query} onChange={e => setQuery(e.target.value)} />\n      {filtered.map(item => (\n        <ProductCard key={item.id} product={item} />\n      ))}\n    </div>\n  );\n}",
+    "options": [
+      "Filter runs on every keystroke without debouncing or useDeferredValue",
+      "items.filter creates a new array reference causing child re-renders",
+      "ProductCard should accept a memo wrapper to avoid re-rendering"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-025",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "scales",
+    "prompt": "Which session strategy scales horizontally?",
+    "code": "// Option A: In-memory store\nconst sessions = new Map<string, Session>();\n\n// Option B: Database-backed sessions\nawait prisma.session.findUnique({ where: { token } });\n\n// Option C: Signed JWT in cookie\nconst payload = jwt.verify(token, SECRET);",
+    "options": [
+      "A -- in-memory Map gives lowest latency for session lookups",
+      "B -- database sessions persist across server restarts",
+      "C -- stateless JWT needs no shared storage across instances"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-026",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this Zod parse return?",
+    "code": "import { z } from 'zod';\n\nconst schema = z.object({\n  name: z.string(),\n  age: z.coerce.number(),\n});\n\nconst result = schema.safeParse({\n  name: 'Ada',\n  age: '29',\n});\n\nconsole.log(result.success, result.data?.age);",
+    "options": [
+      "false, undefined -- '29' is a string, not a number",
+      "true, 29 -- z.coerce.number() converts string to number",
+      "true, '29' -- safeParse does not transform values"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-027",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this server action leak data?",
+    "code": "// app/actions.ts\n'use server';\n\nconst SECRET_KEY = process.env.STRIPE_SECRET_KEY!;\n\nexport async function createCheckout(priceId: string) {\n  const session = await stripe.checkout.sessions.create({\n    mode: 'payment',\n    line_items: [{ price: priceId, quantity: 1 }],\n    success_url: `${process.env.BASE_URL}/success`,\n  });\n  return { url: session.url, key: SECRET_KEY };\n}",
+    "options": [
+      "stripe.checkout.sessions.create needs an API version header",
+      "Return object includes SECRET_KEY which is sent to the client",
+      "priceId should be validated before passing to Stripe"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-028",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this Drizzle query return?",
+    "code": "import { eq, and } from 'drizzle-orm';\nimport { users } from './schema';\n\nconst result = await db\n  .select({ name: users.name })\n  .from(users)\n  .where(\n    and(\n      eq(users.role, 'admin'),\n      eq(users.active, true)\n    )\n  )\n  .limit(1);\n\nconsole.log(result);",
+    "options": [
+      "A single user object: { name: 'Alice' }",
+      "An array with one element: [{ name: 'Alice' }]",
+      "An array of all matching users, truncated to 1"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-029",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this form refactor fix?",
+    "code": "// BEFORE:\n'use client';\nexport function Newsletter() {\n  const [email, setEmail] = useState('');\n  const [pending, setPending] = useState(false);\n  async function submit() {\n    setPending(true);\n    await subscribe(email);\n    setPending(false);\n  }\n  return <button onClick={submit} disabled={pending}>Join</button>;\n}\n\n// AFTER:\n'use client';\nimport { useFormStatus } from 'react-dom';\nfunction SubmitBtn() {\n  const { pending } = useFormStatus();\n  return <button disabled={pending}>Join</button>;\n}\nexport function Newsletter() {\n  return <form action={subscribe}><input name=\"email\" /><SubmitBtn /></form>;\n}",
+    "options": [
+      "Eliminates manual pending state by using native form status tracking",
+      "Moves the subscription to the server to avoid CORS issues",
+      "Replaces controlled input with uncontrolled for better performance"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-030",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this page bundle so large?",
+    "code": "// app/editor/page.tsx\n'use client';\nimport { Editor } from '@monaco-editor/react';\nimport { marked } from 'marked';\nimport hljs from 'highlight.js';\n\nexport default function MarkdownEditor() {\n  const [text, setText] = useState('');\n  const html = marked(text);\n  return (\n    <div>\n      <Editor value={text} onChange={v => setText(v ?? '')} />\n      <div dangerouslySetInnerHTML={{ __html: html }} />\n    </div>\n  );\n}",
+    "options": [
+      "marked and hljs should be loaded on the server to reduce client JS",
+      "Heavy libraries imported statically -- use next/dynamic with ssr: false",
+      "dangerouslySetInnerHTML forces React to skip diffing, increasing memory"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-031",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which job processing strategy scales?",
+    "code": "// Option A: Process inline\nexport async function POST(req: Request) {\n  const { to, body } = await req.json();\n  await sendEmail(to, body); // takes 2-5 seconds\n  return Response.json({ sent: true });\n}\n\n// Option B: Queue + worker\nexport async function POST(req: Request) {\n  const { to, body } = await req.json();\n  await queue.add('email', { to, body });\n  return Response.json({ queued: true });\n}",
+    "options": [
+      "A -- direct sending confirms delivery and simplifies error handling",
+      "B -- queue decouples request from slow work, enabling retries and concurrency",
+      "Both are fine -- email sending is I/O-bound and non-blocking anyway"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-032",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this useEffect loop infinitely?",
+    "code": "'use client';\nexport function UserSettings({ userId }: { userId: string }) {\n  const [settings, setSettings] = useState<Settings | null>(null);\n\n  useEffect(() => {\n    const loadSettings = async () => {\n      const res = await fetch(`/api/settings?uid=${userId}`);\n      const data = await res.json();\n      setSettings(data);\n    };\n    loadSettings();\n  }, [settings]);\n\n  return settings ? <Form data={settings} /> : <p>Loading...</p>;\n}",
+    "options": [
+      "fetch inside useEffect should use AbortController for cleanup",
+      "Dependency on settings causes re-fetch every time setSettings updates it",
+      "async functions cannot be called directly inside useEffect"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-033",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What security issue does this fix?",
+    "code": "// BEFORE: app/api/profile/route.ts\nexport async function PATCH(req: Request) {\n  const session = await getServerSession();\n  const body = await req.json();\n  await prisma.user.update({\n    where: { id: session!.user.id },\n    data: body,\n  });\n  return Response.json({ updated: true });\n}\n\n// AFTER:\nexport async function PATCH(req: Request) {\n  const session = await getServerSession();\n  const body = await req.json();\n  const { name, bio } = body;\n  await prisma.user.update({\n    where: { id: session!.user.id },\n    data: { name, bio },\n  });\n  return Response.json({ updated: true });\n}",
+    "options": [
+      "Prevents mass assignment -- user could send role or email in body",
+      "Fixes a type error -- Prisma requires explicit field selection",
+      "Reduces payload size by only sending changed fields to the database"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-034",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this list page slow?",
+    "code": "// app/users/page.tsx\nexport default async function UsersPage() {\n  const users = await prisma.user.findMany({\n    include: {\n      posts: true,\n      comments: true,\n      followers: true,\n      following: true,\n    },\n  });\n  return (\n    <ul>\n      {users.map(u => (\n        <li key={u.id}>{u.name} ({u.posts.length} posts)</li>\n      ))}\n    </ul>\n  );\n}",
+    "options": [
+      "findMany loads all users without pagination or limit",
+      "Includes load full relations but only post count is used -- use _count instead",
+      "Both: no pagination and over-fetching related data unnecessarily"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-035",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does useSearchParams return here?",
+    "code": "// URL: /products?category=shoes&sort=price\n'use client';\nimport { useSearchParams } from 'next/navigation';\n\nexport function Filters() {\n  const searchParams = useSearchParams();\n  const category = searchParams.get('category');\n  const color = searchParams.get('color');\n\n  console.log(category, color);\n  return <div>{category} - {color}</div>;\n}",
+    "options": [
+      "\"shoes\", \"\" -- missing params return empty string",
+      "\"shoes\", null -- get() returns null for missing params",
+      "\"shoes\", undefined -- get() returns undefined for missing params"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-036",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which rate limiting approach works across replicas?",
+    "code": "// Option A: In-memory counter\nconst hits = new Map<string, number>();\nfunction rateLimit(ip: string) {\n  const count = (hits.get(ip) ?? 0) + 1;\n  hits.set(ip, count);\n  return count <= 100;\n}\n\n// Option B: Redis sliding window\nasync function rateLimit(ip: string) {\n  const key = `rl:${ip}`;\n  const count = await redis.incr(key);\n  if (count === 1) await redis.expire(key, 60);\n  return count <= 100;\n}",
+    "options": [
+      "A -- in-memory is faster and avoids network round trips to Redis",
+      "B -- shared Redis counter is consistent across multiple server instances",
+      "Both work if each replica handles a consistent hash of IP addresses"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-037",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this parallel route not render?",
+    "code": "// app/layout.tsx\nexport default function Layout({\n  children,\n  modal,\n}: {\n  children: React.ReactNode;\n  modal: React.ReactNode;\n}) {\n  return (\n    <html>\n      <body>\n        {children}\n        {modal}\n      </body>\n    </html>\n  );\n}\n// app/@modal/default.tsx does NOT exist\n// app/@modal/login/page.tsx exists",
+    "options": [
+      "Parallel routes need a default.tsx to render when not active",
+      "The @modal folder must be inside the (group) route segment",
+      "modal prop requires Suspense wrapping in the layout"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-038",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "What's wrong with this tRPC router?",
+    "code": "// server/routers/post.ts\nimport { z } from 'zod';\nimport { router, publicProcedure, protectedProcedure } from '../trpc';\n\nexport const postRouter = router({\n  getAll: publicProcedure.query(async ({ ctx }) => {\n    return ctx.prisma.post.findMany();\n  }),\n  create: protectedProcedure\n    .input(z.object({ title: z.string() }))\n    .query(async ({ ctx, input }) => {\n      return ctx.prisma.post.create({\n        data: { title: input.title, authorId: ctx.session.user.id },\n      });\n    }),\n});",
+    "options": [
+      "protectedProcedure requires middleware to inject session into context",
+      "create uses .query() instead of .mutation() for a write operation",
+      "z.object needs .parse() before accessing input fields"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-039",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this React Query refactor improve?",
+    "code": "// BEFORE:\nfunction useUser(id: string) {\n  return useQuery({\n    queryKey: ['user', id],\n    queryFn: () => fetch(`/api/user/${id}`).then(r => r.json()),\n  });\n}\n\n// AFTER:\nfunction useUser(id: string) {\n  return useQuery({\n    queryKey: ['user', id],\n    queryFn: () => fetch(`/api/user/${id}`).then(r => r.json()),\n    staleTime: 5 * 60 * 1000,\n    gcTime: 10 * 60 * 1000,\n  });\n}",
+    "options": [
+      "Prevents memory leaks by garbage-collecting unused queries",
+      "Reduces refetches -- data stays fresh for 5 minutes instead of instant stale",
+      "Enables offline support by keeping cached data for 10 minutes"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-040",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this soft delete still show records?",
+    "code": "// schema.prisma\nmodel Post {\n  id        String   @id @default(cuid())\n  title     String\n  deletedAt DateTime?\n}\n\n// app/posts/page.tsx\nexport default async function PostsPage() {\n  const posts = await prisma.post.findMany({\n    orderBy: { id: 'desc' },\n  });\n  return posts.map(p => <PostCard key={p.id} post={p} />);\n}\n\n// app/actions.ts\nexport async function deletePost(id: string) {\n  await prisma.post.update({ where: { id }, data: { deletedAt: new Date() } });\n  revalidatePath('/posts');\n}",
+    "options": [
+      "revalidatePath doesn't work with prisma.post.update",
+      "findMany has no where: { deletedAt: null } filter to exclude soft-deleted records",
+      "deletedAt should be a Boolean field, not DateTime, for Prisma filtering"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-041",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What problem does this middleware pattern solve?",
+    "code": "// BEFORE: app/api/posts/route.ts\nexport async function GET() {\n  const posts = await prisma.post.findMany();\n  return Response.json(posts);\n}\n\n// AFTER: app/api/posts/route.ts\nimport { headers } from 'next/headers';\nexport async function GET() {\n  const headersList = headers();\n  const etag = headersList.get('if-none-match');\n  const posts = await prisma.post.findMany();\n  const hash = createHash('md5').update(JSON.stringify(posts)).digest('hex');\n  if (etag === hash) {\n    return new Response(null, { status: 304 });\n  }\n  return Response.json(posts, { headers: { ETag: hash } });\n}",
+    "options": [
+      "Adds HTTP caching with ETag -- clients skip re-downloading unchanged data",
+      "Prevents concurrent modification by checking content hash before serving",
+      "Enables CDN edge caching by generating unique content identifiers"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-042",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this redirect not work?",
+    "code": "// app/old-blog/[slug]/page.tsx\nimport { redirect } from 'next/navigation';\n\nexport default async function OldBlogPost({\n  params,\n}: {\n  params: { slug: string };\n}) {\n  redirect(`/blog/${params.slug}`);\n  return <div>Redirecting...</div>;\n}",
+    "options": [
+      "redirect() works, but the return statement after it is unreachable dead code",
+      "redirect() must be called inside a try/catch because it throws internally",
+      "redirect() only works in server actions, not in page components"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-043",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this dialog not close on outside click?",
+    "code": "'use client';\nimport { useRef } from 'react';\n\nexport function Modal({ open, onClose }: Props) {\n  const dialogRef = useRef<HTMLDialogElement>(null);\n\n  if (open) dialogRef.current?.showModal();\n  else dialogRef.current?.close();\n\n  return (\n    <dialog ref={dialogRef}>\n      <h2>Settings</h2>\n      <button onClick={onClose}>Close</button>\n    </dialog>\n  );\n}",
+    "options": [
+      "showModal() called during render -- should use useEffect to sync open state",
+      "dialog element requires a backdrop click handler for outside click dismissal",
+      "useRef does not trigger re-renders, so open state changes are ignored"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-044",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this migration fix?",
+    "code": "// BEFORE: app/layout.tsx\nimport { Inter } from 'next/font/google';\nconst inter = Inter({ subsets: ['latin'] });\n\nexport default function RootLayout({ children }: Props) {\n  return (\n    <html>\n      <head>\n        <link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=Roboto\" />\n      </head>\n      <body className={inter.className}>{children}</body>\n    </html>\n  );\n}\n\n// AFTER: app/layout.tsx\nimport { Inter, Roboto } from 'next/font/google';\nconst inter = Inter({ subsets: ['latin'] });\nconst roboto = Roboto({ weight: ['400', '700'], subsets: ['latin'] });\n\nexport default function RootLayout({ children }: Props) {\n  return (\n    <html>\n      <body className={`${inter.className} ${roboto.className}`}>{children}</body>\n    </html>\n  );\n}",
+    "options": [
+      "Eliminates external font request -- next/font self-hosts with zero layout shift",
+      "Reduces font file size by subsetting to Latin characters only",
+      "Enables font-display: swap automatically for better accessibility"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-045",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this Prisma upsert do?",
+    "code": "const user = await prisma.user.upsert({\n  where: { email: 'ada@example.com' },\n  update: { lastLogin: new Date() },\n  create: {\n    email: 'ada@example.com',\n    name: 'Ada',\n    lastLogin: new Date(),\n  },\n});\n// User with email ada@example.com already exists\nconsole.log(user.name);",
+    "options": [
+      "Throws a unique constraint error because the user already exists",
+      "'Ada' -- upsert always runs the create branch first",
+      "The existing user's name -- only lastLogin is updated"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-046",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What happens when this route is fetched twice?",
+    "code": "// app/api/random/route.ts\nexport async function GET() {\n  const value = Math.random();\n  return Response.json({ value });\n}\n\n// app/page.tsx (Server Component)\nexport default async function Page() {\n  const res1 = await fetch('http://localhost:3000/api/random');\n  const res2 = await fetch('http://localhost:3000/api/random');\n  const a = await res1.json();\n  const b = await res2.json();\n  return <p>{a.value} vs {b.value}</p>;\n}",
+    "options": [
+      "Two different random values because each fetch hits the route handler",
+      "Same value both times -- Next.js deduplicates identical fetch requests",
+      "Error -- server components cannot fetch their own API routes"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-047",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this cookie not persist?",
+    "code": "// app/api/login/route.ts\nimport { NextResponse } from 'next/server';\n\nexport async function POST(req: Request) {\n  const { email, password } = await req.json();\n  const user = await authenticate(email, password);\n  if (!user) return NextResponse.json({ error: 'Invalid' }, { status: 401 });\n\n  const response = NextResponse.json({ success: true });\n  response.cookies.set('session', user.token, {\n    httpOnly: true,\n    secure: true,\n    sameSite: 'strict',\n    path: '/',\n  });\n  return response;\n}\n// Client on http://localhost:3000 in development",
+    "options": [
+      "sameSite: 'strict' blocks cookies on cross-origin API calls",
+      "secure: true requires HTTPS -- cookie is rejected on http://localhost",
+      "httpOnly cookies cannot be set from API routes in Next.js"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-048",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this validation always pass?",
+    "code": "// app/api/contact/route.ts\nimport { z } from 'zod';\n\nconst schema = z.object({\n  email: z.string().email(),\n  message: z.string().min(10),\n});\n\nexport async function POST(req: Request) {\n  const body = await req.json();\n  schema.parse(body);\n  // body is used directly below, not the parsed result\n  await sendEmail(body.email, body.message);\n  return Response.json({ sent: true });\n}",
+    "options": [
+      "parse() throws on invalid input -- there is no try/catch to handle errors",
+      "Using body directly instead of parse result -- but parse still throws if invalid",
+      "schema.parse should be schema.safeParse to get a result object"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-049",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "Why does this RSC page have high TTFB?",
+    "code": "// app/shop/page.tsx\nimport { cache } from 'react';\n\nconst getProducts = cache(async () => {\n  return prisma.product.findMany({\n    where: { active: true },\n    include: { variants: true, images: true },\n  });\n});\n\nexport default async function ShopPage() {\n  const products = await getProducts();\n  return (\n    <div>\n      {products.map(p => <ProductCard key={p.id} product={p} />)}\n    </div>\n  );\n}\n// 10,000 active products in database",
+    "options": [
+      "React cache only deduplicates within a single request -- does not persist across requests",
+      "include with variants and images on 10k products creates massive payload and query time",
+      "cache() should be replaced with unstable_cache for cross-request caching"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-050",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this component refactor improve?",
+    "code": "// BEFORE:\n'use client';\nexport function UserAvatar({ userId }: { userId: string }) {\n  const [url, setUrl] = useState('');\n  useEffect(() => {\n    fetch(`/api/user/${userId}/avatar`)\n      .then(r => r.json())\n      .then(d => setUrl(d.url));\n  }, [userId]);\n  return url ? <img src={url} /> : <Skeleton />;\n}\n\n// AFTER:\n// app/components/UserAvatar.tsx (Server Component)\nexport async function UserAvatar({ userId }: { userId: string }) {\n  const { url } = await getAvatarUrl(userId);\n  return <img src={url} />;\n}",
+    "options": [
+      "Server component eliminates client-side fetch waterfall and loading flash",
+      "Removes the need for error boundaries around avatar loading",
+      "Enables static generation of avatar URLs at build time"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-051",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this cascade delete fail?",
+    "code": "// schema.prisma\nmodel User {\n  id    String @id @default(cuid())\n  posts Post[]\n}\nmodel Post {\n  id       String @id @default(cuid())\n  authorId String\n  author   User   @relation(fields: [authorId], references: [id])\n}\n\n// app/actions.ts\n'use server';\nexport async function deleteUser(id: string) {\n  await prisma.user.delete({ where: { id } });\n}",
+    "options": [
+      "Prisma delete does not cascade by default -- foreign key constraint blocks deletion",
+      "authorId needs onDelete: Cascade in the @relation decorator",
+      "User model needs an explicit @@map to match the database table name"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-052",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which auth token storage is most secure?",
+    "code": "// Option A: localStorage\nlocalStorage.setItem('token', jwt);\nfetch('/api/data', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });\n\n// Option B: HttpOnly cookie\n// Set by server: Set-Cookie: token=jwt; HttpOnly; Secure; SameSite=Lax\nfetch('/api/data', { credentials: 'include' });\n\n// Option C: In-memory variable\nlet token = jwt;\nfetch('/api/data', { headers: { Authorization: `Bearer ${token}` } });",
+    "options": [
+      "A -- localStorage persists across tabs and survives page refreshes",
+      "C -- in-memory is safe from XSS since scripts can't access other closures",
+      "B -- HttpOnly cookie is invisible to JavaScript, preventing XSS token theft"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-053",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this middleware log?",
+    "code": "// middleware.ts\nimport { NextRequest, NextResponse } from 'next/server';\n\nexport function middleware(request: NextRequest) {\n  const response = NextResponse.next();\n  response.headers.set('x-url', request.url);\n  console.log('middleware:', request.nextUrl.pathname);\n  return response;\n}\n\nexport const config = {\n  matcher: ['/dashboard/:path*'],\n};\n// User navigates to /dashboard/settings?tab=profile",
+    "options": [
+      "\"middleware: /dashboard/settings?tab=profile\"",
+      "\"middleware: /dashboard/settings\"",
+      "\"middleware: /dashboard/:path*\""
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-054",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which validation approach is safest?",
+    "code": "// Option A: Validate at API boundary\nexport async function POST(req: Request) {\n  const body = schema.parse(await req.json());\n  await createOrder(body);\n}\n\n// Option B: Validate in business logic\nasync function createOrder(data: unknown) {\n  const order = schema.parse(data);\n  await prisma.order.create({ data: order });\n}\n\n// Option C: Validate at both layers\nexport async function POST(req: Request) {\n  const body = apiSchema.parse(await req.json());\n  await createOrder(body);\n}\nasync function createOrder(data: OrderInput) {\n  const order = domainSchema.parse(data);\n  await prisma.order.create({ data: order });\n}",
+    "options": [
+      "A -- single validation at the entry point is sufficient and avoids duplication",
+      "B -- validating in business logic catches issues from all callers",
+      "C -- defense in depth catches API-level and domain-level violations separately"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-055",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this table re-render every row?",
+    "code": "'use client';\nexport function DataTable({ rows }: { rows: Row[] }) {\n  const [sortCol, setSortCol] = useState('name');\n\n  const sorted = [...rows].sort((a, b) =>\n    a[sortCol].localeCompare(b[sortCol])\n  );\n\n  return (\n    <table>\n      <thead>\n        <tr>\n          <th onClick={() => setSortCol('name')}>Name</th>\n          <th onClick={() => setSortCol('email')}>Email</th>\n        </tr>\n      </thead>\n      <tbody>\n        {sorted.map(row => (\n          <TableRow key={row.id} row={row} onSelect={() => console.log(row.id)} />\n        ))}\n      </tbody>\n    </table>\n  );\n}",
+    "options": [
+      "sorted creates a new array on every render, invalidating all row keys",
+      "Inline arrow in onSelect creates a new function ref, breaking memo on TableRow",
+      "localeCompare is expensive -- should use Intl.Collator for batch sorting"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-056",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this schema change enable?",
+    "code": "// BEFORE: schema.prisma\nmodel Post {\n  id        String   @id @default(cuid())\n  title     String\n  content   String\n  createdAt DateTime @default(now())\n}\n\n// AFTER: schema.prisma\nmodel Post {\n  id        String   @id @default(cuid())\n  title     String\n  content   String\n  createdAt DateTime @default(now())\n  status    PostStatus @default(DRAFT)\n}\n\nenum PostStatus {\n  DRAFT\n  PUBLISHED\n  ARCHIVED\n}",
+    "options": [
+      "Adds a type-safe enum for post lifecycle states with database-level constraints",
+      "Enables full-text search on post content via the status index",
+      "Allows Prisma to generate separate models for each post status"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-057",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why does this infinite scroll lag?",
+    "code": "'use client';\nexport function Feed() {\n  const [posts, setPosts] = useState<Post[]>([]);\n  const [page, setPage] = useState(1);\n\n  useEffect(() => {\n    fetch(`/api/posts?page=${page}`)\n      .then(r => r.json())\n      .then(newPosts => setPosts(prev => [...prev, ...newPosts]));\n  }, [page]);\n\n  return (\n    <div onScroll={e => {\n      const el = e.currentTarget;\n      if (el.scrollTop + el.clientHeight >= el.scrollHeight) {\n        setPage(p => p + 1);\n      }\n    }}>\n      {posts.map(p => <PostCard key={p.id} post={p} />)}\n    </div>\n  );\n}",
+    "options": [
+      "scroll event fires too often without throttle -- triggers rapid page increments",
+      "Spreading previous posts creates a growing array that rerenders all cards",
+      "Both: unthrottled scroll handler and full list re-render on every append"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-058",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Why does this generate stale closures?",
+    "code": "'use client';\nexport function Timer() {\n  const [count, setCount] = useState(0);\n\n  useEffect(() => {\n    const id = setInterval(() => {\n      setCount(count + 1);\n    }, 1000);\n    return () => clearInterval(id);\n  }, []);\n\n  return <p>Count: {count}</p>;\n}",
+    "options": [
+      "setInterval callback closes over initial count (0) -- use setCount(c => c + 1)",
+      "useEffect with empty deps never re-runs, so setInterval is never refreshed",
+      "clearInterval in cleanup fires on every render, resetting the timer"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-059",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "diff",
+    "prompt": "What resilience problem does this solve?",
+    "code": "// BEFORE: app/api/checkout/route.ts\nexport async function POST(req: Request) {\n  const { cartId } = await req.json();\n  const order = await createOrder(cartId);\n  await chargePayment(order.id);\n  await sendConfirmationEmail(order.id);\n  return Response.json({ orderId: order.id });\n}\n\n// AFTER:\nexport async function POST(req: Request) {\n  const { cartId } = await req.json();\n  const order = await createOrder(cartId);\n  await chargePayment(order.id);\n  await queue.add('send-confirmation', { orderId: order.id });\n  return Response.json({ orderId: order.id });\n}",
+    "options": [
+      "Email failure no longer rolls back the payment -- non-critical work is async",
+      "Queue adds retry logic so emails are guaranteed to send eventually",
+      "Both: decouples email from checkout response and adds automatic retries"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fs-060",
+    "track": "fullstack",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this route handler return?",
+    "code": "// app/api/greet/route.ts\nexport async function GET(request: Request) {\n  const { searchParams } = new URL(request.url);\n  const name = searchParams.get('name') ?? 'World';\n  return Response.json({ message: `Hello, ${name}!` });\n}\n// GET /api/greet",
+    "options": [
+      "{ message: 'Hello, World!' }",
+      "{ message: 'Hello, null!' }",
+      "400 Bad Request because name param is missing"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  }
+]

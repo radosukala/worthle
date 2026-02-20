@@ -1,0 +1,682 @@
+[
+  {
+    "id": "kt-mo-001",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "ui_components",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this Composable.",
+    "code": "@Composable\nfun Greeting(name: String) {\n    var text = \"Hello, $name\"\n    Text(text = text)\n    Button(onClick = { text = \"Clicked!\" }) {\n        Text(\"Click me\")\n    }\n}",
+    "options": [
+      "text is a plain var, not mutableStateOf -- UI won't update",
+      "Button onClick should use rememberCoroutineScope",
+      "Text composable is missing a modifier parameter"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-002",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "state_management",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this ViewModel emit?",
+    "code": "class CounterViewModel : ViewModel() {\n    private val _count = MutableStateFlow(0)\n    val count: StateFlow<Int> = _count\n\n    fun increment() {\n        _count.value += 1\n        _count.value += 1\n    }\n}\n// After calling increment() once, count.value = ?",
+    "options": [
+      "1",
+      "2",
+      "0"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-003",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the concurrency bug.",
+    "code": "class UserRepository(\n    private val api: UserApi,\n    private val dao: UserDao\n) {\n    suspend fun getUser(id: String): User {\n        val user = api.fetchUser(id)\n        dao.insertUser(user)\n        return dao.getUser(id)\n    }\n}",
+    "options": [
+      "No dispatcher specified -- network call may run on Main",
+      "Missing try-catch around the API call",
+      "dao.insertUser and dao.getUser should be in a transaction"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-004",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the performance issue?",
+    "code": "@Composable\nfun UserList(users: List<User>) {\n    Column {\n        users.forEach { user ->\n            UserCard(user = user)\n        }\n    }\n}",
+    "options": [
+      "UserCard should be wrapped in key() for identity",
+      "users list should be converted to SnapshotStateList",
+      "forEach in Column composes all items -- use LazyColumn"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-005",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "security",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this change fix?",
+    "code": "// Before:\nval prefs = context.getSharedPreferences(\n    \"user_prefs\", Context.MODE_PRIVATE\n)\nprefs.edit().putString(\"auth_token\", token).apply()\n\n// After:\nval prefs = EncryptedSharedPreferences.create(\n    \"user_prefs\", masterKeyAlias,\n    context, AES256_SIV, AES256_GCM\n)\nprefs.edit().putString(\"auth_token\", token).apply()",
+    "options": [
+      "Fixes a race condition in SharedPreferences writes",
+      "Encrypts sensitive data at rest on disk",
+      "Prevents other apps from reading the preferences file"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-006",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this crash on rotation?",
+    "code": "class DetailFragment : Fragment() {\n    private var binding: FragmentDetailBinding? = null\n\n    override fun onCreateView(...): View {\n        binding = FragmentDetailBinding.inflate(inflater)\n        return binding!!.root\n    }\n\n    override fun onDestroyView() {\n        super.onDestroyView()\n    }\n}",
+    "options": [
+      "binding is not set to null in onDestroyView -- memory leak",
+      "inflate() should use the container parameter",
+      "Should use viewBinding delegate instead of manual binding"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-007",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this Composable display?",
+    "code": "@Composable\nfun StatusBadge(isOnline: Boolean) {\n    val color = if (isOnline) Color.Green else Color.Red\n    val label = if (isOnline) \"Online\" else \"Offline\"\n    Row(verticalAlignment = Alignment.CenterVertically) {\n        Box(Modifier.size(8.dp).background(color, CircleShape))\n        Spacer(Modifier.width(4.dp))\n        Text(label)\n    }\n}\n// Called with isOnline = false",
+    "options": [
+      "Green dot followed by \"Offline\"",
+      "Red dot followed by \"Offline\"",
+      "Red dot followed by \"Online\""
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-008",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the coroutine leak.",
+    "code": "class SearchViewModel : ViewModel() {\n    private var searchJob: Job? = null\n\n    fun search(query: String) {\n        searchJob = viewModelScope.launch {\n            delay(300)\n            val results = repository.search(query)\n            _results.value = results\n        }\n    }\n}",
+    "options": [
+      "viewModelScope already cancels -- but previous job is not cancelled",
+      "delay() will throw CancellationException on config change",
+      "repository.search should use withContext(Dispatchers.IO)"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-009",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this list scroll janky?",
+    "code": "@Composable\nfun ImageFeed(posts: List<Post>) {\n    LazyColumn {\n        items(posts) { post ->\n            val bitmap = BitmapFactory.decodeFile(post.imagePath)\n            Image(\n                bitmap = bitmap.asImageBitmap(),\n                contentDescription = null,\n                modifier = Modifier.fillMaxWidth().height(200.dp)\n            )\n            Text(post.caption)\n        }\n    }\n}",
+    "options": [
+      "BitmapFactory.decodeFile blocks the main thread during composition",
+      "LazyColumn items are not keyed, causing unnecessary recompositions",
+      "Image should use a fixed size instead of fillMaxWidth"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-010",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why doesn't the UI update?",
+    "code": "class TodoViewModel : ViewModel() {\n    private val _todos = MutableStateFlow(mutableListOf<String>())\n    val todos: StateFlow<List<String>> = _todos\n\n    fun addTodo(text: String) {\n        _todos.value.add(text)\n    }\n}",
+    "options": [
+      "StateFlow needs conflated dispatch to emit list changes",
+      "Mutating the same list instance -- StateFlow won't emit",
+      "MutableStateFlow should be MutableLiveData for UI updates"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-011",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "security",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the security vulnerability.",
+    "code": "class LoginActivity : AppCompatActivity() {\n    fun onLoginClick() {\n        val password = passwordEditText.text.toString()\n        Log.d(\"LoginActivity\", \"Attempting login with: $password\")\n        viewModel.login(emailEditText.text.toString(), password)\n    }\n}",
+    "options": [
+      "Password is stored as String instead of CharArray",
+      "Password is logged in plaintext to Logcat",
+      "EditText should use inputType=textPassword"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-012",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What happens when this runs?",
+    "code": "lifecycleScope.launch {\n    val deferred1 = async { fetchUserProfile() }\n    val deferred2 = async { fetchUserPosts() }\n    try {\n        val profile = deferred1.await()\n        val posts = deferred2.await()\n        showData(profile, posts)\n    } catch (e: Exception) {\n        showError(e)\n    }\n}\n// fetchUserPosts() throws IOException",
+    "options": [
+      "Crash -- structured concurrency cancels the parent scope",
+      "showError is called with IOException",
+      "fetchUserProfile result is lost, only error is caught"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-013",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which navigation approach scales best?",
+    "code": "// A: Nested NavHosts per feature\nNavHost(navController, startDestination = \"home\") {\n    homeGraph(navController)\n    profileGraph(navController)\n    settingsGraph(navController)\n}\n\n// B: Single flat NavHost with all routes\nNavHost(navController, startDestination = \"home\") {\n    composable(\"home\") { ... }\n    composable(\"profile\") { ... }\n    composable(\"settings\") { ... }\n    composable(\"profile/edit\") { ... }\n    // ... 30 more routes\n}\n\n// C: Manual Fragment transactions\nsupportFragmentManager.beginTransaction()\n    .replace(R.id.container, fragment).commit()",
+    "options": [
+      "A -- nested graphs isolate features and reduce coupling",
+      "B -- flat navigation is simpler and faster to resolve",
+      "C -- Fragment transactions give full control over backstack"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-014",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "runBlocking {\n    val result = withContext(Dispatchers.Default) {\n        var sum = 0\n        for (i in 1..3) {\n            sum += i\n        }\n        sum\n    }\n    println(result)\n}",
+    "options": [
+      "0",
+      "Throws IllegalStateException",
+      "6"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-015",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What causes recomposition storms here?",
+    "code": "@Composable\nfun AnimatedCounter(count: Int) {\n    val animatedCount by animateIntAsState(\n        targetValue = count,\n        animationSpec = tween(durationMillis = 500)\n    )\n    Column {\n        Text(\"Count: $animatedCount\")\n        ExpensiveChart(data = generateChartData(animatedCount))\n    }\n}",
+    "options": [
+      "tween animation blocks the main thread for 500ms",
+      "Column should be wrapped in a remember block",
+      "animateIntAsState triggers recomposition on every animation frame"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-016",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this refactor improve?",
+    "code": "// Before:\nclass ProfileViewModel : ViewModel() {\n    val name = MutableLiveData<String>()\n    val email = MutableLiveData<String>()\n    val avatar = MutableLiveData<String>()\n}\n\n// After:\ndata class ProfileUiState(\n    val name: String = \"\",\n    val email: String = \"\",\n    val avatar: String = \"\"\n)\nclass ProfileViewModel : ViewModel() {\n    private val _uiState = MutableStateFlow(ProfileUiState())\n    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()\n}",
+    "options": [
+      "Reduces memory by combining three LiveData into one Flow",
+      "Ensures atomic UI state updates and prevents partial state",
+      "Enables Compose previews that LiveData doesn't support"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-017",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "security",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach secures API communication?",
+    "code": "// A: Trust all certificates\nval trustAll = arrayOf(object : X509TrustManager {\n    override fun checkServerTrusted(...) {}\n    override fun checkClientTrusted(...) {}\n    override fun getAcceptedIssuers() = arrayOf<X509Certificate>()\n})\n\n// B: Certificate pinning with OkHttp\nval pinner = CertificatePinner.Builder()\n    .add(\"api.example.com\", \"sha256/AAAA...\")\n    .build()\nOkHttpClient.Builder().certificatePinner(pinner).build()\n\n// C: Network security config (XML)\n// <domain-config>\n//   <domain>api.example.com</domain>\n//   <pin-set><pin digest=\"SHA-256\">AAAA...</pin></pin-set>\n// </domain-config>",
+    "options": [
+      "A -- custom TrustManager gives the most flexibility",
+      "B -- OkHttp pinning with hash rotation support",
+      "C -- network security config is declarative and updatable"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-018",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this crash?",
+    "code": "class MainActivity : ComponentActivity() {\n    private lateinit var viewModel: MainViewModel\n\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n        viewModel = MainViewModel()\n        setContent {\n            MainScreen(viewModel)\n        }\n    }\n}",
+    "options": [
+      "setContent must be called before super.onCreate",
+      "ViewModel is created manually -- won't survive config changes",
+      "ComponentActivity requires a Compose theme wrapper"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-019",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the race condition.",
+    "code": "class BankAccount {\n    private var balance: Double = 100.0\n\n    suspend fun transfer(amount: Double) {\n        if (balance >= amount) {\n            delay(10) // simulate processing\n            balance -= amount\n        }\n    }\n}\n// Two coroutines call transfer(100.0) simultaneously",
+    "options": [
+      "delay() may throw CancellationException mid-transfer",
+      "Check-then-act is not atomic -- both can pass the check",
+      "Double arithmetic causes floating-point rounding errors"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-020",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this Composable show?",
+    "code": "@Composable\nfun ToggleDemo() {\n    var enabled by remember { mutableStateOf(false) }\n    Column {\n        Switch(\n            checked = enabled,\n            onCheckedChange = { enabled = it }\n        )\n        if (enabled) {\n            Text(\"Feature is ON\")\n        }\n    }\n}\n// Initial render",
+    "options": [
+      "Switch (off) only -- no text shown",
+      "Switch (off) and \"Feature is ON\" text",
+      "Switch (on) and \"Feature is ON\" text"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-021",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this change improve?",
+    "code": "// Before:\n@Composable\nfun UserList(users: List<User>) {\n    LazyColumn {\n        items(users) { user ->\n            UserRow(user)\n        }\n    }\n}\n\n// After:\n@Composable\nfun UserList(users: List<User>) {\n    LazyColumn {\n        items(users, key = { it.id }) { user ->\n            UserRow(user)\n        }\n    }\n}",
+    "options": [
+      "Prevents duplicate items from appearing in the list",
+      "Allows LazyColumn to pre-fetch items off-screen",
+      "Enables item reuse and correct animations on reorder"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-022",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "state_management",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the state management bug.",
+    "code": "@Composable\nfun SearchScreen(viewModel: SearchViewModel = hiltViewModel()) {\n    val results by viewModel.results.collectAsState()\n    var query by remember { mutableStateOf(\"\") }\n\n    LaunchedEffect(query) {\n        delay(300)\n        viewModel.search(query)\n    }\n\n    TextField(value = query, onValueChange = { query = it })\n    ResultsList(results)\n}",
+    "options": [
+      "collectAsState needs a lifecycle-aware scope",
+      "LaunchedEffect restarts on every keystroke but doesn't cancel cleanly on empty query",
+      "remember{} loses state on configuration change"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-023",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this flow emit?",
+    "code": "val flow = flow {\n    emit(1)\n    emit(2)\n    emit(3)\n}.onEach { delay(100) }\n .conflate()\n\nrunBlocking {\n    flow.collect { value ->\n        delay(250)\n        println(value)\n    }\n}",
+    "options": [
+      "1, 2, 3",
+      "1, 3",
+      "1, 2"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-024",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "security",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the security issue.",
+    "code": "class DeepLinkActivity : AppCompatActivity() {\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n        val uri = intent.data\n        val userId = uri?.getQueryParameter(\"userId\")\n        if (userId != null) {\n            loadUserProfile(userId)\n        }\n    }\n}",
+    "options": [
+      "intent.data can be null on process recreation",
+      "No validation on userId -- allows injection via crafted deep link",
+      "getQueryParameter doesn't decode URL-encoded characters"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-025",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "ui_components",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What's causing frame drops?",
+    "code": "@Composable\nfun ProfileHeader(user: User) {\n    val gradient = Brush.linearGradient(\n        colors = listOf(Color.Blue, Color.Cyan)\n    )\n    Box(\n        modifier = Modifier\n            .fillMaxWidth()\n            .height(200.dp)\n            .background(gradient)\n            .drawWithContent {\n                drawContent()\n                drawCircle(color = Color.White, radius = 60.dp.toPx())\n            }\n    ) {\n        AsyncImage(model = user.avatarUrl, contentDescription = null)\n    }\n}",
+    "options": [
+      "Brush.linearGradient is recreated on every recomposition",
+      "drawWithContent overlaps with AsyncImage causing overdraw",
+      "AsyncImage loads on main thread without placeholder"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-026",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this refactor achieve?",
+    "code": "// Before:\nsuspend fun loadData() {\n    val user = api.getUser()\n    val posts = api.getPosts(user.id)\n    val comments = api.getComments(user.id)\n    updateUI(user, posts, comments)\n}\n\n// After:\nsuspend fun loadData() = coroutineScope {\n    val user = api.getUser()\n    val posts = async { api.getPosts(user.id) }\n    val comments = async { api.getComments(user.id) }\n    updateUI(user, posts.await(), comments.await())\n}",
+    "options": [
+      "Runs posts and comments requests in parallel",
+      "Adds error handling via coroutineScope's structured concurrency",
+      "Moves network calls off the main thread"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-027",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "state_management",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What does the collector receive?",
+    "code": "val shared = MutableSharedFlow<Int>(replay = 1)\n\nrunBlocking {\n    shared.emit(1)\n    shared.emit(2)\n\n    val values = mutableListOf<Int>()\n    val job = launch {\n        shared.take(2).collect { values.add(it) }\n    }\n    shared.emit(3)\n    job.join()\n    println(values)\n}",
+    "options": [
+      "[1, 2]",
+      "[2, 3]",
+      "[1, 2, 3]"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-028",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which image loading strategy scales?",
+    "code": "// A: Load full bitmap\nBitmapFactory.decodeResource(resources, R.drawable.photo)\n\n// B: Downsampled with inSampleSize\nval opts = BitmapFactory.Options()\nopts.inJustDecodeBounds = true\nBitmapFactory.decodeResource(resources, R.drawable.photo, opts)\nopts.inSampleSize = calculateInSampleSize(opts, reqW, reqH)\nopts.inJustDecodeBounds = false\nBitmapFactory.decodeResource(resources, R.drawable.photo, opts)\n\n// C: Coil with memory and disk cache\nAsyncImage(model = ImageRequest.Builder(context)\n    .data(R.drawable.photo).size(reqW, reqH)\n    .memoryCachePolicy(CachePolicy.ENABLED).build())",
+    "options": [
+      "A -- full bitmap has best quality for any screen size",
+      "B -- inSampleSize reduces memory without library overhead",
+      "C -- Coil handles caching, sizing, and lifecycle automatically"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-029",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this leak memory?",
+    "code": "class LocationTracker(private val context: Context) {\n    private val locationManager =\n        context.getSystemService(Context.LOCATION_SERVICE)\n            as LocationManager\n\n    private val listener = LocationListener { location ->\n        saveLocation(location)\n    }\n\n    fun startTracking() {\n        locationManager.requestLocationUpdates(\n            LocationManager.GPS_PROVIDER, 1000, 10f, listener\n        )\n    }\n}",
+    "options": [
+      "context.getSystemService returns a new instance each call",
+      "GPS_PROVIDER keeps the radio on even when app is backgrounded",
+      "LocationManager holds a reference to the listener indefinitely"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-030",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this layout.",
+    "code": "@Composable\nfun LoadingButton(\n    isLoading: Boolean,\n    onClick: () -> Unit\n) {\n    Button(onClick = onClick) {\n        if (isLoading) {\n            CircularProgressIndicator()\n        }\n        Text(\"Submit\")\n    }\n}",
+    "options": [
+      "Button is clickable while loading -- should disable it",
+      "CircularProgressIndicator needs explicit size in Button",
+      "Text and indicator should be in a Row for horizontal layout"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-031",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which handles background work best?",
+    "code": "// A: GlobalScope.launch\nGlobalScope.launch(Dispatchers.IO) {\n    syncDataToServer()\n}\n\n// B: WorkManager periodic\nval request = PeriodicWorkRequestBuilder<SyncWorker>(\n    15, TimeUnit.MINUTES\n).setConstraints(\n    Constraints.Builder().setRequiredNetworkType(\n        NetworkType.CONNECTED\n    ).build()\n).build()\nWorkManager.getInstance(context).enqueue(request)\n\n// C: AlarmManager repeating\nalarmManager.setRepeating(\n    AlarmManager.RTC_WAKEUP, triggerTime, 900000, pendingIntent\n)",
+    "options": [
+      "A -- GlobalScope is lightweight with no system overhead",
+      "B -- WorkManager respects battery and network constraints",
+      "C -- AlarmManager guarantees exact scheduling"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-032",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "security",
+    "difficulty": 5,
+    "type": "diff",
+    "prompt": "What does this change protect against?",
+    "code": "// Before:\nval retrofit = Retrofit.Builder()\n    .baseUrl(\"https://api.example.com\")\n    .client(OkHttpClient())\n    .build()\n\n// After:\nval interceptor = Interceptor { chain ->\n    val request = chain.request().newBuilder()\n        .addHeader(\"X-Request-ID\", UUID.randomUUID().toString())\n        .addHeader(\"X-Timestamp\", System.currentTimeMillis().toString())\n        .build()\n    val body = request.body?.let { readBody(it) } ?: \"\"\n    val hmac = computeHmac(body + request.url, secretKey)\n    chain.proceed(request.newBuilder()\n        .addHeader(\"X-Signature\", hmac).build())\n}\nval retrofit = Retrofit.Builder()\n    .baseUrl(\"https://api.example.com\")\n    .client(OkHttpClient.Builder().addInterceptor(interceptor).build())\n    .build()",
+    "options": [
+      "Prevents man-in-the-middle attacks by encrypting the body",
+      "Prevents API key theft via request signing with HMAC",
+      "Prevents request replay and tampering via signed payloads"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-033",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "state_management",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What state does this expose?",
+    "code": "class TimerViewModel : ViewModel() {\n    private val _seconds = MutableStateFlow(0)\n    val seconds = _seconds.asStateFlow()\n\n    init {\n        viewModelScope.launch {\n            while (true) {\n                delay(1000)\n                _seconds.value++\n            }\n        }\n    }\n}\n// After 3.5 seconds, seconds.value = ?",
+    "options": [
+      "4",
+      "3.5",
+      "3"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-034",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What's causing excessive allocations?",
+    "code": "@Composable\nfun ChatMessages(messages: List<Message>) {\n    LazyColumn {\n        items(messages, key = { it.id }) { message ->\n            val dateFormatter = SimpleDateFormat(\n                \"MMM dd, HH:mm\", Locale.getDefault()\n            )\n            Row {\n                Text(message.sender)\n                Spacer(Modifier.weight(1f))\n                Text(dateFormatter.format(message.timestamp))\n            }\n        }\n    }\n}",
+    "options": [
+      "Spacer with weight(1f) forces full Row remeasure on each item",
+      "LazyColumn key function creates new lambda on each recomposition",
+      "SimpleDateFormat is created per item -- should be remembered or hoisted"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-035",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What problem does this fix?",
+    "code": "// Before:\n@Composable\nfun DataScreen(viewModel: DataViewModel = viewModel()) {\n    val data by viewModel.data.collectAsState(initial = emptyList())\n    LazyColumn {\n        items(data) { item -> ItemRow(item) }\n    }\n}\n\n// After:\n@Composable\nfun DataScreen(viewModel: DataViewModel = viewModel()) {\n    val lifecycle = LocalLifecycleOwner.current.lifecycle\n    val data by viewModel.data.collectAsStateWithLifecycle(\n        initialValue = emptyList()\n    )\n    LazyColumn {\n        items(data) { item -> ItemRow(item) }\n    }\n}",
+    "options": [
+      "Prevents data updates while the app is in the background",
+      "Fixes a crash when the ViewModel is cleared",
+      "Adds automatic retry on flow collection errors"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-036",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "runBlocking {\n    val mutex = Mutex()\n    var counter = 0\n    val jobs = List(100) {\n        launch(Dispatchers.Default) {\n            repeat(1000) {\n                mutex.withLock {\n                    counter++\n                }\n            }\n        }\n    }\n    jobs.forEach { it.join() }\n    println(counter)\n}",
+    "options": [
+      "Less than 100000 due to coroutine scheduling",
+      "Deadlock -- Mutex can't be used across dispatchers",
+      "100000"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-037",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "ui_components",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the subtle recomposition bug.",
+    "code": "@Composable\nfun ProductCard(product: Product, onAddToCart: (Product) -> Unit) {\n    Card {\n        Text(product.name)\n        Text(\"$${product.price}\")\n        Button(onClick = { onAddToCart(product) }) {\n            Text(\"Add to Cart\")\n        }\n    }\n}\n\n@Composable\nfun ProductList(products: List<Product>, cartVM: CartViewModel) {\n    LazyColumn {\n        items(products, key = { it.id }) { product ->\n            ProductCard(product) { p -> cartVM.add(p) }\n        }\n    }\n}",
+    "options": [
+      "Lambda { p -> cartVM.add(p) } is a new instance each recomposition -- breaks skipping",
+      "Product data class may not implement equals correctly",
+      "LazyColumn items should use itemsIndexed for stable composition"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-038",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "state_management",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does remember do here?",
+    "code": "@Composable\nfun Counter() {\n    var count by remember { mutableStateOf(0) }\n    Button(onClick = { count++ }) {\n        Text(\"Count: $count\")\n    }\n}\n// User taps button 3 times",
+    "options": [
+      "Count: 0",
+      "Count: 1",
+      "Count: 3"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-039",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "security",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which stores biometric-gated secrets best?",
+    "code": "// A: SharedPreferences after biometric prompt\nval prefs = context.getSharedPreferences(\"secrets\", MODE_PRIVATE)\nbiometricPrompt.authenticate(...)\nprefs.getString(\"api_key\", null)\n\n// B: AndroidKeyStore with biometric binding\nval keyGenSpec = KeyGenParameterSpec.Builder(\"key\",\n    PURPOSE_ENCRYPT or PURPOSE_DECRYPT)\n    .setUserAuthenticationRequired(true)\n    .setInvalidatedByBiometricEnrollment(true)\n    .build()\nkeyGenerator.init(keyGenSpec)\n\n// C: Room database with encrypted columns\n@ColumnInfo(name = \"secret\")\nval encryptedSecret: String",
+    "options": [
+      "A -- biometric prompt guards access to stored values",
+      "B -- AndroidKeyStore binds key to biometric hardware",
+      "C -- Room encryption protects secrets in the database"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "kt-mo-040",
+    "track": "mobile",
+    "language": "kotlin",
+    "category": "performance",
+    "difficulty": 1,
+    "type": "scales",
+    "prompt": "Which data storage approach is fastest?",
+    "code": "// A: SharedPreferences for key-value\nval prefs = context.getSharedPreferences(\"settings\", MODE_PRIVATE)\nprefs.edit().putBoolean(\"darkMode\", true).apply()\n\n// B: Room database for key-value\n@Entity data class Setting(val key: String, val value: String)\n@Dao interface SettingsDao {\n    @Query(\"SELECT * FROM setting WHERE key = :k\")\n    fun get(k: String): Setting?\n}\n\n// C: File I/O with JSON\nFile(\"settings.json\").writeText(\n    Json.encodeToString(mapOf(\"darkMode\" to true))\n)",
+    "options": [
+      "B -- Room provides type safety and query capability",
+      "A -- SharedPreferences is optimized for simple key-value pairs",
+      "C -- JSON files are portable and human-readable"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  }
+]

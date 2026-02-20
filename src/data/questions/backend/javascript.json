@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "js-be-001",
+    "track": "backend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Why does this middleware hang?",
+    "code": "const express = require('express');\nconst app = express();\n\napp.use((req, res, next) => {\n  console.log(`${req.method} ${req.url}`);\n});\n\napp.get('/health', (req, res) => {\n  res.json({ status: 'ok' });\n});\n\napp.listen(3000);",
+    "options": [
+      "console.log blocks the event loop on large strings",
+      "Logger middleware never calls next() -- request hangs",
+      "app.listen should use a callback to confirm binding"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-002",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "const EventEmitter = require('events');\nconst emitter = new EventEmitter();\n\nemitter.on('data', () => console.log('A'));\nemitter.on('data', () => console.log('B'));\n\nsetImmediate(() => console.log('C'));\n\nemitter.emit('data');\nconsole.log('D');",
+    "options": [
+      "A, B, D, C",
+      "C, A, B, D",
+      "A, B, C, D"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-003",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this Mongoose query.",
+    "code": "const mongoose = require('mongoose');\n\nconst User = mongoose.model('User', new mongoose.Schema({\n  email: String,\n  age: Number\n}));\n\napp.get('/users', async (req, res) => {\n  const minAge = req.query.minAge;\n  const users = await User.find({ age: { $gte: minAge } });\n  res.json(users);\n});",
+    "options": [
+      "req.query.minAge is a string -- $gte comparison with string skips results",
+      "$gte is not a valid Mongoose operator -- use $min instead",
+      "User.find returns a query object, not a promise"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-004",
+    "track": "backend",
+    "language": "javascript",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What did this refactor fix?",
+    "code": "// BEFORE:\napp.delete('/users/:id', async (req, res) => {\n  await db.query('DELETE FROM users WHERE id = $1', [req.params.id]);\n  res.status(200).json({ deleted: true });\n});\n\n// AFTER:\napp.delete('/users/:id', auth, async (req, res) => {\n  const result = await db.query(\n    'DELETE FROM users WHERE id = $1 AND org_id = $2',\n    [req.params.id, req.user.orgId]\n  );\n  if (result.rowCount === 0) return res.status(404).end();\n  res.status(200).json({ deleted: true });\n});",
+    "options": [
+      "Added auth and tenant scoping -- prevents unauthorized cross-org deletion",
+      "Added row count check to improve database write performance",
+      "Switched from soft delete to hard delete for GDPR compliance"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-005",
+    "track": "backend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this JSON endpoint slow?",
+    "code": "const fs = require('fs');\n\napp.get('/config', (req, res) => {\n  const raw = fs.readFileSync('./config.json', 'utf8');\n  const config = JSON.parse(raw);\n  const filtered = Object.fromEntries(\n    Object.entries(config).filter(([k]) => !k.startsWith('_'))\n  );\n  res.json(filtered);\n});",
+    "options": [
+      "Object.fromEntries is O(n^2) on large objects",
+      "readFileSync blocks the event loop -- use async readFile or cache the result",
+      "JSON.parse is vulnerable to prototype pollution from untrusted files"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-006",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this log?",
+    "code": "async function fetchAll(ids) {\n  const results = [];\n  for (const id of ids) {\n    const data = await fetch(`/api/${id}`).then(r => r.json());\n    results.push(data);\n  }\n  return results;\n}\n\nconst start = Date.now();\nawait fetchAll([1, 2, 3]); // each fetch takes ~100ms\nconsole.log(`Took ${Date.now() - start}ms`);",
+    "options": [
+      "Took ~100ms (parallel execution)",
+      "Took ~300ms (sequential awaits in loop)",
+      "Took ~200ms (first two run concurrently)"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-007",
+    "track": "backend",
+    "language": "javascript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which session store scales horizontally?",
+    "code": "const session = require('express-session');\n\n// Option A:\napp.use(session({ secret: 'key', resave: false,\n  saveUninitialized: false }));\n\n// Option B:\nconst RedisStore = require('connect-redis').default;\napp.use(session({ store: new RedisStore({ client: redis }),\n  secret: 'key', resave: false, saveUninitialized: false }));\n\n// Option C:\nconst SQLiteStore = require('better-sqlite3-session-store')(session);\napp.use(session({ store: new SQLiteStore({ client: db }),\n  secret: 'key', resave: false, saveUninitialized: false }));",
+    "options": [
+      "A -- default MemoryStore has the lowest latency",
+      "C -- SQLite persists sessions across restarts",
+      "B -- Redis store is shared across all server instances"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-008",
+    "track": "backend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this event emitter leak memory?",
+    "code": "const EventEmitter = require('events');\nconst bus = new EventEmitter();\n\napp.get('/stream/:channel', (req, res) => {\n  res.writeHead(200, { 'Content-Type': 'text/event-stream' });\n\n  const handler = (data) => {\n    res.write(`data: ${JSON.stringify(data)}\\n\\n`);\n  };\n  bus.on(req.params.channel, handler);\n\n  req.on('close', () => {\n    res.end();\n  });\n});",
+    "options": [
+      "writeHead should set Connection: keep-alive for SSE",
+      "Listener is never removed on disconnect -- bus.off missing in close handler",
+      "res.write should be wrapped in try/catch for broken pipe errors"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-009",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this bulk insert slow?",
+    "code": "const knex = require('knex')(config);\n\napp.post('/import', async (req, res) => {\n  const rows = req.body.items; // ~5000 rows\n  for (const row of rows) {\n    await knex('products').insert({\n      name: row.name,\n      price: row.price,\n      sku: row.sku\n    });\n  }\n  res.json({ imported: rows.length });\n});",
+    "options": [
+      "Missing a transaction causes auto-commit overhead per row",
+      "knex('products') creates a new query builder each iteration",
+      "5000 individual INSERTs -- use knex.batchInsert or single insert with array"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-010",
+    "track": "backend",
+    "language": "javascript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the security bug in this route.",
+    "code": "const path = require('path');\nconst fs = require('fs');\n\napp.get('/files/:name', (req, res) => {\n  const filePath = path.join(__dirname, 'uploads', req.params.name);\n  if (!fs.existsSync(filePath)) {\n    return res.status(404).json({ error: 'Not found' });\n  }\n  res.sendFile(filePath);\n});",
+    "options": [
+      "existsSync is deprecated -- use fs.accessSync instead",
+      "path.join does not prevent path traversal -- name could be ../../etc/passwd",
+      "sendFile needs an absolute path -- __dirname is relative"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-011",
+    "track": "backend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why does this stream use too much memory?",
+    "code": "const { Transform } = require('stream');\nconst zlib = require('zlib');\n\napp.get('/export', async (req, res) => {\n  const cursor = db.collection('logs').find().batchSize(1000);\n  const rows = await cursor.toArray();\n  const output = zlib.createGzip();\n  output.pipe(res);\n  for (const row of rows) {\n    output.write(JSON.stringify(row) + '\\n');\n  }\n  output.end();\n});",
+    "options": [
+      "output.write should be awaited to respect backpressure",
+      "createGzip buffers all input before compressing",
+      "toArray() loads entire collection into memory -- stream the cursor instead"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-012",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the bug in this connection pool.",
+    "code": "const pool = [];\nconst MAX = 5;\n\nasync function getConnection() {\n  if (pool.length > 0) {\n    return pool.pop();\n  }\n  if (pool.length < MAX) {\n    return await createConnection();\n  }\n  await new Promise(r => setTimeout(r, 100));\n  return getConnection();\n}\n\nfunction release(conn) {\n  pool.push(conn);\n}",
+    "options": [
+      "pool.length check is wrong -- it tracks idle, not total connections",
+      "setTimeout polling is inefficient -- should use a queue with callbacks",
+      "pop() and push() are not atomic in async context"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-013",
+    "track": "backend",
+    "language": "javascript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which caching strategy scales for real-time leaderboards?",
+    "code": "// Option A: Compute on read\napp.get('/leaderboard', async (req, res) => {\n  const top = await db.query(\n    'SELECT * FROM scores ORDER BY points DESC LIMIT 100'\n  );\n  res.json(top.rows);\n});\n\n// Option B: Redis sorted set\nawait redis.zadd('leaderboard', score, odId);\nconst top = await redis.zrevrange('leaderboard', 0, 99, 'WITHSCORES');\n\n// Option C: Materialized view refreshed every 5 min\nawait db.query('REFRESH MATERIALIZED VIEW leaderboard_mv');",
+    "options": [
+      "A -- direct query with an index is simple and consistent",
+      "C -- materialized views offload computation to the database",
+      "B -- Redis sorted set gives O(log N) updates and O(log N + M) reads"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-014",
+    "track": "backend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What happens when this runs?",
+    "code": "const http = require('http');\n\nconst server = http.createServer((req, res) => {\n  if (req.url === '/slow') {\n    setTimeout(() => {\n      res.writeHead(200);\n      res.end('done');\n    }, 5000);\n  }\n  res.writeHead(200);\n  res.end('fast');\n});\n\nserver.listen(3000);",
+    "options": [
+      "/slow returns 'fast' immediately, then crashes after 5s writing to ended response",
+      "/slow returns 'done' after 5 seconds",
+      "/slow returns 'fast' immediately with no error"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-015",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the bug in this transaction.",
+    "code": "app.post('/transfer', async (req, res) => {\n  const { from, to, amount } = req.body;\n  const trx = await knex.transaction();\n  try {\n    await trx('accounts').where({ id: from }).decrement('balance', amount);\n    await trx('accounts').where({ id: to }).increment('balance', amount);\n    await trx.commit();\n    res.json({ success: true });\n  } catch (err) {\n    res.status(500).json({ error: 'Transfer failed' });\n  }\n});",
+    "options": [
+      "increment and decrement are not atomic -- use raw SQL with UPDATE ... SET",
+      "decrement allows negative balance -- needs a CHECK constraint or WHERE clause",
+      "trx.rollback() is never called in catch -- transaction left dangling"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-016",
+    "track": "backend",
+    "language": "javascript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What did this refactor improve?",
+    "code": "// BEFORE:\napp.post('/webhook', (req, res) => {\n  const event = req.body;\n  processEvent(event);\n  res.status(200).end();\n});\n\n// AFTER:\napp.post('/webhook', express.raw({ type: '*/*' }), (req, res) => {\n  const sig = req.headers['x-signature'];\n  const valid = crypto.timingSafeEqual(\n    Buffer.from(sig, 'hex'),\n    crypto.createHmac('sha256', SECRET).update(req.body).digest()\n  );\n  if (!valid) return res.status(401).end();\n  processEvent(JSON.parse(req.body));\n  res.status(200).end();\n});",
+    "options": [
+      "Switched from JSON to raw body parsing for smaller payloads",
+      "Added HMAC signature verification to prevent webhook spoofing",
+      "Added timing-safe comparison to prevent brute-force attacks on the endpoint"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-017",
+    "track": "backend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why does this worker starve under load?",
+    "code": "const cluster = require('cluster');\nconst os = require('os');\n\nif (cluster.isPrimary) {\n  for (let i = 0; i < os.cpus().length; i++) {\n    cluster.fork();\n  }\n} else {\n  const app = require('./app');\n  app.get('/compute', (req, res) => {\n    let sum = 0;\n    for (let i = 0; i < 1e9; i++) sum += i;\n    res.json({ sum });\n  });\n  app.listen(3000);\n}",
+    "options": [
+      "os.cpus().length forks too many processes on high-core machines",
+      "cluster.fork() shares the same port causing EADDRINUSE",
+      "CPU-bound loop blocks the worker's event loop -- offload to worker_threads"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-018",
+    "track": "backend",
+    "language": "javascript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this refactor improve?",
+    "code": "// BEFORE:\napp.get('/search', async (req, res) => {\n  const results = await db.query(\n    `SELECT * FROM articles WHERE title ILIKE $1`,\n    [`%${req.query.q}%`]\n  );\n  res.json(results.rows);\n});\n\n// AFTER:\napp.get('/search', async (req, res) => {\n  const results = await elastic.search({\n    index: 'articles',\n    body: { query: { match: { title: req.query.q } } }\n  });\n  res.json(results.hits.hits.map(h => h._source));\n});",
+    "options": [
+      "Moved from SQL ILIKE to Elasticsearch for full-text search at scale",
+      "Elasticsearch prevents SQL injection that ILIKE was vulnerable to",
+      "Replaced wildcard scan with indexed lookup for exact matches"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-019",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the subtle concurrency bug.",
+    "code": "const cache = new Map();\n\nasync function memoize(key, fn) {\n  if (cache.has(key)) return cache.get(key);\n  const result = await fn();\n  cache.set(key, result);\n  return result;\n}\n\n// Called concurrently:\napp.get('/user/:id', async (req, res) => {\n  const user = await memoize(req.params.id, () =>\n    db.query('SELECT * FROM users WHERE id = $1', [req.params.id])\n  );\n  res.json(user);\n});",
+    "options": [
+      "Cache stores resolved values -- should store the promise to deduplicate in-flight requests",
+      "Map.has and Map.set are not atomic across await boundaries",
+      "db.query result contains a client reference that cannot be cached"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-020",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this query return?",
+    "code": "const knex = require('knex')(config);\n\nconst result = await knex('users')\n  .select('department', knex.raw('COUNT(*) as count'))\n  .groupBy('department')\n  .having('count', '>', 5)\n  .orderBy('count', 'desc');\n\nconsole.log(result);",
+    "options": [
+      "The total number of users grouped by department",
+      "All departments sorted alphabetically",
+      "Departments with more than 5 users, sorted by count descending"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-021",
+    "track": "backend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Why does this route always 404?",
+    "code": "const express = require('express');\nconst app = express();\n\napp.post('/api/users', express.json(), async (req, res) => {\n  const user = await createUser(req.body);\n  res.status(201).json(user);\n});\n\napp.use('*', (req, res) => {\n  res.status(404).json({ error: 'Not found' });\n});\n\napp.post('/api/orders', express.json(), async (req, res) => {\n  const order = await createOrder(req.body);\n  res.status(201).json(order);\n});\n\napp.listen(3000);",
+    "options": [
+      "The wildcard catch-all is before /api/orders -- it intercepts the request",
+      "express.json() middleware should be registered globally, not per-route",
+      "app.post should be app.route for multiple POST endpoints"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-022",
+    "track": "backend",
+    "language": "javascript",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What status code is returned?",
+    "code": "const express = require('express');\nconst app = express();\n\napp.post('/api/items', express.json(), (req, res) => {\n  if (!req.body.name) {\n    return res.status(400).json({ error: 'Name required' });\n  }\n  const item = { id: 1, name: req.body.name };\n  res.json(item);\n});\n\n// Client sends: POST /api/items with body { \"name\": \"Widget\" }",
+    "options": [
+      "201 Created with the item JSON",
+      "400 Bad Request with error message",
+      "200 OK with the item JSON"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-023",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What order does this print?",
+    "code": "console.log('1');\n\nsetTimeout(() => console.log('2'), 0);\n\nPromise.resolve().then(() => console.log('3'));\n\nconsole.log('4');",
+    "options": [
+      "1, 4, 3, 2",
+      "1, 2, 3, 4",
+      "1, 4, 2, 3"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-024",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "Why is this user lookup slow?",
+    "code": "const knex = require('knex')(config);\n\napp.get('/api/users/:email', async (req, res) => {\n  const user = await knex('users')\n    .whereRaw('LOWER(email) = ?', [req.params.email.toLowerCase()])\n    .first();\n  if (!user) return res.status(404).end();\n  res.json(user);\n});",
+    "options": [
+      "whereRaw bypasses Knex query optimization and caching",
+      ".first() fetches all rows then returns one -- use .limit(1)",
+      "LOWER() on the column prevents using an index -- add a functional index"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-025",
+    "track": "backend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "Why does this response take 3 seconds?",
+    "code": "app.get('/dashboard', async (req, res) => {\n  const user = await db.query('SELECT * FROM users WHERE id = $1', [req.userId]);\n  const orders = await db.query('SELECT * FROM orders WHERE user_id = $1', [req.userId]);\n  const notifications = await db.query('SELECT * FROM notifications WHERE user_id = $1', [req.userId]);\n  res.json({ user: user.rows[0], orders: orders.rows, notifications: notifications.rows });\n});",
+    "options": [
+      "Three independent queries run sequentially -- use Promise.all to parallelize",
+      "SELECT * fetches too many columns -- specify only needed fields",
+      "Missing connection pooling causes a new TCP handshake per query"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-026",
+    "track": "backend",
+    "language": "javascript",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "scales",
+    "prompt": "Which approach handles email sending at scale?",
+    "code": "// Option A: Send inline\napp.post('/register', async (req, res) => {\n  const user = await createUser(req.body);\n  await sendWelcomeEmail(user.email);\n  res.status(201).json(user);\n});\n\n// Option B: Background queue\napp.post('/register', async (req, res) => {\n  const user = await createUser(req.body);\n  await emailQueue.add('welcome', { email: user.email });\n  res.status(201).json(user);\n});\n\n// Option C: setTimeout\napp.post('/register', async (req, res) => {\n  const user = await createUser(req.body);\n  setTimeout(() => sendWelcomeEmail(user.email), 0);\n  res.status(201).json(user);\n});",
+    "options": [
+      "A -- inline sending guarantees delivery before responding",
+      "B -- queue decouples email delivery with retries and backpressure",
+      "C -- setTimeout defers work without blocking the response"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-027",
+    "track": "backend",
+    "language": "javascript",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the input validation bug.",
+    "code": "app.put('/api/users/:id', express.json(), async (req, res) => {\n  const { name, role } = req.body;\n  await db.query(\n    'UPDATE users SET name = $1, role = $2 WHERE id = $3',\n    [name, role, req.params.id]\n  );\n  res.json({ updated: true });\n});",
+    "options": [
+      "req.params.id should be parsed as an integer before the query",
+      "PUT should return the updated resource, not a confirmation object",
+      "Client can set role to 'admin' -- no server-side validation on allowed values"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-028",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this resolve to?",
+    "code": "const result = await Promise.allSettled([\n  Promise.resolve('a'),\n  Promise.reject(new Error('fail')),\n  Promise.resolve('c')\n]);\n\nconsole.log(result.map(r => r.status));",
+    "options": [
+      "['fulfilled', 'fulfilled', 'fulfilled']",
+      "Throws 'fail' -- Promise.allSettled rejects on first failure",
+      "['fulfilled', 'rejected', 'fulfilled']"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-029",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What did this migration fix?",
+    "code": "// BEFORE:\nconst User = mongoose.model('User', new mongoose.Schema({\n  email: String,\n  name: String,\n  createdAt: { type: Date, default: Date.now }\n}));\n\n// AFTER:\nconst User = mongoose.model('User', new mongoose.Schema({\n  email: { type: String, required: true, unique: true, lowercase: true },\n  name: { type: String, required: true, trim: true },\n  createdAt: { type: Date, default: Date.now }\n}));",
+    "options": [
+      "Added unique constraint and normalization to prevent duplicate accounts",
+      "Changed field types from String to object for better query performance",
+      "Added required fields to enable Mongoose strict mode validation"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-030",
+    "track": "backend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this error handler never run?",
+    "code": "const express = require('express');\nconst app = express();\n\napp.get('/api/data', async (req, res) => {\n  const data = await fetchExternalApi();\n  res.json(data);\n});\n\napp.use((err, req, res, next) => {\n  console.error(err.stack);\n  res.status(500).json({ error: 'Internal server error' });\n});\n\napp.listen(3000);",
+    "options": [
+      "Async errors are not caught -- rejected promise bypasses Express error handling",
+      "Error handler has wrong argument count -- Express expects (req, res, next)",
+      "app.use for error handlers must be registered before routes"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-031",
+    "track": "backend",
+    "language": "javascript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which rate limiter works across instances?",
+    "code": "// Option A: In-memory counter\nconst counts = new Map();\napp.use((req, res, next) => {\n  const key = req.ip;\n  const count = (counts.get(key) || 0) + 1;\n  counts.set(key, count);\n  if (count > 100) return res.status(429).end();\n  next();\n});\n\n// Option B: Redis sliding window\napp.use(async (req, res, next) => {\n  const key = `rate:${req.ip}`;\n  const count = await redis.incr(key);\n  if (count === 1) await redis.expire(key, 60);\n  if (count > 100) return res.status(429).end();\n  next();\n});\n\n// Option C: File-based log\napp.use((req, res, next) => {\n  fs.appendFileSync('access.log', `${req.ip}\\n`);\n  next();\n});",
+    "options": [
+      "A -- in-memory Map has zero network overhead per request",
+      "B -- Redis counter is shared across all server instances",
+      "C -- file log creates a persistent audit trail for analysis"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-032",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the race condition.",
+    "code": "let balance = 100;\n\napp.post('/withdraw', async (req, res) => {\n  const amount = req.body.amount;\n  if (balance >= amount) {\n    await processPayment(amount); // takes ~200ms\n    balance -= amount;\n    res.json({ balance });\n  } else {\n    res.status(400).json({ error: 'Insufficient funds' });\n  }\n});",
+    "options": [
+      "TOCTOU -- concurrent requests both pass the check before either deducts",
+      "processPayment might throw leaving balance unchanged after deduction intent",
+      "balance -= amount is not atomic and can produce NaN with concurrent access"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-033",
+    "track": "backend",
+    "language": "javascript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What did this refactor improve?",
+    "code": "// BEFORE:\napp.get('/api/products', async (req, res) => {\n  const products = await db.query('SELECT * FROM products');\n  res.json(products.rows);\n});\n\n// AFTER:\napp.get('/api/products', async (req, res) => {\n  const page = parseInt(req.query.page) || 1;\n  const limit = Math.min(parseInt(req.query.limit) || 20, 100);\n  const offset = (page - 1) * limit;\n  const { rows, rowCount } = await db.query(\n    'SELECT * FROM products ORDER BY id LIMIT $1 OFFSET $2',\n    [limit, offset]\n  );\n  res.json({ data: rows, page, limit, total: rowCount });\n});",
+    "options": [
+      "Added pagination to prevent unbounded result sets and memory exhaustion",
+      "Replaced SELECT * with ordered query for consistent response sorting",
+      "Added query parameter parsing to support client-side filtering"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-034",
+    "track": "backend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this crypto operation slow?",
+    "code": "const crypto = require('crypto');\n\napp.post('/login', express.json(), async (req, res) => {\n  const { email, password } = req.body;\n  const user = await db.query('SELECT * FROM users WHERE email = $1', [email]);\n  if (!user.rows[0]) return res.status(401).end();\n  const hash = crypto.pbkdf2Sync(\n    password, user.rows[0].salt, 600000, 64, 'sha512'\n  ).toString('hex');\n  if (hash !== user.rows[0].hash) return res.status(401).end();\n  res.json({ token: generateToken(user.rows[0]) });\n});",
+    "options": [
+      "600000 iterations is excessive -- reduce to 10000 for acceptable speed",
+      "toString('hex') on a 64-byte buffer is slow -- use base64 encoding instead",
+      "pbkdf2Sync blocks the event loop -- use async pbkdf2 to keep handling requests"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-035",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the N+1 query problem.",
+    "code": "app.get('/api/posts', async (req, res) => {\n  const posts = await knex('posts').select('*').limit(50);\n  const result = [];\n  for (const post of posts) {\n    const author = await knex('users').where({ id: post.author_id }).first();\n    result.push({ ...post, author });\n  }\n  res.json(result);\n});",
+    "options": [
+      "knex('users').where runs inside a loop -- use a JOIN or whereIn to batch",
+      ".first() does not limit the SQL query -- it fetches all matching rows",
+      "Spread operator on post creates a shallow copy causing stale data"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-036",
+    "track": "backend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this error handler respond?",
+    "code": "app.get('/api/item/:id', async (req, res, next) => {\n  try {\n    const item = await db.findById(req.params.id);\n    if (!item) {\n      const err = new Error('Not found');\n      err.status = 404;\n      throw err;\n    }\n    res.json(item);\n  } catch (err) {\n    next(err);\n  }\n});\n\napp.use((err, req, res, next) => {\n  res.status(err.status || 500).json({ message: err.message });\n});",
+    "options": [
+      "500 Internal Server Error with message 'Not found'",
+      "404 Not Found with message 'Not found'",
+      "Unhandled rejection -- next(err) does not work in async routes"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-037",
+    "track": "backend",
+    "language": "javascript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which file upload approach handles large files?",
+    "code": "// Option A: Buffer in memory\napp.post('/upload', express.raw({ limit: '500mb' }), async (req, res) => {\n  await s3.putObject({ Body: req.body, Bucket: 'files', Key: 'file' });\n  res.json({ ok: true });\n});\n\n// Option B: Stream to S3\napp.post('/upload', (req, res) => {\n  const pass = new stream.PassThrough();\n  req.pipe(pass);\n  s3.upload({ Body: pass, Bucket: 'files', Key: 'file' }).promise()\n    .then(() => res.json({ ok: true }));\n});\n\n// Option C: Save to disk then upload\napp.post('/upload', multer({ dest: '/tmp' }).single('file'), async (req, res) => {\n  await s3.putObject({ Body: fs.readFileSync(req.file.path), Bucket: 'files', Key: 'file' });\n  res.json({ ok: true });\n});",
+    "options": [
+      "A -- raw body parser handles binary data most efficiently",
+      "C -- temp file avoids memory pressure during the upload phase",
+      "B -- streaming pipes data directly to S3 without buffering the whole file"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-038",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "How many concurrent requests run?",
+    "code": "const pLimit = require('p-limit');\nconst limit = pLimit(3);\n\nconst urls = ['/a', '/b', '/c', '/d', '/e'];\n\nconst results = await Promise.all(\n  urls.map(url => limit(() => fetch(url).then(r => r.json())))\n);\n\nconsole.log(results.length);",
+    "options": [
+      "5 -- Promise.all ignores the concurrency limiter",
+      "3 at a time -- p-limit caps concurrent executions, then runs remaining",
+      "1 -- limit() serializes all calls into a single queue"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-039",
+    "track": "backend",
+    "language": "javascript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the security issue in this JWT check.",
+    "code": "const jwt = require('jsonwebtoken');\n\nfunction authMiddleware(req, res, next) {\n  const token = req.headers.authorization?.split(' ')[1];\n  if (!token) return res.status(401).end();\n  try {\n    const decoded = jwt.decode(token);\n    req.user = decoded;\n    next();\n  } catch (err) {\n    res.status(403).json({ error: 'Invalid token' });\n  }\n}",
+    "options": [
+      "split(' ')[1] fails when Authorization header uses lowercase 'bearer'",
+      "jwt.decode does not verify the signature -- use jwt.verify with the secret",
+      "try/catch is unnecessary because jwt.decode never throws"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-040",
+    "track": "backend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What did this optimization fix?",
+    "code": "// BEFORE:\napp.get('/api/feed', async (req, res) => {\n  const posts = await Post.find().populate('author').populate('comments');\n  res.json(posts);\n});\n\n// AFTER:\napp.get('/api/feed', async (req, res) => {\n  const posts = await Post.find()\n    .select('title body createdAt author')\n    .populate('author', 'name avatar')\n    .sort('-createdAt')\n    .limit(20)\n    .lean();\n  res.json(posts);\n});",
+    "options": [
+      "Replaced populate with manual joins for better query planning",
+      "Added field selection, limit, and lean() to reduce data transfer and memory use",
+      "Removed comments populate to fix a circular reference in serialization"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-041",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the connection leak.",
+    "code": "const { Client } = require('pg');\n\napp.get('/api/stats', async (req, res) => {\n  const client = new Client(connectionString);\n  await client.connect();\n  const result = await client.query('SELECT COUNT(*) FROM events');\n  res.json({ count: result.rows[0].count });\n});",
+    "options": [
+      "Client should use Pool instead for connection reuse",
+      "COUNT(*) returns a string, not a number -- needs parseInt",
+      "client.end() is never called -- connection stays open after each request"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-042",
+    "track": "backend",
+    "language": "javascript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which approach handles scheduled jobs reliably?",
+    "code": "// Option A: setInterval\nsetInterval(async () => {\n  await processExpiredSubscriptions();\n}, 60000);\n\n// Option B: Bull queue with repeatable job\nconst queue = new Bull('subscriptions', { redis: redisConfig });\nqueue.add('check-expired', {}, { repeat: { every: 60000 } });\nqueue.process('check-expired', async () => {\n  await processExpiredSubscriptions();\n});\n\n// Option C: Cron file\n// crontab: * * * * * node /app/check-expired.js",
+    "options": [
+      "C -- cron is battle-tested and avoids Node.js memory leaks",
+      "A -- setInterval is simplest and runs in the same process",
+      "B -- Bull queue persists jobs in Redis with retries and distributed locking"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-043",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the unhandled rejection.",
+    "code": "const express = require('express');\nconst app = express();\n\napp.get('/api/process', (req, res) => {\n  doAsyncWork(req.query.id)\n    .then(result => res.json(result));\n});\n\nasync function doAsyncWork(id) {\n  const data = await fetchRemote(id);\n  if (!data) throw new Error('Not found');\n  return transform(data);\n}",
+    "options": [
+      "doAsyncWork returns a promise but the rejection is never caught with .catch()",
+      "fetchRemote might return undefined which crashes transform()",
+      "Express requires async route handlers to use the async keyword"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-044",
+    "track": "backend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this middleware log?",
+    "code": "app.use((req, res, next) => {\n  const start = Date.now();\n  res.on('finish', () => {\n    console.log(`${req.method} ${req.url} ${res.statusCode} ${Date.now() - start}ms`);\n  });\n  next();\n});\n\napp.get('/health', (req, res) => {\n  res.status(200).json({ ok: true });\n});\n\n// GET /health is called",
+    "options": [
+      "Nothing -- res 'finish' event fires before the listener is attached",
+      "GET /health 200 <elapsed>ms",
+      "GET /health undefined <elapsed>ms"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-045",
+    "track": "backend",
+    "language": "javascript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which approach handles real-time notifications?",
+    "code": "// Option A: Client polls every 5 seconds\nsetInterval(async () => {\n  const res = await fetch('/api/notifications');\n  const data = await res.json();\n  updateUI(data);\n}, 5000);\n\n// Option B: WebSocket connection\nconst ws = new WebSocket('ws://server/notifications');\nws.onmessage = (e) => updateUI(JSON.parse(e.data));\n\n// Option C: Long polling\nasync function poll() {\n  const res = await fetch('/api/notifications?wait=true');\n  updateUI(await res.json());\n  poll();\n}",
+    "options": [
+      "A -- polling is simple and works behind any proxy or firewall",
+      "B -- WebSocket gives instant push delivery with a persistent connection",
+      "C -- long polling minimizes requests while using standard HTTP"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-046",
+    "track": "backend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why does this regex cause timeouts?",
+    "code": "app.post('/api/validate', express.json(), (req, res) => {\n  const emailRegex = /^([a-zA-Z0-9]+[._-])*[a-zA-Z0-9]+@([a-zA-Z0-9]+[._-])*[a-zA-Z0-9]+\\.[a-zA-Z]{2,}$/;\n  const isValid = emailRegex.test(req.body.email);\n  res.json({ valid: isValid });\n});",
+    "options": [
+      "Regex is too permissive -- it matches invalid email formats",
+      "Nested quantifiers cause catastrophic backtracking on malformed input",
+      "emailRegex should be compiled once outside the handler, not on each request"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-047",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this upsert return?",
+    "code": "const knex = require('knex')(config);\n\nconst result = await knex('settings')\n  .insert({ key: 'theme', value: 'dark' })\n  .onConflict('key')\n  .merge()\n  .returning('*');\n\n// Row with key='theme' already exists with value='light'\nconsole.log(result[0].value);",
+    "options": [
+      "light -- merge keeps the existing row unchanged",
+      "Throws a unique constraint violation error",
+      "dark -- onConflict merge updates the row with the new value"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-048",
+    "track": "backend",
+    "language": "javascript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this architectural change improve?",
+    "code": "// BEFORE:\napp.post('/api/orders', async (req, res) => {\n  const order = await createOrder(req.body);\n  await chargePayment(order);\n  await sendConfirmationEmail(order);\n  await updateInventory(order);\n  res.status(201).json(order);\n});\n\n// AFTER:\napp.post('/api/orders', async (req, res) => {\n  const order = await createOrder(req.body);\n  await eventBus.publish('order.created', order);\n  res.status(201).json(order);\n});\n// Separate consumers handle payment, email, and inventory",
+    "options": [
+      "Moved to event-driven architecture -- decouples services and improves resilience",
+      "Reduced the number of await calls to improve response time",
+      "Replaced direct function calls with pub/sub for better error logging"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-049",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What values does this produce?",
+    "code": "const { Worker, isMainThread, parentPort } = require('worker_threads');\n\nif (isMainThread) {\n  const worker = new Worker(__filename);\n  worker.on('message', (msg) => console.log('main:', msg));\n  worker.postMessage('ping');\n} else {\n  parentPort.on('message', (msg) => {\n    parentPort.postMessage(msg.toUpperCase());\n  });\n}",
+    "options": [
+      "main: ping -- worker echoes the message unchanged",
+      "main: PING -- worker uppercases and posts back to main",
+      "Throws -- postMessage cannot send strings, only structured cloneable data"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-050",
+    "track": "backend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this graceful shutdown fail?",
+    "code": "const server = app.listen(3000);\n\nprocess.on('SIGTERM', () => {\n  console.log('Shutting down...');\n  server.close();\n  process.exit(0);\n});\n\n// Active connections with keep-alive",
+    "options": [
+      "server.close() only stops new connections -- existing keep-alive sockets prevent exit",
+      "SIGTERM handler should use process.kill instead of process.exit",
+      "process.exit(0) runs before server.close completes its callback"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-051",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why does this aggregation time out?",
+    "code": "app.get('/api/analytics', async (req, res) => {\n  const result = await db.query(`\n    SELECT DATE_TRUNC('day', created_at) AS day,\n           COUNT(*) AS total,\n           COUNT(DISTINCT user_id) AS unique_users\n    FROM events\n    WHERE created_at > NOW() - INTERVAL '90 days'\n    GROUP BY day\n    ORDER BY day\n  `);\n  res.json(result.rows);\n});",
+    "options": [
+      "DATE_TRUNC prevents index usage on created_at -- use a range scan with a covering index",
+      "COUNT(DISTINCT user_id) requires a sort per group -- use HyperLogLog or precompute",
+      "90-day window scans millions of rows -- partition the table or use a materialized view"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-052",
+    "track": "backend",
+    "language": "javascript",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the authorization flaw.",
+    "code": "app.put('/api/posts/:id', auth, async (req, res) => {\n  const post = await Post.findById(req.params.id);\n  if (!post) return res.status(404).end();\n  Object.assign(post, req.body);\n  await post.save();\n  res.json(post);\n});",
+    "options": [
+      "Object.assign allows overwriting author_id -- no ownership check before update",
+      "findById should use findByIdAndUpdate for atomic updates",
+      "post.save() does not validate schema changes made via Object.assign"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-053",
+    "track": "backend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which caching pattern avoids thundering herd?",
+    "code": "// Option A: Cache-aside\napp.get('/api/product/:id', async (req, res) => {\n  let product = await redis.get(`product:${req.params.id}`);\n  if (!product) {\n    product = await db.query('SELECT * FROM products WHERE id = $1', [req.params.id]);\n    await redis.set(`product:${req.params.id}`, JSON.stringify(product), 'EX', 300);\n  }\n  res.json(product);\n});\n\n// Option B: Cache-aside with lock\napp.get('/api/product/:id', async (req, res) => {\n  let product = await redis.get(`product:${req.params.id}`);\n  if (!product) {\n    const lock = await redis.set(`lock:product:${req.params.id}`, '1', 'EX', 5, 'NX');\n    if (lock) {\n      product = await db.query('SELECT * FROM products WHERE id = $1', [req.params.id]);\n      await redis.set(`product:${req.params.id}`, JSON.stringify(product), 'EX', 300);\n    } else {\n      await sleep(50);\n      product = await redis.get(`product:${req.params.id}`);\n    }\n  }\n  res.json(product);\n});\n\n// Option C: No cache\napp.get('/api/product/:id', async (req, res) => {\n  const product = await db.query('SELECT * FROM products WHERE id = $1', [req.params.id]);\n  res.json(product);\n});",
+    "options": [
+      "A -- simple cache-aside is sufficient with short TTL values",
+      "C -- no cache avoids stale data and is simpler to reason about",
+      "B -- Redis lock prevents multiple concurrent DB queries on cache miss"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-054",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the deadlock condition.",
+    "code": "app.post('/api/transfer', async (req, res) => {\n  const { fromId, toId, amount } = req.body;\n  const trx = await knex.transaction();\n  try {\n    await trx('accounts').where({ id: fromId }).forUpdate().first();\n    await trx('accounts').where({ id: toId }).forUpdate().first();\n    await trx('accounts').where({ id: fromId }).decrement('balance', amount);\n    await trx('accounts').where({ id: toId }).increment('balance', amount);\n    await trx.commit();\n    res.json({ ok: true });\n  } catch (err) {\n    await trx.rollback();\n    res.status(500).end();\n  }\n});",
+    "options": [
+      "forUpdate() locks are unnecessary -- decrement/increment are already atomic",
+      "Two separate forUpdate queries should be combined into a single whereIn",
+      "Concurrent transfers A->B and B->A lock rows in opposite order causing deadlock"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-055",
+    "track": "backend",
+    "language": "javascript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which WebSocket architecture scales horizontally?",
+    "code": "// Option A: In-process broadcast\nconst clients = new Set();\nwss.on('connection', (ws) => {\n  clients.add(ws);\n  ws.on('message', (msg) => {\n    clients.forEach(c => c.send(msg));\n  });\n  ws.on('close', () => clients.delete(ws));\n});\n\n// Option B: Redis pub/sub adapter\nconst sub = redis.duplicate();\nsub.subscribe('chat');\nwss.on('connection', (ws) => {\n  ws.on('message', (msg) => redis.publish('chat', msg));\n  sub.on('message', (ch, msg) => ws.send(msg));\n  ws.on('close', () => {});\n});\n\n// Option C: Database polling\nwss.on('connection', (ws) => {\n  setInterval(async () => {\n    const msgs = await db.query('SELECT * FROM messages WHERE ts > $1', [lastCheck]);\n    msgs.rows.forEach(m => ws.send(JSON.stringify(m)));\n  }, 1000);\n});",
+    "options": [
+      "A -- in-process Set has the lowest latency for broadcasting",
+      "C -- database polling ensures message persistence and durability",
+      "B -- Redis pub/sub syncs messages across multiple server instances"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-056",
+    "track": "backend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this stream pipeline output?",
+    "code": "const { pipeline, Readable, Transform } = require('stream');\n\nconst source = Readable.from(['hello', ' ', 'world']);\nconst upper = new Transform({\n  transform(chunk, enc, cb) {\n    cb(null, chunk.toString().toUpperCase());\n  }\n});\n\nconst chunks = [];\nupper.on('data', (c) => chunks.push(c.toString()));\n\nawait pipeline(source, upper);\nconsole.log(chunks.join(''));",
+    "options": [
+      "hello world",
+      "HELLO WORLD",
+      "Throws -- pipeline requires a writable destination as the last argument"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-057",
+    "track": "backend",
+    "language": "javascript",
+    "category": "databases",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the subtle data integrity bug.",
+    "code": "app.post('/api/checkout', async (req, res) => {\n  const { cartId } = req.body;\n  const items = await knex('cart_items').where({ cart_id: cartId });\n  const prices = await knex('products').whereIn('id', items.map(i => i.product_id));\n\n  const total = items.reduce((sum, item) => {\n    const price = prices.find(p => p.id === item.product_id);\n    return sum + price.amount * item.quantity;\n  }, 0);\n\n  await knex('orders').insert({ cart_id: cartId, total });\n  res.json({ total });\n});",
+    "options": [
+      "prices.find returns undefined if a product was deleted between the two queries",
+      "reduce uses floating-point math -- total accumulates rounding errors on currency",
+      "Cart and prices are read without a transaction -- price can change between reads"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-058",
+    "track": "backend",
+    "language": "javascript",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What does this AbortController pattern produce?",
+    "code": "const ac = new AbortController();\n\nsetTimeout(() => ac.abort(), 50);\n\ntry {\n  const res = await fetch('http://slow-api.example.com/data', {\n    signal: ac.signal\n  });\n  console.log('status:', res.status);\n} catch (err) {\n  console.log('name:', err.name);\n}",
+    "options": [
+      "name: AbortError",
+      "name: TimeoutError",
+      "status: 408"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-059",
+    "track": "backend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "Why does this JSON serialization block the event loop?",
+    "code": "app.get('/api/export', async (req, res) => {\n  const rows = await db.query('SELECT * FROM audit_log');\n  const payload = rows.rows.map(r => ({\n    ...r,\n    metadata: JSON.parse(r.metadata),\n    timestamp: new Date(r.created_at).toISOString()\n  }));\n  res.setHeader('Content-Type', 'application/json');\n  res.end(JSON.stringify(payload));\n});",
+    "options": [
+      "JSON.parse inside .map is O(n*m) where m is metadata size",
+      "Large payload JSON.stringify blocks the event loop -- stream with JSONStream instead",
+      "new Date().toISOString() allocates excessive short-lived objects triggering GC pauses"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-be-060",
+    "track": "backend",
+    "language": "javascript",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What did this refactor improve?",
+    "code": "// BEFORE:\napp.post('/api/upload', multer().single('avatar'), async (req, res) => {\n  await s3.putObject({\n    Bucket: 'avatars',\n    Key: req.file.originalname,\n    Body: req.file.buffer\n  });\n  res.json({ url: `https://cdn.example.com/${req.file.originalname}` });\n});\n\n// AFTER:\napp.post('/api/upload', multer().single('avatar'), async (req, res) => {\n  const ext = path.extname(req.file.originalname);\n  const key = `${crypto.randomUUID()}${ext}`;\n  await s3.putObject({\n    Bucket: 'avatars',\n    Key: key,\n    Body: req.file.buffer,\n    ContentType: req.file.mimetype\n  });\n  res.json({ url: `https://cdn.example.com/${key}` });\n});",
+    "options": [
+      "Added ContentType header for correct MIME type serving from the CDN",
+      "Replaced user-controlled filename with UUID to prevent overwrites and path injection",
+      "Used path.extname to validate the file extension before uploading"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  }
+]

@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "ts-fe-001",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does the counter always show 1 after rapid clicks?",
+    "code": "function Counter() {\n  const [count, setCount] = useState(0);\n\n  const handleClick = () => {\n    setCount(count + 1);\n    setCount(count + 1);\n    setCount(count + 1);\n  };\n\n  return <button onClick={handleClick}>{count}</button>;\n}",
+    "options": [
+      "setCount batches and uses stale closure value of count",
+      "useState is not re-entrant during event handlers",
+      "React ignores duplicate setState calls in the same tick"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-002",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What renders on screen after clicking the button once?",
+    "code": "function Toggle() {\n  const [on, setOn] = useState(false);\n\n  return (\n    <div>\n      <button onClick={() => setOn(!on)}>Toggle</button>\n      {on && <p>Visible</p>}\n      {!on && <p>Hidden</p>}\n    </div>\n  );\n}",
+    "options": [
+      "Toggle button and \"Visible\"",
+      "Toggle button and \"Hidden\"",
+      "Toggle button, \"Visible\", and \"Hidden\""
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-003",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What causes unnecessary re-renders in this component?",
+    "code": "function List({ items }: { items: string[] }) {\n  const sorted = items.sort();\n\n  return (\n    <ul>\n      {sorted.map((item) => (\n        <li key={item}>{item}</li>\n      ))}\n    </ul>\n  );\n}",
+    "options": [
+      ".sort() mutates the original array, causing parent re-renders",
+      "Using string values as keys is slower than indices",
+      "sorted is recalculated on every render without memoization"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-004",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does the effect run on every render despite the deps array?",
+    "code": "function Search({ filters }: { filters: { q: string } }) {\n  useEffect(() => {\n    fetchResults(filters);\n  }, [filters]);\n\n  return <div>...</div>;\n}",
+    "options": [
+      "Parent creates a new filters object each render, failing reference equality",
+      "useEffect deps comparison doesn't work with object types",
+      "fetchResults is not wrapped in useCallback"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-005",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "css_layout",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What layout does this CSS produce for 3 child divs?",
+    "code": "const Container = styled.div`\n  display: flex;\n  flex-wrap: wrap;\n  gap: 10px;\n`;\n\nconst Item = styled.div`\n  flex: 1 1 300px;\n  min-width: 0;\n`;",
+    "options": [
+      "Responsive row that wraps items at 300px each",
+      "Three equal columns that never wrap",
+      "A single column of 300px-wide stacked items"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-006",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "accessibility",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "What accessibility issue exists in this custom button?",
+    "code": "function IconButton({ onClick, icon }: Props) {\n  return (\n    <div\n      className=\"icon-btn\"\n      onClick={onClick}\n      style={{ cursor: 'pointer' }}\n    >\n      <img src={icon} />\n    </div>\n  );\n}",
+    "options": [
+      "Missing role, tabIndex, aria-label, and keyboard handler",
+      "Should use <span> instead of <div> for inline elements",
+      "The img tag needs a width and height for layout stability"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-007",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "state_management",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does the interval always log 0?",
+    "code": "function Timer() {\n  const [seconds, setSeconds] = useState(0);\n\n  useEffect(() => {\n    const id = setInterval(() => {\n      console.log(seconds);\n      setSeconds(seconds + 1);\n    }, 1000);\n    return () => clearInterval(id);\n  }, []);\n\n  return <span>{seconds}</span>;\n}",
+    "options": [
+      "The closure captures the initial seconds value; use functional update",
+      "setInterval is not compatible with React's batching system",
+      "useEffect with [] runs before state is initialized"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-008",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does adding React.memo() change for this component?",
+    "code": "const UserCard = React.memo(({ user }: { user: User }) => (\n  <div className=\"card\">\n    <h2>{user.name}</h2>\n    <p>{user.email}</p>\n  </div>\n));\n\n// Parent re-renders frequently\n<UserCard user={{ name: 'Ada', email: 'ada@test.com' }} />",
+    "options": [
+      "No change \u2014 inline object literal creates a new reference each render",
+      "UserCard skips re-renders when parent re-renders",
+      "React.memo is ignored for components without state"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-009",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which pattern best handles a list of 10,000 items?",
+    "code": "// Option A:\nitems.map(i => <Row key={i.id} data={i} />)\n\n// Option B:\n<VirtualList\n  height={400}\n  itemCount={items.length}\n  itemSize={35}\n  renderItem={({ index }) => <Row data={items[index]} />}\n/>",
+    "options": [
+      "Option B \u2014 virtualizes the list, rendering only visible rows",
+      "Option A \u2014 React's reconciler handles large lists efficiently",
+      "Both perform the same with React.memo on Row"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-010",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does the ref.current value log on mount?",
+    "code": "function App() {\n  const ref = useRef<HTMLDivElement>(null);\n\n  useEffect(() => {\n    console.log(ref.current?.offsetHeight);\n  }, []);\n\n  return (\n    <div ref={ref} style={{ height: '100px' }}>\n      Hello\n    </div>\n  );\n}",
+    "options": [
+      "100",
+      "undefined",
+      "0"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-011",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "css_layout",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why doesn't the overlay cover the full viewport?",
+    "code": "function Modal({ children }: Props) {\n  return (\n    <div style={{\n      position: 'fixed',\n      top: 0, left: 0,\n      width: '100%', height: '100%',\n      background: 'rgba(0,0,0,0.5)',\n    }}>\n      {children}\n    </div>\n  );\n}\n// Rendered inside a parent with: transform: scale(1);",
+    "options": [
+      "A parent with transform creates a new containing block for fixed elements",
+      "width/height 100% doesn't include scrollbars",
+      "position: fixed requires z-index to layer above other content"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-012",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "accessibility",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does adding aria-live=\"polite\" change here?",
+    "code": "function Notification({ message }: { message: string }) {\n  return (\n    <div\n      role=\"status\"\n      aria-live=\"polite\"\n      className=\"toast\"\n    >\n      {message}\n    </div>\n  );\n}",
+    "options": [
+      "Screen readers announce content changes without interrupting the user",
+      "The element becomes focusable by assistive technologies",
+      "It delays rendering until the previous announcement finishes"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-013",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "state_management",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Why does this reducer lose updates under concurrent mode?",
+    "code": "const reducer = (state: State, action: Action) => {\n  switch (action.type) {\n    case 'add':\n      state.items.push(action.payload);\n      return { ...state };\n    case 'clear':\n      return { items: [] };\n  }\n};",
+    "options": [
+      "push() mutates state.items in place; spread only shallow-copies the top level",
+      "switch without default causes TypeScript to infer never type",
+      "The reducer isn't wrapped in useCallback, causing stale references"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-014",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What value does the input show after typing \"hello\"?",
+    "code": "function Input() {\n  const [value, setValue] = useState('');\n\n  return (\n    <input\n      value={value}\n      onChange={(e) => setValue(e.target.value.toUpperCase())}\n    />\n  );\n}",
+    "options": [
+      "HELLO",
+      "hello",
+      "Hello"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-015",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What causes the performance issue in this component?",
+    "code": "function Dashboard({ data }: { data: Item[] }) {\n  const processed = data\n    .filter(d => d.active)\n    .sort((a, b) => b.score - a.score)\n    .map(d => ({ ...d, rank: 0 }));\n\n  return <Chart data={processed} />;\n}",
+    "options": [
+      "processed is recalculated every render; wrap with useMemo",
+      ".sort() should use a web worker for large arrays",
+      "Spreading objects in .map() triggers garbage collection pauses"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-016",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this form submit twice in development?",
+    "code": "function Form() {\n  useEffect(() => {\n    const form = document.getElementById('myForm');\n    form?.addEventListener('submit', handleSubmit);\n    return () => form?.removeEventListener('submit', handleSubmit);\n  }, []);\n\n  return <form id=\"myForm\"><button type=\"submit\">Send</button></form>;\n}",
+    "options": [
+      "React 18 StrictMode double-invokes effects, adding the listener twice",
+      "The native submit event fires before React's synthetic event",
+      "document.getElementById runs before the DOM is painted"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-017",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "css_layout",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What width does the .child element get?",
+    "code": "// CSS:\n// .parent { display: grid; grid-template-columns: 1fr 2fr; width: 900px; gap: 30px; }\n// .child  { grid-column: 2; }\n\nfunction Layout() {\n  return (\n    <div className=\"parent\">\n      <div>Sidebar</div>\n      <div className=\"child\">Content</div>\n    </div>\n  );\n}",
+    "options": [
+      "580px (2/3 of 900px minus gap distribution)",
+      "600px (2/3 of 900px)",
+      "570px (900px - 30px gap, then 2/3)"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-018",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "accessibility",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which pattern correctly manages focus for a modal dialog?",
+    "code": "// Option A:\nuseEffect(() => {\n  const prev = document.activeElement as HTMLElement;\n  dialogRef.current?.focus();\n  return () => prev?.focus();\n}, []);\n\n// Option B:\nuseEffect(() => {\n  dialogRef.current?.querySelector('input')?.focus();\n}, []);",
+    "options": [
+      "Option A \u2014 traps and restores focus on mount/unmount",
+      "Option B \u2014 focusing the first input is sufficient for accessibility",
+      "Both are equivalent; screen readers manage focus automatically"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-019",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Why do list items flicker and lose input state on reorder?",
+    "code": "function SortableList({ items }: { items: Item[] }) {\n  return (\n    <ul>\n      {items.map((item, index) => (\n        <li key={index}>\n          <input defaultValue={item.name} />\n          <span>{item.score}</span>\n        </li>\n      ))}\n    </ul>\n  );\n}",
+    "options": [
+      "Using index as key causes React to reuse wrong DOM nodes on reorder",
+      "defaultValue doesn't update when props change after initial render",
+      "Uncontrolled inputs lose state whenever the parent re-renders"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-020",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What changes when you replace useEffect with useLayoutEffect?",
+    "code": "function Tooltip({ targetRef }: Props) {\n  const [pos, setPos] = useState({ x: 0, y: 0 });\n\n  useLayoutEffect(() => {\n    const rect = targetRef.current?.getBoundingClientRect();\n    if (rect) setPos({ x: rect.left, y: rect.bottom });\n  });\n\n  return <div style={{ position: 'fixed', left: pos.x, top: pos.y }}>Tip</div>;\n}",
+    "options": [
+      "Position is calculated synchronously before paint, preventing flicker",
+      "The effect runs after every commit instead of only on mount",
+      "getBoundingClientRect returns more accurate values in layout phase"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-021",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What renders when count is 0?",
+    "code": "function Badge({ count }: { count: number }) {\n  return (\n    <div>\n      {count && <span className=\"badge\">{count}</span>}\n    </div>\n  );\n}",
+    "options": [
+      "An empty div with no children",
+      "A div containing the number 0",
+      "A div with a span showing 0"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-022",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "state_management",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does clicking the button log?",
+    "code": "function App() {\n  const [count, setCount] = useState(0);\n\n  const handleClick = () => {\n    setCount(1);\n    console.log(count);\n  };\n\n  return <button onClick={handleClick}>{count}</button>;\n}",
+    "options": [
+      "1",
+      "0",
+      "undefined"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-023",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "css_layout",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "How do these two boxes appear?",
+    "code": "function Layout() {\n  return (\n    <div style={{ display: 'flex', justifyContent: 'space-between' }}>\n      <div style={{ width: 100 }}>Left</div>\n      <div style={{ width: 100 }}>Right</div>\n    </div>\n  );\n}",
+    "options": [
+      "Both boxes side by side in the center",
+      "Left box at start, right box at end of the container",
+      "Both boxes stacked vertically"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-024",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "Why is this component slow on every keystroke?",
+    "code": "function Search({ items }: { items: Item[] }) {\n  const [query, setQuery] = useState('');\n\n  const results = items.filter(item =>\n    item.name.toLowerCase().includes(query.toLowerCase())\n  );\n\n  return (\n    <>\n      <input value={query} onChange={e => setQuery(e.target.value)} />\n      <HeavyList data={results} />\n    </>\n  );\n}",
+    "options": [
+      "onChange should be wrapped in useCallback to prevent re-renders",
+      "Filtering runs on every render; debounce the input or memoize results",
+      "toLowerCase() is expensive and should be precomputed"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-025",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "accessibility",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "What accessibility problem does this form have?",
+    "code": "function LoginForm() {\n  return (\n    <form>\n      <span className=\"label\">Email</span>\n      <input type=\"email\" placeholder=\"you@example.com\" />\n      <span className=\"label\">Password</span>\n      <input type=\"password\" placeholder=\"********\" />\n      <button type=\"submit\">Log in</button>\n    </form>\n  );\n}",
+    "options": [
+      "Inputs lack autocomplete attributes for password managers",
+      "Using <span> instead of <label> leaves inputs unlabeled for screen readers",
+      "The form needs role=\"form\" and an aria-labelledby attribute"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-026",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this async effect cause a memory leak warning?",
+    "code": "function UserProfile({ userId }: { userId: string }) {\n  const [user, setUser] = useState<User | null>(null);\n\n  useEffect(() => {\n    fetch(`/api/users/${userId}`)\n      .then(res => res.json())\n      .then(data => setUser(data));\n  }, [userId]);\n\n  return <div>{user?.name}</div>;\n}",
+    "options": [
+      "fetch needs to be wrapped in an async IIFE inside useEffect",
+      "setUser is called after unmount if the component unmounts before fetch resolves",
+      "The dependency array should include setUser to prevent stale closures"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-027",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does the child component not re-render on prop change?",
+    "code": "function Parent() {\n  const config = useRef({ theme: 'dark' });\n\n  const toggleTheme = () => {\n    config.current.theme = config.current.theme === 'dark' ? 'light' : 'dark';\n  };\n\n  return (\n    <>\n      <button onClick={toggleTheme}>Toggle</button>\n      <Child config={config.current} />\n    </>\n  );\n}",
+    "options": [
+      "config.current is the same object reference, so Child sees no prop change",
+      "useRef values are not accessible to child components",
+      "Mutating ref.current triggers a re-render only for the parent"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-028",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What changes when switching from useState to useReducer?",
+    "code": "// Before:\nconst [items, setItems] = useState<Item[]>([]);\nconst add = (item: Item) => setItems([...items, item]);\nconst remove = (id: string) => setItems(items.filter(i => i.id !== id));\n\n// After:\nconst [items, dispatch] = useReducer(itemReducer, []);\nconst add = (item: Item) => dispatch({ type: 'add', payload: item });\nconst remove = (id: string) => dispatch({ type: 'remove', payload: id });",
+    "options": [
+      "useReducer is always faster because it batches updates differently",
+      "dispatch is stable across renders, avoiding stale closure bugs in callbacks",
+      "The reducer runs outside the component, preventing re-renders on dispatch"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-029",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "css_layout",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does the text overflow its container?",
+    "code": "function Card({ title }: { title: string }) {\n  return (\n    <div style={{ width: 200, border: '1px solid #ccc', padding: 16 }}>\n      <h3 style={{ whiteSpace: 'nowrap' }}>{title}</h3>\n    </div>\n  );\n}",
+    "options": [
+      "padding adds to the 200px width, making the box larger than expected",
+      "whiteSpace: 'nowrap' prevents text from wrapping, so long titles overflow",
+      "h3 has default margins that push content outside the container"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-030",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which approach scales for real-time data updates?",
+    "code": "// Option A:\nuseEffect(() => {\n  const id = setInterval(async () => {\n    const data = await fetch('/api/prices').then(r => r.json());\n    setPrices(data);\n  }, 1000);\n  return () => clearInterval(id);\n}, []);\n\n// Option B:\nuseEffect(() => {\n  const ws = new WebSocket('wss://api/prices');\n  ws.onmessage = (e) => setPrices(JSON.parse(e.data));\n  return () => ws.close();\n}, []);",
+    "options": [
+      "Option A \u2014 polling is more reliable than WebSocket connections",
+      "Both scale equally if the server can handle the request rate",
+      "Option B \u2014 WebSocket pushes updates without repeated HTTP overhead"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-031",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "accessibility",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "What accessibility issue does this tab component have?",
+    "code": "function Tabs({ tabs }: { tabs: Tab[] }) {\n  const [active, setActive] = useState(0);\n\n  return (\n    <div>\n      <div className=\"tab-list\">\n        {tabs.map((tab, i) => (\n          <div\n            key={i}\n            className={i === active ? 'tab active' : 'tab'}\n            onClick={() => setActive(i)}\n          >\n            {tab.label}\n          </div>\n        ))}\n      </div>\n      <div>{tabs[active].content}</div>\n    </div>\n  );\n}",
+    "options": [
+      "The tab list div should use display: flex for proper alignment",
+      "Active tab styling should use a CSS class instead of inline ternary",
+      "Missing role=\"tablist\", role=\"tab\", aria-selected, and keyboard navigation"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-032",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What logs when the component mounts?",
+    "code": "function App() {\n  const [count, setCount] = useState(0);\n\n  useEffect(() => {\n    console.log('A');\n    return () => console.log('B');\n  }, []);\n\n  useEffect(() => {\n    console.log('C');\n  });\n\n  return <div>{count}</div>;\n}",
+    "options": [
+      "A then B then C",
+      "C then A",
+      "A then C"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-033",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this component render?",
+    "code": "function Greeting({ name }: { name?: string }) {\n  return (\n    <div>\n      <h1>Hello, {name ?? 'Guest'}!</h1>\n      <p>Welcome {name || 'back'}.</p>\n    </div>\n  );\n}\n\n// Usage: <Greeting name=\"\" />",
+    "options": [
+      "\"Hello, Guest!\" and \"Welcome back.\"",
+      "\"Hello, !\" and \"Welcome .\"",
+      "\"Hello, !\" and \"Welcome back.\""
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-034",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does the context value never update for consumers?",
+    "code": "const ThemeContext = createContext('light');\n\nfunction ThemeProvider({ children }: Props) {\n  let theme = 'light';\n\n  const toggle = () => {\n    theme = theme === 'light' ? 'dark' : 'light';\n  };\n\n  return (\n    <ThemeContext.Provider value={theme}>\n      <button onClick={toggle}>Toggle</button>\n      {children}\n    </ThemeContext.Provider>\n  );\n}",
+    "options": [
+      "createContext default value overrides the Provider value",
+      "ThemeContext.Provider needs a key prop to trigger re-renders",
+      "theme is a local variable, not state; mutating it doesn't cause re-renders"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-035",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "css_layout",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What changes when switching to CSS Grid here?",
+    "code": "// Before:\n<div style={{ display: 'flex', flexWrap: 'wrap' }}>\n  {cards.map(c => <Card key={c.id} style={{ width: '33.33%' }} />)}\n</div>\n\n// After:\n<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>\n  {cards.map(c => <Card key={c.id} />)}\n</div>",
+    "options": [
+      "Grid is slower because it calculates all cell positions upfront",
+      "Cards no longer need explicit width; grid handles responsive columns automatically",
+      "Grid removes the ability to have variable-width cards"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-036",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What is the performance problem in this context provider?",
+    "code": "function AppProvider({ children }: Props) {\n  const [user, setUser] = useState<User | null>(null);\n  const [theme, setTheme] = useState('light');\n\n  return (\n    <AppContext.Provider value={{ user, setUser, theme, setTheme }}>\n      {children}\n    </AppContext.Provider>\n  );\n}",
+    "options": [
+      "A new value object is created every render, re-rendering all consumers",
+      "useState should be replaced with useReducer for complex state",
+      "children prop causes the provider to re-render on every parent update"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-037",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "accessibility",
+    "difficulty": 1,
+    "type": "diff",
+    "prompt": "What improves when adding alt text to images?",
+    "code": "// Before:\n<img src=\"/hero.jpg\" />\n\n// After:\n<img src=\"/hero.jpg\" alt=\"Team collaborating around a whiteboard\" />",
+    "options": [
+      "The image loads faster because the browser can optimize rendering",
+      "Screen readers describe the image content to visually impaired users",
+      "Search engines can index the page but accessibility is unchanged"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-038",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this component crash on initial render?",
+    "code": "function UserList() {\n  const { data } = useQuery<User[]>({ queryKey: ['users'], queryFn: fetchUsers });\n\n  return (\n    <ul>\n      {data.map(user => (\n        <li key={user.id}>{user.name}</li>\n      ))}\n    </ul>\n  );\n}",
+    "options": [
+      "useQuery returns stale data from a previous render cycle",
+      "fetchUsers is not wrapped in useCallback causing infinite refetches",
+      "data is undefined before the query resolves; needs a loading check"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-039",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does the portal render in the wrong location?",
+    "code": "function Tooltip({ children, content }: Props) {\n  const [show, setShow] = useState(false);\n  const el = document.createElement('div');\n\n  useEffect(() => {\n    document.body.appendChild(el);\n    return () => { document.body.removeChild(el); };\n  }, []);\n\n  return (\n    <div onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>\n      {children}\n      {show && createPortal(<div className=\"tip\">{content}</div>, el)}\n    </div>\n  );\n}",
+    "options": [
+      "createPortal doesn't work with dynamically created elements",
+      "A new el is created on every render; move document.createElement into a ref",
+      "The portal should target document.body directly, not a child element"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-040",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "state_management",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which state management pattern scales for large apps?",
+    "code": "// Option A: Prop drilling\n<App user={user} theme={theme}>\n  <Layout user={user} theme={theme}>\n    <Sidebar user={user} theme={theme} />\n  </Layout>\n</App>\n\n// Option B: Zustand store\nconst useStore = create<Store>((set) => ({\n  user: null,\n  theme: 'light',\n  setUser: (user) => set({ user }),\n  setTheme: (theme) => set({ theme }),\n}));",
+    "options": [
+      "Option A \u2014 prop drilling is more predictable and testable",
+      "Both are equivalent; React optimizes prop passing internally",
+      "Option B \u2014 components subscribe to slices, avoiding unnecessary re-renders"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-041",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "css_layout",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does the sticky header stop working inside this container?",
+    "code": "function Page() {\n  return (\n    <div style={{ overflow: 'auto', height: '100vh' }}>\n      <header style={{ position: 'sticky', top: 0, background: '#fff' }}>\n        Navigation\n      </header>\n      <main style={{ minHeight: '200vh' }}>\n        Content...\n      </main>\n    </div>\n  );\n}\n// Header scrolls away instead of sticking",
+    "options": [
+      "position: sticky doesn't work without a z-index value",
+      "sticky requires the parent to have a defined height via max-height",
+      "The overflow: auto parent creates a new scroll container, which is correct; check for overflow: hidden on an ancestor"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-042",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does adding React.lazy() change here?",
+    "code": "// Before:\nimport { AdminPanel } from './AdminPanel';\n\n// After:\nconst AdminPanel = React.lazy(() => import('./AdminPanel'));\n\nfunction App() {\n  return (\n    <Suspense fallback={<Spinner />}>\n      {isAdmin && <AdminPanel />}\n    </Suspense>\n  );\n}",
+    "options": [
+      "AdminPanel code is split into a separate chunk, loaded only when needed",
+      "AdminPanel renders faster because React precompiles lazy components",
+      "Suspense prevents the entire app from re-rendering while AdminPanel loads"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-043",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "accessibility",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach handles keyboard navigation correctly for a dropdown?",
+    "code": "// Option A:\n<div className=\"dropdown\">\n  <button onClick={() => setOpen(!open)}>Menu</button>\n  {open && <ul>{items.map(i => <li onClick={() => select(i)}>{i}</li>)}</ul>}\n</div>\n\n// Option B:\n<div role=\"listbox\" aria-activedescendant={activeId}>\n  <button aria-haspopup=\"listbox\" aria-expanded={open} onClick={toggle}>Menu</button>\n  {open && <ul role=\"listbox\">\n    {items.map(i => <li role=\"option\" id={i} tabIndex={-1} onKeyDown={handleArrowKeys}>{i}</li>)}\n  </ul>}\n</div>",
+    "options": [
+      "Option A \u2014 simpler markup is better for all users",
+      "Option B \u2014 ARIA roles and keyboard handlers enable assistive technology",
+      "Both are equivalent if onClick handlers are added to all elements"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-044",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What order do these console.logs fire?",
+    "code": "function App() {\n  console.log('render');\n\n  useEffect(() => {\n    console.log('effect');\n  });\n\n  useMemo(() => {\n    console.log('memo');\n    return 42;\n  }, []);\n\n  return <div>Hello</div>;\n}",
+    "options": [
+      "render, effect, memo",
+      "memo, render, effect",
+      "render, memo, effect"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-045",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does adding an ErrorBoundary change here?",
+    "code": "// Before:\nfunction App() {\n  return <UserProfile userId={id} />;\n}\n\n// After:\nfunction App() {\n  return (\n    <ErrorBoundary fallback={<p>Something went wrong.</p>}>\n      <UserProfile userId={id} />\n    </ErrorBoundary>\n  );\n}",
+    "options": [
+      "UserProfile renders faster because errors are caught at compile time",
+      "Runtime errors in UserProfile show fallback UI instead of crashing the app",
+      "ErrorBoundary prevents errors from reaching the console"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-046",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "state_management",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does the todo list not update when adding items?",
+    "code": "function TodoApp() {\n  const [todos, setTodos] = useState<string[]>([]);\n  const [input, setInput] = useState('');\n\n  const addTodo = () => {\n    todos.push(input);\n    setTodos(todos);\n    setInput('');\n  };\n\n  return (\n    <div>\n      <input value={input} onChange={e => setInput(e.target.value)} />\n      <button onClick={addTodo}>Add</button>\n      {todos.map((t, i) => <p key={i}>{t}</p>)}\n    </div>\n  );\n}",
+    "options": [
+      "push() mutates the same array reference; React skips re-render on same ref",
+      "setTodos needs a callback form to access the latest state",
+      "useState arrays must be typed as readonly to prevent mutation"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-047",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "css_layout",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "How does this grid layout render with 5 items?",
+    "code": "function Grid() {\n  return (\n    <div style={{\n      display: 'grid',\n      gridTemplateColumns: 'repeat(3, 1fr)',\n      gap: '1rem',\n    }}>\n      {[1, 2, 3, 4, 5].map(n => <div key={n}>Item {n}</div>)}\n    </div>\n  );\n}",
+    "options": [
+      "5 items in a single row, each taking 1/5 width",
+      "3 items in the first row, 2 items in the second row aligned left",
+      "3 items in the first row, 2 centered items in the second row"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-048",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "Why does this component tree re-render excessively?",
+    "code": "function Parent() {\n  const [count, setCount] = useState(0);\n\n  return (\n    <div>\n      <button onClick={() => setCount(c => c + 1)}>Inc: {count}</button>\n      <ExpensiveChild\n        onAction={() => console.log('action')}\n        config={{ debug: false }}\n      />\n    </div>\n  );\n}",
+    "options": [
+      "ExpensiveChild is not wrapped in React.memo to skip re-renders",
+      "New function and object references on every render defeat React.memo if added",
+      "setCount with functional updater still causes a full component tree re-render"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-049",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "accessibility",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What improves when adding skip navigation?",
+    "code": "// Before:\n<body>\n  <nav>...50 links...</nav>\n  <main>Content</main>\n</body>\n\n// After:\n<body>\n  <a href=\"#main\" className=\"skip-link\">Skip to content</a>\n  <nav>...50 links...</nav>\n  <main id=\"main\" tabIndex={-1}>Content</main>\n</body>",
+    "options": [
+      "Keyboard users can bypass the navigation and jump directly to main content",
+      "Screen readers automatically skip nav elements marked with role=\"navigation\"",
+      "The skip link improves SEO by signaling the primary content area"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-050",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Why does this server component hydration fail?",
+    "code": "// app/page.tsx (Next.js Server Component)\nexport default function Page() {\n  const now = new Date().toLocaleTimeString();\n\n  return (\n    <div>\n      <p>Server time: {now}</p>\n      <ClientCounter />\n    </div>\n  );\n}",
+    "options": [
+      "Server Components cannot import or render Client Components",
+      "toLocaleTimeString differs between server and client, causing a hydration mismatch",
+      "Date objects cannot be serialized across the server-client boundary"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-051",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does switching to a controlled input change?",
+    "code": "// Before:\nfunction Form() {\n  const ref = useRef<HTMLInputElement>(null);\n  const submit = () => console.log(ref.current?.value);\n  return <input ref={ref} defaultValue=\"hello\" />;\n}\n\n// After:\nfunction Form() {\n  const [val, setVal] = useState('hello');\n  const submit = () => console.log(val);\n  return <input value={val} onChange={e => setVal(e.target.value)} />;\n}",
+    "options": [
+      "The controlled input is slower because React processes every keystroke",
+      "The uncontrolled input cannot be used in forms with validation",
+      "React owns the input value, enabling validation, formatting, and conditional updates"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-052",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "state_management",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What does the Zustand selector log after both clicks?",
+    "code": "const useStore = create<Store>((set) => ({\n  count: 0,\n  name: 'Alice',\n  inc: () => set((s) => ({ count: s.count + 1 })),\n  rename: (n: string) => set({ name: n }),\n}));\n\nfunction Display() {\n  const count = useStore((s) => s.count);\n  console.log('render', count);\n  return <span>{count}</span>;\n}\n\n// Click inc(), then rename('Bob')",
+    "options": [
+      "render 0, render 1, render 1",
+      "render 0, render 1",
+      "render 0, render 1, render 2"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-053",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "css_layout",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Why does the absolutely positioned element appear in the wrong place?",
+    "code": "function Popover({ anchorRef }: Props) {\n  return (\n    <div className=\"wrapper\" style={{ overflow: 'hidden' }}>\n      <div\n        style={{\n          position: 'absolute',\n          top: anchorRef.current?.offsetTop ?? 0,\n          left: anchorRef.current?.offsetLeft ?? 0,\n        }}\n      >\n        Popover content\n      </div>\n    </div>\n  );\n}",
+    "options": [
+      "offsetTop/offsetLeft are relative to offsetParent, not the wrapper div",
+      "overflow: hidden clips but does not affect position calculation",
+      "absolute positioning requires the wrapper to have position: relative"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-054",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why does this image gallery feel sluggish on scroll?",
+    "code": "function Gallery({ images }: { images: string[] }) {\n  return (\n    <div className=\"grid\">\n      {images.map((src, i) => (\n        <img key={i} src={src} width={300} height={200} />\n      ))}\n    </div>\n  );\n}\n// 200 images loaded at once",
+    "options": [
+      "img elements should use srcSet for responsive image sizes",
+      "Using index as key prevents React from reusing DOM nodes efficiently",
+      "All 200 images load at once; use loading=\"lazy\" to defer offscreen images"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-055",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "accessibility",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does a screen reader announce for this button?",
+    "code": "function DeleteButton() {\n  return (\n    <button aria-label=\"Delete item\">\n      <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\">\n        <path d=\"M6 19c0 1.1.9 2 2 2h8...\" />\n      </svg>\n    </button>\n  );\n}",
+    "options": [
+      "Nothing \u2014 the button only contains a hidden SVG",
+      "\"image\" followed by the SVG path data",
+      "\"Delete item, button\""
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-056",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this event handler not fire?",
+    "code": "function App() {\n  const handleClick = (e: React.MouseEvent) => {\n    console.log('clicked');\n  };\n\n  return (\n    <button disabled onClick={handleClick}>\n      Click me\n    </button>\n  );\n}",
+    "options": [
+      "React.MouseEvent type is incompatible with button onClick",
+      "disabled buttons do not fire click events in the browser",
+      "onClick must be defined before the disabled attribute"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-057",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this component render when status is \"loading\"?",
+    "code": "function Status({ status }: { status: 'idle' | 'loading' | 'error' | 'success' }) {\n  switch (status) {\n    case 'loading':\n      return <Spinner />;\n    case 'error':\n      return <Alert />;\n    case 'success':\n      return <CheckMark />;\n  }\n\n  return null;\n}",
+    "options": [
+      "null because switch falls through all cases",
+      "<Spinner /> component",
+      "<Spinner /> followed by <Alert /> and <CheckMark />"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-058",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which data-fetching approach avoids waterfalls?",
+    "code": "// Option A:\nfunction Page() {\n  const { data: user } = useQuery({ queryKey: ['user'], queryFn: fetchUser });\n  const { data: posts } = useQuery({\n    queryKey: ['posts', user?.id],\n    queryFn: () => fetchPosts(user!.id),\n    enabled: !!user,\n  });\n  return <Feed user={user} posts={posts} />;\n}\n\n// Option B:\nfunction Page() {\n  const [{ data: user }, { data: posts }] = useQueries({\n    queries: [\n      { queryKey: ['user'], queryFn: fetchUser },\n      { queryKey: ['posts'], queryFn: fetchAllPosts },\n    ],\n  });\n  return <Feed user={user} posts={posts} />;\n}",
+    "options": [
+      "Option A \u2014 dependent queries are more cache-friendly",
+      "Both perform equally because React Query batches all queries",
+      "Option B \u2014 parallel queries avoid waiting for user before fetching posts"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-059",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "css_layout",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does adding box-sizing: border-box change?",
+    "code": "// Before:\n.box { width: 200px; padding: 20px; border: 2px solid; }\n// Rendered width: 244px\n\n// After:\n.box { width: 200px; padding: 20px; border: 2px solid; box-sizing: border-box; }\n// Rendered width: ???",
+    "options": [
+      "200px \u2014 padding and border are included inside the declared width",
+      "240px \u2014 only border is included, padding is still added",
+      "200px \u2014 padding is removed and only border affects the width"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-fe-060",
+    "track": "frontend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why does this Next.js page load slowly?",
+    "code": "// app/dashboard/page.tsx\nimport { Chart } from 'heavy-chart-lib'; // 450KB\nimport { DataTable } from 'full-data-grid'; // 380KB\n\nexport default async function Dashboard() {\n  const data = await fetchDashboardData();\n\n  return (\n    <div>\n      <Chart data={data.chart} />\n      <DataTable rows={data.rows} />\n    </div>\n  );\n}",
+    "options": [
+      "async server components block rendering until fetchDashboardData resolves",
+      "Large client-side libraries in the bundle increase initial JS payload significantly",
+      "Chart and DataTable should be rendered in parallel using Suspense boundaries"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  }
+]

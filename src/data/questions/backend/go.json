@@ -1,0 +1,682 @@
+[
+  {
+    "id": "go-be-001",
+    "track": "backend",
+    "language": "go",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this handler.",
+    "code": "func getUser(w http.ResponseWriter, r *http.Request) {\n\tuser, err := db.FindUser(r.URL.Query().Get(\"id\"))\n\tif err != nil {\n\t\tlog.Println(err)\n\t}\n\tjson.NewEncoder(w).Encode(user)\n}",
+    "options": [
+      "err is logged but handler continues with nil user",
+      "r.URL.Query().Get returns int, not string",
+      "json.NewEncoder should use json.Marshal instead"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-002",
+    "track": "backend",
+    "language": "go",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "func main() {\n\tch := make(chan int, 3)\n\tch <- 1\n\tch <- 2\n\tch <- 3\n\tclose(ch)\n\tfor v := range ch {\n\t\tfmt.Print(v)\n\t}\n}",
+    "options": [
+      "123",
+      "Deadlock — reading from closed channel panics",
+      "123 then blocks forever"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-003",
+    "track": "backend",
+    "language": "go",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the performance issue?",
+    "code": "func ListOrders(db *gorm.DB) ([]Order, error) {\n\tvar orders []Order\n\tdb.Find(&orders)\n\tfor i := range orders {\n\t\tdb.Model(&orders[i]).Association(\"Items\").Find(&orders[i].Items)\n\t\tdb.Model(&orders[i]).Association(\"Customer\").Find(&orders[i].Customer)\n\t}\n\treturn orders, nil\n}",
+    "options": [
+      "gorm.DB is not safe for concurrent use",
+      "Association() returns a copy, not a reference",
+      "N+1 queries — each order triggers two extra queries"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-004",
+    "track": "backend",
+    "language": "go",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "What's wrong with this middleware?",
+    "code": "func authMiddleware(next http.Handler) http.Handler {\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\ttoken := r.Header.Get(\"Authorization\")\n\t\tif token == \"\" {\n\t\t\thttp.Error(w, \"unauthorized\", http.StatusUnauthorized)\n\t\t}\n\t\tctx := context.WithValue(r.Context(), \"user\", parseToken(token))\n\t\tnext.ServeHTTP(w, r.WithContext(ctx))\n\t})\n}",
+    "options": [
+      "context.WithValue key should be an unexported type, not a string",
+      "Missing return after http.Error — handler continues unauthenticated",
+      "r.WithContext creates a new request, original is unchanged"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-005",
+    "track": "backend",
+    "language": "go",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach handles high throughput best?",
+    "code": "// Option A: Direct write\nfunc handleEvent(w http.ResponseWriter, r *http.Request) {\n\tvar e Event\n\tjson.NewDecoder(r.Body).Decode(&e)\n\tdb.Create(&e)\n\tw.WriteHeader(http.StatusCreated)\n}\n\n// Option B: Buffered channel\nvar eventCh = make(chan Event, 10000)\nfunc handleEvent(w http.ResponseWriter, r *http.Request) {\n\tvar e Event\n\tjson.NewDecoder(r.Body).Decode(&e)\n\teventCh <- e\n\tw.WriteHeader(http.StatusAccepted)\n}",
+    "options": [
+      "A — direct write guarantees consistency without channel overhead",
+      "Both are equivalent under high load",
+      "B — buffered channel decouples ingestion from persistence"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-006",
+    "track": "backend",
+    "language": "go",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the race condition.",
+    "code": "type Counter struct {\n\tcount int\n}\n\nfunc (c *Counter) Increment() {\n\tc.count++\n}\n\nfunc main() {\n\tc := &Counter{}\n\tfor i := 0; i < 1000; i++ {\n\t\tgo c.Increment()\n\t}\n\ttime.Sleep(time.Second)\n\tfmt.Println(c.count)\n}",
+    "options": [
+      "time.Sleep is unreliable — use sync.WaitGroup",
+      "Concurrent writes to c.count without sync.Mutex",
+      "Goroutines capture loop variable i by reference"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-007",
+    "track": "backend",
+    "language": "go",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this handler slow?",
+    "code": "func exportCSV(w http.ResponseWriter, r *http.Request) {\n\trows, _ := db.Query(\"SELECT * FROM events\")\n\tdefer rows.Close()\n\tvar events []Event\n\tfor rows.Next() {\n\t\tvar e Event\n\t\trows.Scan(&e.ID, &e.Name, &e.CreatedAt)\n\t\tevents = append(events, e)\n\t}\n\tdata, _ := encodeCSV(events)\n\tw.Write(data)\n}",
+    "options": [
+      "rows.Scan without error check causes silent failures",
+      "db.Query should use db.QueryContext with request context",
+      "Entire result set buffered in memory before writing response"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-008",
+    "track": "backend",
+    "language": "go",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What status code is returned?",
+    "code": "func healthCheck(w http.ResponseWriter, r *http.Request) {\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tjson.NewEncoder(w).Encode(map[string]string{\n\t\t\"status\": \"ok\",\n\t})\n}",
+    "options": [
+      "200 OK — implicit default when no status is set",
+      "204 No Content — no WriteHeader was called",
+      "0 — no status code is sent without WriteHeader"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-009",
+    "track": "backend",
+    "language": "go",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "What's wrong with this transaction?",
+    "code": "func transfer(db *sql.DB, from, to int, amount float64) error {\n\ttx, err := db.Begin()\n\tif err != nil {\n\t\treturn err\n\t}\n\ttx.Exec(\"UPDATE accounts SET balance = balance - $1 WHERE id = $2\", amount, from)\n\ttx.Exec(\"UPDATE accounts SET balance = balance + $1 WHERE id = $2\", amount, to)\n\treturn tx.Commit()\n}",
+    "options": [
+      "Missing tx.Rollback() on error — transaction leaks on failure",
+      "float64 for money causes rounding errors",
+      "$1/$2 placeholders are Postgres-only, not portable"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-010",
+    "track": "backend",
+    "language": "go",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What happens when this runs?",
+    "code": "func main() {\n\tch := make(chan int)\n\tgo func() {\n\t\tfor i := 0; i < 3; i++ {\n\t\t\tch <- i\n\t\t}\n\t}()\n\tfor v := range ch {\n\t\tfmt.Print(v)\n\t}\n}",
+    "options": [
+      "Panics — cannot range over unbuffered channel",
+      "Prints 012 then exits cleanly",
+      "Prints 012 then deadlocks — channel is never closed"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-011",
+    "track": "backend",
+    "language": "go",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which caching strategy scales better?",
+    "code": "// Option A: In-process cache\nvar cache = map[string]Product{}\nvar mu sync.RWMutex\nfunc GetProduct(id string) Product {\n\tmu.RLock()\n\tp, ok := cache[id]\n\tmu.RUnlock()\n\tif ok { return p }\n\t// ... fetch from DB, store in cache\n}\n\n// Option B: Redis cache\nfunc GetProduct(id string) Product {\n\tval, err := rdb.Get(ctx, \"product:\"+id).Result()\n\tif err == nil { return unmarshal(val) }\n\t// ... fetch from DB, store in Redis\n}",
+    "options": [
+      "A — in-process map avoids network latency to Redis",
+      "B — Redis is shared across instances, avoids stale per-process caches",
+      "Both are equivalent — Go maps are optimized for concurrent reads"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-012",
+    "track": "backend",
+    "language": "go",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this JSON parsing.",
+    "code": "type Config struct {\n\thost     string `json:\"host\"`\n\tport     int    `json:\"port\"`\n\tdebug    bool   `json:\"debug\"`\n}\n\nfunc loadConfig(data []byte) (*Config, error) {\n\tvar cfg Config\n\terr := json.Unmarshal(data, &cfg)\n\treturn &cfg, err\n}",
+    "options": [
+      "json.Unmarshal needs a pointer to pointer for structs",
+      "Unexported fields — json package cannot set lowercase fields",
+      "Missing json tags on bool field causes parse error"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-013",
+    "track": "backend",
+    "language": "go",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why does this leak memory?",
+    "code": "func processRequests(ch <-chan Request) {\n\tfor req := range ch {\n\t\tctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)\n\t\tresp, err := http.DefaultClient.Do(req.ToHTTP().WithContext(ctx))\n\t\tif err != nil {\n\t\t\tlog.Println(err)\n\t\t\tcontinue\n\t\t}\n\t\tprocessResponse(resp)\n\t\tcancel()\n\t}\n}",
+    "options": [
+      "http.DefaultClient has no timeout configured",
+      "resp.Body is never closed after processResponse",
+      "cancel() is skipped on error — context leaks on every failure"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-014",
+    "track": "backend",
+    "language": "go",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this change accomplish?",
+    "code": "// Before\nfunc getUsers(c *gin.Context) {\n\tusers, _ := repo.AllUsers()\n\tc.JSON(200, users)\n}\n\n// After\nfunc getUsers(c *gin.Context) {\n\tpage, _ := strconv.Atoi(c.DefaultQuery(\"page\", \"1\"))\n\tlimit, _ := strconv.Atoi(c.DefaultQuery(\"limit\", \"20\"))\n\tusers, total, _ := repo.PaginatedUsers(page, limit)\n\tc.JSON(200, gin.H{\"data\": users, \"total\": total})\n}",
+    "options": [
+      "Adds input validation for query parameters",
+      "Adds pagination to prevent unbounded result sets",
+      "Switches from array response to envelope for error handling"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-015",
+    "track": "backend",
+    "language": "go",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "What's wrong with this query?",
+    "code": "func searchUsers(db *sql.DB, name string) ([]User, error) {\n\tquery := fmt.Sprintf(\"SELECT id, name, email FROM users WHERE name = '%s'\", name)\n\trows, err := db.Query(query)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdefer rows.Close()\n\t// ... scan rows\n}",
+    "options": [
+      "defer rows.Close() should be before the error check",
+      "SQL injection — use parameterized query with $1 placeholder",
+      "fmt.Sprintf is slower than string concatenation for queries"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-016",
+    "track": "backend",
+    "language": "go",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the subtle concurrency bug.",
+    "code": "type SafeMap struct {\n\tmu sync.RWMutex\n\tm  map[string]int\n}\n\nfunc (s *SafeMap) GetOrSet(key string, val int) int {\n\ts.mu.RLock()\n\tif v, ok := s.m[key]; ok {\n\t\ts.mu.RUnlock()\n\t\treturn v\n\t}\n\ts.mu.RUnlock()\n\ts.mu.Lock()\n\ts.m[key] = val\n\ts.mu.Unlock()\n\treturn val\n}",
+    "options": [
+      "TOCTOU race — another goroutine can set key between RUnlock and Lock",
+      "RLock followed by Lock on same goroutine causes deadlock",
+      "map access inside RLock can panic if another goroutine writes"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-017",
+    "track": "backend",
+    "language": "go",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this refactor achieve?",
+    "code": "// Before\nfunc notify(userID int, msg string) {\n\tuser, _ := db.GetUser(userID)\n\tsendEmail(user.Email, msg)\n\tsendSMS(user.Phone, msg)\n\tsendPush(user.DeviceToken, msg)\n}\n\n// After\nfunc notify(userID int, msg string) {\n\tuser, _ := db.GetUser(userID)\n\tevent := NotificationEvent{UserID: userID, Message: msg}\n\tnatsConn.Publish(\"notifications\", marshal(event))\n}",
+    "options": [
+      "Replaces synchronous fan-out with async event-driven delivery",
+      "Reduces database queries by caching user data in NATS",
+      "Adds retry logic for failed notification deliveries"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-018",
+    "track": "backend",
+    "language": "go",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this return?",
+    "code": "func divide(a, b float64) (float64, error) {\n\tif b == 0 {\n\t\treturn 0, fmt.Errorf(\"division by zero\")\n\t}\n\treturn a / b, nil\n}\n\nfunc main() {\n\tresult, err := divide(10, 3)\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\tfmt.Printf(\"%.2f\", result)\n}",
+    "options": [
+      "3.33",
+      "3.34",
+      "3.30"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-019",
+    "track": "backend",
+    "language": "go",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What makes this allocation-heavy?",
+    "code": "func buildResponse(items []Item) string {\n\tresult := \"\"\n\tfor _, item := range items {\n\t\tresult += fmt.Sprintf(\"{\\\"id\\\":%d,\\\"name\\\":\\\"%s\\\"},\", item.ID, item.Name)\n\t}\n\treturn \"[\" + strings.TrimRight(result, \",\") + \"]\"\n}",
+    "options": [
+      "fmt.Sprintf is slower than strconv for formatting integers",
+      "TrimRight scans the entire string on every call",
+      "String concatenation in loop — each += allocates a new string"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-020",
+    "track": "backend",
+    "language": "go",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this middleware change fix?",
+    "code": "// Before\nfunc rateLimiter(next http.Handler) http.Handler {\n\tvar mu sync.Mutex\n\tvisitors := map[string]int{}\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\tip := r.RemoteAddr\n\t\tmu.Lock()\n\t\tvisitors[ip]++\n\t\tmu.Unlock()\n\t\tnext.ServeHTTP(w, r)\n\t})\n}\n\n// After\nfunc rateLimiter(next http.Handler) http.Handler {\n\tvisitors := sync.Map{}\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\tip := r.RemoteAddr\n\t\tval, _ := visitors.LoadOrStore(ip, new(atomic.Int64))\n\t\tif val.(*atomic.Int64).Add(1) > 100 {\n\t\t\thttp.Error(w, \"rate limited\", 429)\n\t\t\treturn\n\t\t}\n\t\tnext.ServeHTTP(w, r)\n\t})\n}",
+    "options": [
+      "Replaces mutex with sync.Map for lower contention and adds rate enforcement",
+      "Switches from RemoteAddr to X-Forwarded-For for proxy support",
+      "Adds atomic counter to prevent integer overflow on visitor count"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-021",
+    "track": "backend",
+    "language": "go",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this select statement do?",
+    "code": "func fetchWithTimeout(url string) ([]byte, error) {\n\tch := make(chan []byte, 1)\n\tgo func() {\n\t\tresp, _ := http.Get(url)\n\t\tbody, _ := io.ReadAll(resp.Body)\n\t\tch <- body\n\t}()\n\tselect {\n\tcase data := <-ch:\n\t\treturn data, nil\n\tcase <-time.After(2 * time.Second):\n\t\treturn nil, fmt.Errorf(\"timeout\")\n\t}\n}",
+    "options": [
+      "Returns data if fetch completes, or error after 2 seconds",
+      "Always returns timeout — select favors time.After",
+      "Panics — cannot select on buffered channel and timer"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-022",
+    "track": "backend",
+    "language": "go",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What problem does this migration fix?",
+    "code": "// Before\nCREATE TABLE orders (\n  id SERIAL PRIMARY KEY,\n  user_id INTEGER,\n  status TEXT,\n  created_at TIMESTAMP\n);\n\n// After\nCREATE TABLE orders (\n  id SERIAL PRIMARY KEY,\n  user_id INTEGER NOT NULL,\n  status TEXT NOT NULL DEFAULT 'pending',\n  created_at TIMESTAMP NOT NULL DEFAULT NOW()\n);\nCREATE INDEX idx_orders_user_id ON orders(user_id);\nCREATE INDEX idx_orders_status ON orders(status);",
+    "options": [
+      "Adds foreign key constraint on user_id for referential integrity",
+      "Adds NOT NULL constraints, defaults, and indexes for query performance",
+      "Changes id from SERIAL to UUID for distributed systems"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-023",
+    "track": "backend",
+    "language": "go",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "What's wrong with this error handling?",
+    "code": "func fetchAll(urls []string) ([]Result, error) {\n\tvar results []Result\n\tvar firstErr error\n\tvar wg sync.WaitGroup\n\tfor _, url := range urls {\n\t\twg.Add(1)\n\t\tgo func(u string) {\n\t\t\tdefer wg.Done()\n\t\t\tres, err := fetch(u)\n\t\t\tif err != nil {\n\t\t\t\tfirstErr = err\n\t\t\t\treturn\n\t\t\t}\n\t\t\tresults = append(results, res)\n\t\t}(url)\n\t}\n\twg.Wait()\n\treturn results, firstErr\n}",
+    "options": [
+      "wg.Add(1) should be called outside the loop before any goroutines",
+      "Both firstErr and results are written concurrently without a mutex",
+      "Goroutine closure captures url by value, not reference"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-024",
+    "track": "backend",
+    "language": "go",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which pattern handles backpressure correctly?",
+    "code": "// Option A\nfunc process(jobs <-chan Job) {\n\tfor j := range jobs {\n\t\tgo handle(j)\n\t}\n}\n\n// Option B\nfunc process(jobs <-chan Job) {\n\tsem := make(chan struct{}, 100)\n\tfor j := range jobs {\n\t\tsem <- struct{}{}\n\t\tgo func(j Job) {\n\t\t\tdefer func() { <-sem }()\n\t\t\thandle(j)\n\t\t}(j)\n\t}\n}",
+    "options": [
+      "A — Go scheduler handles goroutine limits automatically",
+      "Neither — use a sync.Pool for goroutine reuse instead",
+      "B — semaphore channel bounds concurrent goroutines to 100"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-025",
+    "track": "backend",
+    "language": "go",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the validation bug.",
+    "code": "type CreateUserReq struct {\n\tName  string `json:\"name\" binding:\"required\"`\n\tEmail string `json:\"email\" binding:\"required,email\"`\n\tAge   int    `json:\"age\" binding:\"required,min=1\"`\n}\n\nfunc createUser(c *gin.Context) {\n\tvar req CreateUserReq\n\tc.ShouldBindJSON(&req)\n\tuser, err := svc.CreateUser(req.Name, req.Email, req.Age)\n\tif err != nil {\n\t\tc.JSON(500, gin.H{\"error\": err.Error()})\n\t\treturn\n\t}\n\tc.JSON(201, user)\n}",
+    "options": [
+      "binding:\"required\" on int means 0 is rejected as empty",
+      "CreateUserReq should use pointer fields for optional values",
+      "ShouldBindJSON error is ignored — invalid input proceeds unchecked"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-026",
+    "track": "backend",
+    "language": "go",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "Why is this slow for large files?",
+    "code": "func countLines(path string) (int, error) {\n\tdata, err := os.ReadFile(path)\n\tif err != nil {\n\t\treturn 0, err\n\t}\n\tlines := strings.Split(string(data), \"\\n\")\n\treturn len(lines), nil\n}",
+    "options": [
+      "strings.Split returns wrong count — use strings.Count instead",
+      "Reads entire file into memory — use bufio.Scanner to stream lines",
+      "string(data) conversion is a no-op in Go"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-027",
+    "track": "backend",
+    "language": "go",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "func main() {\n\tvar wg sync.WaitGroup\n\tfor i := 0; i < 3; i++ {\n\t\twg.Add(1)\n\t\tgo func(n int) {\n\t\t\tdefer wg.Done()\n\t\t\tfmt.Print(n)\n\t\t}(i)\n\t}\n\twg.Wait()\n}",
+    "options": [
+      "Always prints 012 in order",
+      "Prints 0, 1, 2 in some unspecified order",
+      "Always prints 222 — closure captures i"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-028",
+    "track": "backend",
+    "language": "go",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the connection pool bug.",
+    "code": "func main() {\n\tdb, err := sql.Open(\"postgres\", connStr)\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\tdb.SetMaxOpenConns(10)\n\thttp.HandleFunc(\"/data\", func(w http.ResponseWriter, r *http.Request) {\n\t\tconn, _ := db.Conn(r.Context())\n\t\trows, _ := conn.QueryContext(r.Context(), \"SELECT * FROM data\")\n\t\t// ... process rows\n\t\trows.Close()\n\t})\n\thttp.ListenAndServe(\":8080\", nil)\n}",
+    "options": [
+      "sql.Open does not actually connect — need db.Ping() to verify",
+      "SetMaxOpenConns(10) is too low for http.ListenAndServe",
+      "Acquired connection is never released back to the pool with conn.Close()"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-029",
+    "track": "backend",
+    "language": "go",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which graceful shutdown approach is correct?",
+    "code": "// Option A\nfunc main() {\n\tsrv := &http.Server{Addr: \":8080\"}\n\tgo srv.ListenAndServe()\n\tquit := make(chan os.Signal, 1)\n\tsignal.Notify(quit, syscall.SIGTERM)\n\t<-quit\n\tos.Exit(0)\n}\n\n// Option B\nfunc main() {\n\tsrv := &http.Server{Addr: \":8080\"}\n\tgo srv.ListenAndServe()\n\tquit := make(chan os.Signal, 1)\n\tsignal.Notify(quit, syscall.SIGTERM)\n\t<-quit\n\tctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)\n\tdefer cancel()\n\tsrv.Shutdown(ctx)\n}",
+    "options": [
+      "A — os.Exit is faster and avoids hanging connections",
+      "Both are correct — ListenAndServe handles SIGTERM internally",
+      "B — Shutdown drains in-flight requests before stopping"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-030",
+    "track": "backend",
+    "language": "go",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this recover block do?",
+    "code": "func safeHandler(w http.ResponseWriter, r *http.Request) {\n\tdefer func() {\n\t\tif r := recover(); r != nil {\n\t\t\tlog.Printf(\"panic: %v\", r)\n\t\t\thttp.Error(w, \"internal error\", 500)\n\t\t}\n\t}()\n\tpanic(\"something broke\")\n}",
+    "options": [
+      "Logs panic and returns 500 instead of crashing the server",
+      "Crashes — recover() only works in the same goroutine that panicked",
+      "Returns 200 — http.Error after recover has no effect"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-031",
+    "track": "backend",
+    "language": "go",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this change improve?",
+    "code": "// Before\nfunc getProduct(c *gin.Context) {\n\tid := c.Param(\"id\")\n\tp, err := repo.Find(id)\n\tif err != nil {\n\t\tc.JSON(500, gin.H{\"error\": \"not found\"})\n\t\treturn\n\t}\n\tc.JSON(200, p)\n}\n\n// After\nfunc getProduct(c *gin.Context) {\n\tid := c.Param(\"id\")\n\tp, err := repo.Find(id)\n\tif errors.Is(err, gorm.ErrRecordNotFound) {\n\t\tc.JSON(404, gin.H{\"error\": \"product not found\"})\n\t\treturn\n\t}\n\tif err != nil {\n\t\tc.JSON(500, gin.H{\"error\": \"internal server error\"})\n\t\treturn\n\t}\n\tc.JSON(200, p)\n}",
+    "options": [
+      "Adds GORM-specific error wrapping for better stack traces",
+      "Returns correct HTTP status codes — 404 for missing, 500 for errors",
+      "Prevents leaking internal error messages to the client"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-032",
+    "track": "backend",
+    "language": "go",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "What's wrong with this worker pool?",
+    "code": "func workerPool(jobs <-chan Job, results chan<- Result) {\n\tvar wg sync.WaitGroup\n\tfor i := 0; i < 5; i++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tfor j := range jobs {\n\t\t\t\tresults <- process(j)\n\t\t\t}\n\t\t}()\n\t}\n\twg.Wait()\n\tclose(results)\n}",
+    "options": [
+      "Workers share the jobs channel — only one worker gets each job",
+      "Caller blocks if results channel is full before wg.Wait returns",
+      "close(results) panics if a worker is still writing to it"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-033",
+    "track": "backend",
+    "language": "go",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the query performance issue?",
+    "code": "func getActiveUsers(db *gorm.DB) ([]User, error) {\n\tvar users []User\n\tresult := db.Where(\"status = ?\", \"active\").\n\t\tOrder(\"created_at DESC\").\n\t\tFind(&users)\n\tfor i := range users {\n\t\tdb.Model(&users[i]).Association(\"Posts\").Count()\n\t}\n\treturn users, result.Error\n}",
+    "options": [
+      "Order by created_at without an index causes a filesort",
+      "Find loads all active users into memory without pagination",
+      "N+1 — counting posts per user in a loop instead of a join or subquery"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-034",
+    "track": "backend",
+    "language": "go",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this optimization do?",
+    "code": "// Before\nfunc marshalUsers(users []User) ([]byte, error) {\n\treturn json.Marshal(users)\n}\n\n// After\nvar bufPool = sync.Pool{\n\tNew: func() interface{} {\n\t\treturn new(bytes.Buffer)\n\t},\n}\n\nfunc marshalUsers(users []User, w io.Writer) error {\n\tbuf := bufPool.Get().(*bytes.Buffer)\n\tbuf.Reset()\n\tdefer bufPool.Put(buf)\n\terr := json.NewEncoder(buf).Encode(users)\n\tif err != nil {\n\t\treturn err\n\t}\n\t_, err = buf.WriteTo(w)\n\treturn err\n}",
+    "options": [
+      "Reduces memory allocations by reusing buffers via sync.Pool",
+      "Switches from json.Marshal to streaming encoder for large payloads",
+      "Adds error handling that was missing in the original version"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-035",
+    "track": "backend",
+    "language": "go",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "scales",
+    "prompt": "Which approach handles file uploads better?",
+    "code": "// Option A\nfunc upload(w http.ResponseWriter, r *http.Request) {\n\tbody, _ := io.ReadAll(r.Body)\n\tos.WriteFile(\"/uploads/\"+r.URL.Query().Get(\"name\"), body, 0644)\n\tw.WriteHeader(200)\n}\n\n// Option B\nfunc upload(w http.ResponseWriter, r *http.Request) {\n\tf, _ := os.Create(\"/uploads/\" + r.URL.Query().Get(\"name\"))\n\tdefer f.Close()\n\tio.Copy(f, r.Body)\n\tw.WriteHeader(200)\n}",
+    "options": [
+      "Both are equivalent — Go buffers r.Body automatically",
+      "A — ReadAll is simpler and validates content length first",
+      "B — io.Copy streams to disk without buffering entire file in memory"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-036",
+    "track": "backend",
+    "language": "go",
+    "category": "debugging",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the subtle interface bug.",
+    "code": "type Logger interface {\n\tLog(msg string)\n}\n\ntype FileLogger struct {\n\tpath string\n}\n\nfunc (f *FileLogger) Log(msg string) {\n\t// write to file\n}\n\nfunc newLogger(debug bool) Logger {\n\tvar logger *FileLogger\n\tif debug {\n\t\tlogger = &FileLogger{path: \"/var/log/debug.log\"}\n\t}\n\treturn logger\n}",
+    "options": [
+      "Returns nil pointer wrapped in non-nil interface when debug is false",
+      "FileLogger should implement Logger with value receiver, not pointer",
+      "*FileLogger is nil-safe — Log method handles nil receiver"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-037",
+    "track": "backend",
+    "language": "go",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this context change enable?",
+    "code": "// Before\nfunc fetchData(url string) ([]byte, error) {\n\tresp, err := http.Get(url)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdefer resp.Body.Close()\n\treturn io.ReadAll(resp.Body)\n}\n\n// After\nfunc fetchData(ctx context.Context, url string) ([]byte, error) {\n\treq, err := http.NewRequestWithContext(ctx, \"GET\", url, nil)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tresp, err := http.DefaultClient.Do(req)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdefer resp.Body.Close()\n\treturn io.ReadAll(resp.Body)\n}",
+    "options": [
+      "Switches from GET shorthand to support custom HTTP methods",
+      "Adds context propagation for cancellation and timeout support",
+      "Replaces http.Get to avoid global DefaultClient connection limits"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-038",
+    "track": "backend",
+    "language": "go",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "What's wrong with this GORM model?",
+    "code": "type User struct {\n\tgorm.Model\n\tName  string `gorm:\"uniqueIndex\"`\n\tEmail string `gorm:\"uniqueIndex\"`\n}\n\nfunc createUser(db *gorm.DB, name, email string) error {\n\tuser := User{Name: name, Email: email}\n\tresult := db.Create(&user)\n\tif result.Error != nil {\n\t\treturn fmt.Errorf(\"failed to create user: %w\", result.Error)\n\t}\n\treturn nil\n}",
+    "options": [
+      "gorm.Model adds soft delete — unique index ignores deleted records",
+      "Error wrapping with %w exposes internal GORM errors to callers",
+      "db.Create does not validate struct tags before insertion"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-039",
+    "track": "backend",
+    "language": "go",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which distributed lock approach is safest?",
+    "code": "// Option A: Database lock\nfunc acquireLock(db *sql.DB, key string) bool {\n\t_, err := db.Exec(\n\t\t\"INSERT INTO locks (key, expires) VALUES ($1, NOW() + interval '30s')\", key)\n\treturn err == nil\n}\n\n// Option B: Redis Redlock\nfunc acquireLock(pool []*redis.Client, key string) bool {\n\tsuccess := 0\n\tfor _, rdb := range pool {\n\t\tif rdb.SetNX(ctx, key, uuid, 30*time.Second).Val() {\n\t\t\tsuccess++\n\t\t}\n\t}\n\treturn success > len(pool)/2\n}",
+    "options": [
+      "A — database transactions provide stronger consistency guarantees",
+      "Neither — use etcd or ZooKeeper for distributed consensus",
+      "B — majority quorum across Redis nodes survives single-node failure"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "go-be-040",
+    "track": "backend",
+    "language": "go",
+    "category": "performance",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does defer do here?",
+    "code": "func readFile(path string) ([]byte, error) {\n\tf, err := os.Open(path)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdefer f.Close()\n\treturn io.ReadAll(f)\n}",
+    "options": [
+      "Closes f only if ReadAll succeeds",
+      "Closes f immediately before ReadAll runs",
+      "Closes f when readFile returns, even on error"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  }
+]

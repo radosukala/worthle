@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "js-fe-001",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "state_management",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does count display after two clicks?",
+    "code": "function Counter() {\n  const [count, setCount] = useState(0);\n\n  const increment = () => {\n    setCount(prev => prev + 1);\n    setCount(prev => prev + 1);\n  };\n\n  return <button onClick={increment}>{count}</button>;\n}",
+    "options": [
+      "4",
+      "2",
+      "1"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-002",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "ui_components",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What renders when isOpen is false?",
+    "code": "function Modal({ isOpen, children }) {\n  return (\n    <div className=\"overlay\" style={{ display: isOpen ? 'flex' : 'none' }}>\n      <div className=\"modal\">\n        {children}\n      </div>\n    </div>\n  );\n}",
+    "options": [
+      "The overlay and modal are in the DOM but hidden",
+      "Nothing is rendered to the DOM",
+      "The overlay renders but the modal content is removed"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-003",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does the list never update?",
+    "code": "function TodoList() {\n  const [items, setItems] = useState(['Buy milk']);\n\n  const addItem = (text) => {\n    items.push(text);\n    setItems(items);\n  };\n\n  return (\n    <ul>{items.map(i => <li key={i}>{i}</li>)}</ul>\n  );\n}",
+    "options": [
+      "React skips render because items is the same reference after push",
+      "push returns the new length, not the array, so setItems receives a number",
+      "useState setter is asynchronous and batches the identical reference away"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-004",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "css_layout",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "How are the three boxes positioned?",
+    "code": "function Layout() {\n  return (\n    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '8px' }}>\n      <div>A</div>\n      <div>B</div>\n      <div>C</div>\n    </div>\n  );\n}",
+    "options": [
+      "Three columns stacked vertically",
+      "A and C are equal width, B is twice as wide",
+      "All three columns are equal width"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-005",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why does typing in the input feel laggy?",
+    "code": "function Search({ items }) {\n  const [query, setQuery] = useState('');\n\n  const filtered = items.filter(item =>\n    item.name.toLowerCase().includes(query.toLowerCase())\n  );\n\n  return (\n    <div>\n      <input value={query} onChange={e => setQuery(e.target.value)} />\n      {filtered.map(item => <ExpensiveCard key={item.id} item={item} />)}\n    </div>\n  );\n}",
+    "options": [
+      "The controlled input re-renders the entire tree on each onChange",
+      "toLowerCase is called on every item for each character typed",
+      "Every keystroke re-renders all ExpensiveCard components with no memoization"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-006",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "accessibility",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why is the dropdown inaccessible via keyboard?",
+    "code": "function Dropdown({ options, onSelect }) {\n  const [open, setOpen] = useState(false);\n\n  return (\n    <div>\n      <div onClick={() => setOpen(!open)}>Select...</div>\n      {open && (\n        <ul>\n          {options.map(opt => (\n            <li key={opt} onClick={() => onSelect(opt)}>{opt}</li>\n          ))}\n        </ul>\n      )}\n    </div>\n  );\n}",
+    "options": [
+      "div and li elements are not focusable and have no keyboard event handlers",
+      "The ul element needs role=\"menu\" to receive keyboard events",
+      "onClick on div elements is ignored by assistive technologies"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-007",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does the timer show stale values?",
+    "code": "function Timer() {\n  const [seconds, setSeconds] = useState(0);\n\n  useEffect(() => {\n    const id = setInterval(() => {\n      setSeconds(seconds + 1);\n    }, 1000);\n    return () => clearInterval(id);\n  }, []);\n\n  return <span>{seconds}s</span>;\n}",
+    "options": [
+      "useEffect with empty deps runs once but setSeconds is debounced",
+      "setInterval captures the initial seconds value in a stale closure",
+      "clearInterval in cleanup cancels the interval before it can update"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-008",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does the event handler fire twice?",
+    "code": "function Form() {\n  const handleSubmit = (e) => {\n    e.preventDefault();\n    console.log('submitted');\n  };\n\n  return (\n    <form onSubmit={handleSubmit}>\n      <button type=\"submit\" onClick={handleSubmit}>\n        Send\n      </button>\n    </form>\n  );\n}",
+    "options": [
+      "Both onClick on the button and onSubmit on the form fire for the same click",
+      "e.preventDefault only stops the default action, not event propagation",
+      "React synthetic events fire handlers twice in StrictMode"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-009",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What causes layout thrashing here?",
+    "code": "function resizeCards(cards) {\n  cards.forEach(card => {\n    const width = card.offsetWidth;\n    card.style.height = width * 0.75 + 'px';\n  });\n}",
+    "options": [
+      "Setting style then immediately reading a layout property in a loop forces synchronous reflows",
+      "forEach is blocking and should use requestAnimationFrame for batch DOM updates",
+      "Reading offsetWidth and writing style.height in the same loop forces layout recalculation per iteration"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-010",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "css_layout",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What is the key difference between these two?",
+    "code": "// Version A\n.container { position: relative; }\n.child { position: absolute; top: 0; right: 0; }\n\n// Version B\n.container { position: relative; }\n.child { position: sticky; top: 0; }",
+    "options": [
+      "A only works with block elements; B works with both block and inline",
+      "A positions relative to the viewport; B positions relative to the container",
+      "A removes child from flow and pins to top-right; B keeps child in flow and sticks on scroll"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-011",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "accessibility",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "Which approach is more accessible and why?",
+    "code": "// Version A\n<div className=\"error\" style={{ color: 'red' }}>\n  Invalid email address\n</div>\n\n// Version B\n<div role=\"alert\" aria-live=\"assertive\" className=\"error\">\n  Invalid email address\n</div>",
+    "options": [
+      "B — role=\"alert\" announces the error to screen readers immediately",
+      "A — color: red provides a visual cue that B lacks",
+      "Both are equivalent; screen readers detect text content changes automatically"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-012",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does the input lose focus on every keystroke?",
+    "code": "function Form() {\n  const [value, setValue] = useState('');\n\n  const Input = () => (\n    <input value={value} onChange={e => setValue(e.target.value)} />\n  );\n\n  return (\n    <div>\n      <Input />\n    </div>\n  );\n}",
+    "options": [
+      "The input needs an explicit autoFocus prop to retain focus between renders",
+      "Defining Input inside Form creates a new component type each render, remounting the input",
+      "setValue triggers a re-render that resets the DOM focus to the body element"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-013",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Why does this degrade with large lists?",
+    "code": "function VirtualList({ items }) {\n  const [scrollTop, setScrollTop] = useState(0);\n  const containerRef = useRef();\n\n  const handleScroll = () => {\n    setScrollTop(containerRef.current.scrollTop);\n  };\n\n  const visible = items.slice(\n    Math.floor(scrollTop / 40),\n    Math.floor(scrollTop / 40) + 20\n  );\n\n  return (\n    <div ref={containerRef} onScroll={handleScroll}\n         style={{ height: 800, overflow: 'auto' }}>\n      <div style={{ height: items.length * 40 }}>\n        {visible.map((item, i) => (\n          <div key={i} style={{ position: 'absolute', top: (Math.floor(scrollTop / 40) + i) * 40 }}>\n            {item}\n          </div>\n        ))}\n      </div>\n    </div>\n  );\n}",
+    "options": [
+      "Using index as key causes React to remount items instead of reusing them on scroll",
+      "setScrollTop on every scroll event triggers a full React render cycle synchronously",
+      "The slice operation copies a portion of the array on every scroll, allocating memory"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-014",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "state_management",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does the child component not re-render?",
+    "code": "const UserContext = createContext();\n\nfunction App() {\n  const user = useRef({ name: 'Alice' });\n\n  return (\n    <UserContext.Provider value={user.current}>\n      <Profile />\n    </UserContext.Provider>\n  );\n}\n\nfunction Profile() {\n  const user = useContext(UserContext);\n  return <span>{user.name}</span>;\n}",
+    "options": [
+      "useRef changes never cause re-renders, so Provider value never updates",
+      "createContext requires a default value to enable re-rendering",
+      "useContext only subscribes to Provider when the component first mounts"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-015",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "css_layout",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does the tooltip get clipped?",
+    "code": "function Card() {\n  return (\n    <div style={{ overflow: 'hidden', borderRadius: '8px' }}>\n      <h3>Title</h3>\n      <div style={{ position: 'relative' }}>\n        <button>Hover me</button>\n        <div style={{ position: 'absolute', top: '-40px', left: 0 }}>\n          Tooltip text\n        </div>\n      </div>\n    </div>\n  );\n}",
+    "options": [
+      "The tooltip needs a higher z-index to escape the stacking context",
+      "overflow: hidden on the ancestor clips the absolutely positioned tooltip",
+      "position: absolute positions the tooltip relative to the viewport, not the parent"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-016",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What logs when the button is clicked?",
+    "code": "function App() {\n  const [count, setCount] = useState(0);\n\n  const handleClick = () => {\n    setCount(count + 1);\n    console.log(count);\n    setTimeout(() => console.log(count), 0);\n  };\n\n  return <button onClick={handleClick}>{count}</button>;\n}",
+    "options": [
+      "0 then 0",
+      "0 then 1",
+      "1 then 1"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-017",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "accessibility",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "What fails as tab content grows?",
+    "code": "function Tabs({ tabs }) {\n  const [active, setActive] = useState(0);\n\n  return (\n    <div>\n      <div role=\"tablist\">\n        {tabs.map((tab, i) => (\n          <button key={i} onClick={() => setActive(i)}>\n            {tab.label}\n          </button>\n        ))}\n      </div>\n      <div>{tabs[active].content}</div>\n    </div>\n  );\n}",
+    "options": [
+      "All tab panels mount simultaneously causing performance issues with many tabs",
+      "The tablist role requires an explicit aria-label for screen reader context",
+      "Tab buttons lack role=\"tab\", aria-selected, and arrow key navigation for WCAG compliance"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-018",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "ui_components",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Why does the portal lose its event context?",
+    "code": "function Modal({ onClose, children }) {\n  const el = useRef(document.createElement('div'));\n\n  useEffect(() => {\n    document.body.appendChild(el.current);\n    return () => document.body.removeChild(el.current);\n  }, []);\n\n  return createPortal(\n    <div onClick={e => e.stopPropagation()}>\n      {children}\n      <button onClick={onClose}>Close</button>\n    </div>,\n    el.current\n  );\n}",
+    "options": [
+      "stopPropagation prevents React synthetic events from bubbling to the portal root",
+      "createPortal renders outside the React tree, so context providers are inaccessible",
+      "stopPropagation stops the native event but the React event still bubbles through the React tree"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-019",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "Why does only Version B work correctly?",
+    "code": "// Version A\nuseEffect(() => {\n  let data = null;\n  fetch('/api/data').then(res => res.json()).then(d => { data = d; });\n  return () => { data = null; };\n}, []);\n\n// Version B\nuseEffect(() => {\n  let cancelled = false;\n  fetch('/api/data').then(res => res.json()).then(d => {\n    if (!cancelled) setData(d);\n  });\n  return () => { cancelled = true; };\n}, []);",
+    "options": [
+      "A lacks error handling for the fetch; B implicitly catches errors via the cancelled flag",
+      "A's cleanup nullifies the data too early; B's cleanup only cancels pending requests",
+      "A assigns to a local variable that nothing reads; B uses a flag to prevent stale setState"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-020",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 1,
+    "type": "diff",
+    "prompt": "Why is Version B faster?",
+    "code": "// Version A\nfunction List({ items }) {\n  return items.map(item => <Item key={Math.random()} data={item} />);\n}\n\n// Version B\nfunction List({ items }) {\n  return items.map(item => <Item key={item.id} data={item} />);\n}",
+    "options": [
+      "Math.random() creates unique keys so React can track items better",
+      "Stable keys in B let React reuse existing DOM nodes instead of remounting every item",
+      "item.id is faster to compute than Math.random() on each render cycle"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-021",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "ui_components",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What renders on screen?",
+    "code": "function Greeting({ name }) {\n  return (\n    <div>\n      {name ? <h1>Hello, {name}!</h1> : <h1>Hello, stranger!</h1>}\n    </div>\n  );\n}\n\n// Usage: <Greeting name=\"\" />",
+    "options": [
+      "Hello, stranger!",
+      "Hello, !",
+      "Nothing renders"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-022",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "state_management",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does the button display after one click?",
+    "code": "function Counter() {\n  const [count, setCount] = useState(0);\n\n  const handleClick = () => {\n    setCount(count + 1);\n    setCount(count + 1);\n    setCount(count + 1);\n  };\n\n  return <button onClick={handleClick}>{count}</button>;\n}",
+    "options": [
+      "3",
+      "1",
+      "2"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-023",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does useEffect run infinitely?",
+    "code": "function UserProfile({ userId }) {\n  const [user, setUser] = useState(null);\n\n  useEffect(() => {\n    fetch(`/api/users/${userId}`)\n      .then(res => res.json())\n      .then(data => setUser(data));\n  }, [{ userId }]);\n\n  return <div>{user?.name}</div>;\n}",
+    "options": [
+      "fetch returns a new promise each time, triggering the effect again",
+      "The object literal in deps creates a new reference every render",
+      "setUser triggers a re-render that changes userId"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-024",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "css_layout",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "How are the items arranged?",
+    "code": "function Nav() {\n  return (\n    <nav style={{\n      display: 'flex',\n      justifyContent: 'space-between',\n      alignItems: 'center'\n    }}>\n      <span>Logo</span>\n      <div>Menu</div>\n    </nav>\n  );\n}",
+    "options": [
+      "Logo and Menu are stacked vertically, centered",
+      "Logo is on the left, Menu is on the right, vertically centered",
+      "Logo and Menu are centered horizontally next to each other"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-025",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this component slow on re-render?",
+    "code": "function Dashboard({ data }) {\n  const chartData = data.map(d => ({\n    label: d.name,\n    value: d.scores.reduce((a, b) => a + b, 0)\n  }));\n\n  const sorted = chartData.sort((a, b) => b.value - a.value);\n\n  return (\n    <div>\n      {sorted.map(item => <ChartBar key={item.label} {...item} />)}\n    </div>\n  );\n}",
+    "options": [
+      "sort() mutates chartData in place, causing inconsistent renders",
+      "reduce inside map creates O(n*m) complexity, recomputed every render without memoization",
+      "ChartBar receives new object references via spread on each render"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-026",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "accessibility",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why can't screen readers identify the image?",
+    "code": "function ProductCard({ product }) {\n  return (\n    <div className=\"card\">\n      <img src={product.imageUrl} />\n      <h3>{product.name}</h3>\n      <p>${product.price}</p>\n    </div>\n  );\n}",
+    "options": [
+      "The img element is missing an alt attribute for screen reader text",
+      "The card div needs role=\"article\" for semantic meaning",
+      "The h3 should be an h2 to maintain correct heading hierarchy"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-027",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why do list items render in wrong order?",
+    "code": "function SortableList({ items }) {\n  const [sorted, setSorted] = useState(items);\n\n  const sortByName = () => {\n    setSorted([...sorted].sort((a, b) => a.name.localeCompare(b.name)));\n  };\n\n  return (\n    <ul>\n      {sorted.map((item, index) => (\n        <li key={index}>{item.name}</li>\n      ))}\n      <button onClick={sortByName}>Sort</button>\n    </ul>\n  );\n}",
+    "options": [
+      "localeCompare is case-sensitive and sorts uppercase before lowercase",
+      "Using index as key causes React to reuse DOM nodes in wrong positions after sorting",
+      "useState(items) only captures the initial value, ignoring prop updates"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-028",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does Version B fix?",
+    "code": "// Version A\nconst [user, setUser] = useState({ name: '', age: 0 });\nconst updateName = (name) => {\n  setUser({ name });\n};\n\n// Version B\nconst [user, setUser] = useState({ name: '', age: 0 });\nconst updateName = (name) => {\n  setUser(prev => ({ ...prev, name }));\n};",
+    "options": [
+      "B avoids a stale closure by using the functional updater form",
+      "B preserves the age field by spreading previous state before overwriting name",
+      "B prevents unnecessary re-renders by only updating the changed field"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-029",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What is logged to the console?",
+    "code": "const el = document.createElement('div');\nel.innerHTML = '<span>hello</span>';\n\nconsole.log(el.childNodes.length);\nconsole.log(el.children.length);",
+    "options": [
+      "1 then 1",
+      "2 then 1",
+      "1 then 0"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-030",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "Why is Version B more efficient?",
+    "code": "// Version A\nfunction App({ userId }) {\n  const [user, setUser] = useState(null);\n  useEffect(() => {\n    fetchUser(userId).then(setUser);\n  }, [userId]);\n  return <Profile user={user} config={{ theme: 'dark' }} />;\n}\n\n// Version B\nfunction App({ userId }) {\n  const [user, setUser] = useState(null);\n  const config = useMemo(() => ({ theme: 'dark' }), []);\n  useEffect(() => {\n    fetchUser(userId).then(setUser);\n  }, [userId]);\n  return <Profile user={user} config={config} />;\n}",
+    "options": [
+      "useMemo prevents fetchUser from being called on every render",
+      "B creates the config object once, preventing Profile from re-rendering on stable props",
+      "useMemo caches the theme string to avoid string allocation on each render"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-031",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "css_layout",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does the child div ignore its height?",
+    "code": "function Page() {\n  return (\n    <div style={{ display: 'flex', height: '100vh' }}>\n      <aside style={{ width: '250px' }}>Sidebar</aside>\n      <main style={{ height: '100%' }}>\n        <div style={{ height: '50%', background: 'lightblue' }}>\n          Content\n        </div>\n      </main>\n    </div>\n  );\n}",
+    "options": [
+      "The main element needs flex: 1 to fill remaining width and establish a height context",
+      "Percentage height requires the parent to have an explicit pixel height, not 100%",
+      "flex containers ignore height on children unless align-items is set to stretch"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-032",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "accessibility",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "Why is Version B more accessible?",
+    "code": "// Version A\n<button onClick={toggleMenu}>\n  <svg viewBox=\"0 0 24 24\"><path d=\"M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z\"/></svg>\n</button>\n\n// Version B\n<button onClick={toggleMenu} aria-label=\"Toggle navigation menu\" aria-expanded={isOpen}>\n  <svg aria-hidden=\"true\" viewBox=\"0 0 24 24\"><path d=\"M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z\"/></svg>\n</button>",
+    "options": [
+      "B hides the SVG from the accessibility tree and provides a text label for the button",
+      "B uses aria-expanded to change the SVG icon based on menu state",
+      "aria-hidden on SVG prevents the screen reader from reading the path data as text"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-033",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does the component render?",
+    "code": "function List({ items }) {\n  return (\n    <ul>\n      {items.length && items.map(item => <li key={item}>{item}</li>)}\n    </ul>\n  );\n}\n\n// Usage: <List items={[]} />",
+    "options": [
+      "An empty ul element",
+      "A ul element containing the text \"0\"",
+      "Nothing renders at all"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-034",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "state_management",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does the derived state get out of sync?",
+    "code": "function FilteredList({ items, filter }) {\n  const [filtered, setFiltered] = useState(\n    items.filter(i => i.type === filter)\n  );\n\n  useEffect(() => {\n    setFiltered(items.filter(i => i.type === filter));\n  }, [filter]);\n\n  return (\n    <ul>{filtered.map(i => <li key={i.id}>{i.name}</li>)}</ul>\n  );\n}",
+    "options": [
+      "useEffect runs after render, so the old filtered list flashes before updating",
+      "The dependency array is missing items, so changes to items don't trigger a refilter",
+      "useState initializer only runs once, and filter changes reset the component state"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-035",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does the ref callback receive null?",
+    "code": "function MeasuredBox() {\n  const [height, setHeight] = useState(0);\n\n  const ref = useCallback(node => {\n    if (node !== null) {\n      setHeight(node.getBoundingClientRect().height);\n    }\n  }, []);\n\n  return (\n    <div>\n      {height > 0 && <p>Height: {height}px</p>}\n      <div ref={ref}>Content here</div>\n    </div>\n  );\n}",
+    "options": [
+      "getBoundingClientRect returns zero height before the element is painted",
+      "The ref callback fires before the DOM is committed, so node dimensions are zero",
+      "This code works correctly; the callback ref handles null checks properly"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-036",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "Why is the image gallery slow to load?",
+    "code": "function Gallery({ images }) {\n  return (\n    <div className=\"grid\">\n      {images.map(img => (\n        <img\n          key={img.id}\n          src={img.fullSizeUrl}\n          alt={img.description}\n          width={200}\n          height={200}\n        />\n      ))}\n    </div>\n  );\n}",
+    "options": [
+      "Setting width and height attributes forces the browser to resize full images on the CPU",
+      "All full-size images load immediately instead of using thumbnails or lazy loading",
+      "The grid layout recalculates positions as each image loads at full resolution"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-037",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "css_layout",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does the box look like?",
+    "code": "function Box() {\n  return (\n    <div style={{\n      width: '100px',\n      height: '100px',\n      padding: '20px',\n      boxSizing: 'border-box',\n      border: '2px solid black'\n    }}>\n      Content\n    </div>\n  );\n}",
+    "options": [
+      "Total size is 144px by 144px including padding and border",
+      "Total size is 100px by 100px with content area shrunk to fit",
+      "Total size is 100px by 100px but padding overflows outside the box"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-038",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "accessibility",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does the focus trap fail?",
+    "code": "function Dialog({ isOpen, onClose }) {\n  const dialogRef = useRef();\n\n  useEffect(() => {\n    if (isOpen) dialogRef.current.focus();\n  }, [isOpen]);\n\n  if (!isOpen) return null;\n\n  return (\n    <div ref={dialogRef} className=\"dialog-overlay\">\n      <div className=\"dialog-content\">\n        <p>Are you sure?</p>\n        <button onClick={onClose}>Confirm</button>\n        <button onClick={onClose}>Cancel</button>\n      </div>\n    </div>\n  );\n}",
+    "options": [
+      "The overlay div is not focusable because it lacks tabIndex, and there is no focus trap logic",
+      "focus() on the overlay steals focus from the buttons inside the dialog",
+      "The dialog renders after the effect runs, so dialogRef.current is null"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-039",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does Version B handle that A does not?",
+    "code": "// Version A\nfunction Toggle({ onChange }) {\n  const [on, setOn] = useState(false);\n  const toggle = () => {\n    setOn(!on);\n    onChange(!on);\n  };\n  return <button onClick={toggle}>{on ? 'ON' : 'OFF'}</button>;\n}\n\n// Version B\nfunction Toggle({ on, onChange }) {\n  return <button onClick={() => onChange(!on)}>{on ? 'ON' : 'OFF'}</button>;\n}",
+    "options": [
+      "B is a controlled component that lets the parent be the single source of truth",
+      "B avoids the stale closure in onChange by reading on directly from props",
+      "B prevents double-rendering by eliminating internal state synchronization"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-040",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What value does total display?",
+    "code": "function Cart() {\n  const [items, setItems] = useState([10, 20, 30]);\n\n  const total = useRef(0);\n  items.forEach(price => { total.current += price; });\n\n  return <span>Total: {total.current}</span>;\n}",
+    "options": [
+      "Total: 60",
+      "Total: 120",
+      "Total: 0"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-041",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What order do the logs appear?",
+    "code": "function App() {\n  console.log('render');\n\n  useEffect(() => {\n    console.log('effect');\n    return () => console.log('cleanup');\n  });\n\n  useMemo(() => {\n    console.log('memo');\n    return 42;\n  }, []);\n\n  return <div>App</div>;\n}",
+    "options": [
+      "memo, render, effect",
+      "render, memo, effect",
+      "render, effect, memo"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-042",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach handles frequent updates best?",
+    "code": "// Approach A: useState for cursor position\nconst [pos, setPos] = useState({ x: 0, y: 0 });\nuseEffect(() => {\n  const handler = (e) => setPos({ x: e.clientX, y: e.clientY });\n  window.addEventListener('mousemove', handler);\n  return () => window.removeEventListener('mousemove', handler);\n}, []);\n\n// Approach B: useRef + requestAnimationFrame\nconst pos = useRef({ x: 0, y: 0 });\nconst elRef = useRef();\nuseEffect(() => {\n  const handler = (e) => { pos.current = { x: e.clientX, y: e.clientY }; };\n  window.addEventListener('mousemove', handler);\n  // rAF loop reads pos.current and updates elRef.current.style\n}, []);",
+    "options": [
+      "A — React batches setState calls from mousemove events automatically",
+      "B — useRef avoids re-renders and rAF syncs DOM writes to the display refresh rate",
+      "Both perform the same because React 18 batches all state updates by default"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-043",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "css_layout",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "Which element wins the background color?",
+    "code": "<style>\n  .card { background: blue; }\n  div.card { background: green; }\n  #main .card { background: red; }\n</style>\n\n<div id=\"main\">\n  <div class=\"card\">Hello</div>\n</div>",
+    "options": [
+      "Blue — .card is declared first and class selectors take priority",
+      "Green — div.card is more specific than .card alone",
+      "Red — #main .card has the highest specificity due to the ID selector"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-044",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "accessibility",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which approach scales for form validation?",
+    "code": "// Approach A\n<input type=\"email\" required />\n<span style={{ color: 'red' }}>{error}</span>\n\n// Approach B\n<input type=\"email\" required\n  aria-describedby=\"email-error\"\n  aria-invalid={!!error} />\n<span id=\"email-error\" role=\"alert\">{error}</span>\n\n// Approach C\n<input type=\"email\" required title={error} />\n<span>{error}</span>",
+    "options": [
+      "A — native required validation is sufficient for all users",
+      "B — aria-describedby links the error to the input for screen readers",
+      "C — the title attribute is read by screen readers as the accessible description"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-045",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "ui_components",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does the effect receive stale props?",
+    "code": "function ChatRoom({ roomId }) {\n  const [messages, setMessages] = useState([]);\n\n  const onMessage = (msg) => {\n    setMessages([...messages, msg]);\n  };\n\n  useEffect(() => {\n    const conn = createConnection(roomId);\n    conn.on('message', onMessage);\n    return () => conn.disconnect();\n  }, [roomId]);\n\n  return <MessageList messages={messages} />;\n}",
+    "options": [
+      "createConnection returns a new instance on each roomId change, losing queued messages",
+      "onMessage closes over the initial messages array and never sees subsequent updates",
+      "useEffect cleanup disconnects before new messages arrive during room transitions"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-046",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does the component crash on mount?",
+    "code": "function UserCard({ user }) {\n  const [name, setName] = useState(user.name);\n  const [email, setEmail] = useState(user.email);\n\n  return (\n    <div>\n      <h2>{name}</h2>\n      <p>{email}</p>\n    </div>\n  );\n}\n\n// Usage: <UserCard user={null} />",
+    "options": [
+      "useState cannot accept values from props as initial state",
+      "Accessing user.name throws because user is null",
+      "React does not allow two useState calls with dependent initial values"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-047",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why does this table render slowly?",
+    "code": "function DataTable({ rows, columns }) {\n  return (\n    <table>\n      <tbody>\n        {rows.map(row => (\n          <tr key={row.id}>\n            {columns.map(col => (\n              <td key={col.key}\n                style={{ color: row[col.key] > col.threshold ? 'red' : 'black' }}>\n                {new Intl.NumberFormat('en-US').format(row[col.key])}\n              </td>\n            ))}\n          </tr>\n        ))}\n      </tbody>\n    </table>\n  );\n}",
+    "options": [
+      "Inline style objects create new references for every cell, blocking React reconciliation",
+      "new Intl.NumberFormat is instantiated for every cell instead of being reused",
+      "Nested map loops cause O(n*m) DOM nodes but that is unavoidable for tables"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-048",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "css_layout",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What layout problem does Version B solve?",
+    "code": "// Version A\n.container {\n  display: flex;\n  flex-wrap: wrap;\n}\n.item {\n  width: 33.33%;\n}\n\n// Version B\n.container {\n  display: grid;\n  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));\n}",
+    "options": [
+      "B automatically adjusts column count based on container width",
+      "B eliminates the need for media queries by using fractional units",
+      "A leaves a gap when items don't divide evenly; B fills remaining space"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-049",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "state_management",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Why does the optimistic update fail?",
+    "code": "function useTodos() {\n  const [todos, setTodos] = useState([]);\n\n  const addTodo = async (text) => {\n    const optimistic = { id: Date.now(), text, saving: true };\n    setTodos([...todos, optimistic]);\n\n    try {\n      const saved = await api.createTodo(text);\n      setTodos(todos.map(t => t.id === optimistic.id ? saved : t));\n    } catch {\n      setTodos(todos.filter(t => t.id !== optimistic.id));\n    }\n  };\n\n  return { todos, addTodo };\n}",
+    "options": [
+      "Date.now() can produce duplicate IDs if addTodo is called rapidly",
+      "The catch and then branches close over the pre-optimistic todos, discarding the optimistic item",
+      "async functions cannot be used inside custom hooks without useCallback"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-050",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What does the console log?",
+    "code": "const btn = document.createElement('button');\ndocument.body.appendChild(btn);\n\nbtn.addEventListener('click', () => console.log('native'));\n\nPromise.resolve().then(() => console.log('microtask'));\n\nbtn.click();\n\nconsole.log('sync');",
+    "options": [
+      "native, sync, microtask",
+      "native, microtask, sync",
+      "sync, native, microtask"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-051",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach handles large bundles best?",
+    "code": "// Approach A: import at top level\nimport { BarChart } from 'heavy-chart-lib';\n\nfunction Dashboard() {\n  return <BarChart data={data} />;\n}\n\n// Approach B: lazy load\nconst BarChart = React.lazy(() => import('heavy-chart-lib'));\n\nfunction Dashboard() {\n  return (\n    <Suspense fallback={<Spinner />}>\n      <BarChart data={data} />\n    </Suspense>\n  );\n}",
+    "options": [
+      "A — static imports allow tree-shaking to remove unused chart types",
+      "B — lazy loading defers the chart bundle until the component is rendered",
+      "Both load the same amount of code; the difference is only in perceived timing"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-052",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "accessibility",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What accessibility gap does Version B close?",
+    "code": "// Version A\n<div className=\"modal-overlay\" onClick={onClose}>\n  <div className=\"modal\">{children}</div>\n</div>\n\n// Version B\n<div className=\"modal-overlay\" onClick={onClose}>\n  <div role=\"dialog\" aria-modal=\"true\"\n       aria-labelledby=\"modal-title\" className=\"modal\"\n       onClick={e => e.stopPropagation()}>\n    <h2 id=\"modal-title\">{title}</h2>\n    {children}\n  </div>\n</div>",
+    "options": [
+      "B prevents clicks inside the modal from closing it via stopPropagation",
+      "B identifies the dialog to assistive technology and labels it with the title",
+      "B prevents screen reader focus from leaving the modal with aria-modal"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-053",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What changes between these two approaches?",
+    "code": "// Version A\nfunction App() {\n  const [show, setShow] = useState(true);\n  return (\n    <div>\n      {show && <Child />}\n    </div>\n  );\n}\n\n// Version B\nfunction App() {\n  const [show, setShow] = useState(true);\n  return (\n    <div>\n      <Child style={{ display: show ? 'block' : 'none' }} />\n    </div>\n  );\n}",
+    "options": [
+      "A unmounts Child, destroying its state; B hides it visually but preserves state",
+      "A conditionally renders null; B always renders but applies an inline override",
+      "B is faster because it avoids mount/unmount cycles for the Child component"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-054",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which state approach scales for deep trees?",
+    "code": "// Approach A: Prop drilling\nfunction App() {\n  const [theme, setTheme] = useState('light');\n  return <Page theme={theme} setTheme={setTheme} />;\n}\n// Page -> Section -> Card -> Button all pass theme\n\n// Approach B: Context\nconst ThemeCtx = createContext();\nfunction App() {\n  const [theme, setTheme] = useState('light');\n  return (\n    <ThemeCtx.Provider value={{ theme, setTheme }}>\n      <Page />\n    </ThemeCtx.Provider>\n  );\n}",
+    "options": [
+      "A — explicit props make data flow traceable and avoid hidden dependencies",
+      "B — context eliminates passing props through intermediate components that don't use them",
+      "Both scale equally; context is just syntactic sugar over prop drilling"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-055",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does Version B prevent?",
+    "code": "// Version A\nfunction App() {\n  return (\n    <div>\n      <Header />\n      <Content />\n      <Footer />\n    </div>\n  );\n}\n\n// Version B\nfunction App() {\n  return (\n    <div>\n      <ErrorBoundary fallback={<p>Something went wrong.</p>}>\n        <Header />\n        <Content />\n        <Footer />\n      </ErrorBoundary>\n    </div>\n  );\n}",
+    "options": [
+      "B catches rendering errors in children and shows a fallback instead of a white screen",
+      "B prevents unhandled promise rejections from crashing the application",
+      "B wraps children in a try-catch that prevents errors from propagating to the console"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-056",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "Why does this context cause excessive re-renders?",
+    "code": "const AppContext = createContext();\n\nfunction AppProvider({ children }) {\n  const [user, setUser] = useState(null);\n  const [theme, setTheme] = useState('light');\n  const [locale, setLocale] = useState('en');\n\n  return (\n    <AppContext.Provider value={{ user, setUser, theme, setTheme, locale, setLocale }}>\n      {children}\n    </AppContext.Provider>\n  );\n}",
+    "options": [
+      "Combining all state into one provider means any state change re-renders all consumers",
+      "Object spread in the value prop creates a new reference that React cannot memoize",
+      "Three useState calls in one component cause batched re-renders that propagate to children"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-057",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "css_layout",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does the centered div not appear centered?",
+    "code": "function CenteredBox() {\n  return (\n    <div style={{ width: '200px', margin: '0 auto' }}>\n      <p>I should be centered</p>\n    </div>\n  );\n}\n\n// Parent has: display: flex; flex-direction: column;",
+    "options": [
+      "margin auto does not work for horizontal centering inside a flex column container",
+      "The parent needs justify-content: center for flex children to center",
+      "width: 200px is ignored inside a flex container unless flex-shrink is 0"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-058",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "ui_components",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which pattern handles dynamic forms best?",
+    "code": "// Approach A: one useState per field\nconst [name, setName] = useState('');\nconst [email, setEmail] = useState('');\nconst [phone, setPhone] = useState('');\n// ... 20 more fields\n\n// Approach B: useReducer with dynamic fields\nconst [fields, dispatch] = useReducer(formReducer, {});\nconst updateField = (key, value) =>\n  dispatch({ type: 'SET_FIELD', key, value });",
+    "options": [
+      "A — separate state variables enable fine-grained memoization per field",
+      "B — a single reducer handles arbitrary field counts with one dispatch pattern",
+      "Both scale equally; useReducer is just a refactor of multiple useState calls"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-059",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "accessibility",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Why is this live region not announced?",
+    "code": "function Notification({ message }) {\n  if (!message) return null;\n\n  return (\n    <div aria-live=\"polite\" role=\"status\">\n      {message}\n    </div>\n  );\n}",
+    "options": [
+      "polite announcements are deferred and can be interrupted by other content updates",
+      "The live region is added and populated simultaneously, so the screen reader misses the change",
+      "role=\"status\" conflicts with aria-live=\"polite\" causing the announcement to be suppressed"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "js-fe-060",
+    "track": "frontend",
+    "language": "javascript",
+    "category": "debugging",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What does document.all evaluate to?",
+    "code": "console.log(typeof document.all);\nconsole.log(Boolean(document.all));\nconsole.log(document.all === undefined);",
+    "options": [
+      "\"object\", true, false",
+      "\"undefined\", false, false",
+      "\"undefined\", true, true"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  }
+]

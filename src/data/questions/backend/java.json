@@ -1,0 +1,682 @@
+[
+  {
+    "id": "ja-be-001",
+    "track": "backend",
+    "language": "java",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this method.",
+    "code": "public String greet(String name) {\n    if (name.equals(\"admin\")) {\n        return \"Welcome, admin!\";\n    }\n    return \"Hello, \" + name;\n}",
+    "options": [
+      "NullPointerException if name is null",
+      "equals should use == for string comparison",
+      "Missing else branch causes double return"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-002",
+    "track": "backend",
+    "language": "java",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "List<Integer> nums = Arrays.asList(3, 1, 4, 1, 5);\nlong count = nums.stream()\n    .filter(n -> n > 2)\n    .distinct()\n    .count();\nSystem.out.println(count);",
+    "options": [
+      "3",
+      "2",
+      "5"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-003",
+    "track": "backend",
+    "language": "java",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the performance issue?",
+    "code": "@GetMapping(\"/users\")\npublic List<UserDto> getUsers() {\n    List<User> users = userRepository.findAll();\n    return users.stream().map(user -> {\n        List<Order> orders = orderRepository.findByUserId(user.getId());\n        return new UserDto(user, orders);\n    }).collect(Collectors.toList());\n}",
+    "options": [
+      "findAll without pagination loads entire table",
+      "Stream operations are slower than for-loops",
+      "N+1 query -- should use JOIN FETCH or @EntityGraph"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-004",
+    "track": "backend",
+    "language": "java",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which scales for distributed job processing?",
+    "code": "// Option A: @Scheduled with fixed delay\n@Scheduled(fixedDelay = 5000)\npublic void processJobs() { ... }\n\n// Option B: RabbitMQ with competing consumers\n@RabbitListener(queues = \"jobs\")\npublic void onJob(JobMessage msg) { ... }\n\n// Option C: Database polling with SELECT FOR UPDATE\nSELECT * FROM jobs WHERE status='PENDING'\n    FOR UPDATE SKIP LOCKED LIMIT 10;",
+    "options": [
+      "A -- scheduled tasks are simplest and most reliable",
+      "B -- message queue distributes work across instances",
+      "C -- database locking guarantees exactly-once processing"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-005",
+    "track": "backend",
+    "language": "java",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this controller.",
+    "code": "@PostMapping(\"/users\")\npublic ResponseEntity<User> createUser(@RequestBody UserDto dto) {\n    User user = userService.create(dto);\n    return ResponseEntity.ok(user);\n}",
+    "options": [
+      "Missing @Valid annotation for input validation",
+      "UserDto needs @JsonCreator on constructor",
+      "Should return ResponseEntity.created() with location header"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-006",
+    "track": "backend",
+    "language": "java",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this endpoint slow?",
+    "code": "@GetMapping(\"/report\")\npublic Report generateReport() {\n    List<Transaction> all = txRepo.findAll();\n    double total = 0;\n    for (Transaction tx : all) {\n        if (tx.getDate().isAfter(LocalDate.now().minusDays(30))) {\n            total += tx.getAmount();\n        }\n    }\n    return new Report(total);\n}",
+    "options": [
+      "LocalDate.now() called in loop creates clock skew",
+      "Loads all transactions into memory instead of filtering in SQL",
+      "Double arithmetic causes floating-point rounding errors"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-007",
+    "track": "backend",
+    "language": "java",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the concurrency bug.",
+    "code": "public class Counter {\n    private int count = 0;\n\n    public void increment() {\n        count++;\n    }\n\n    public int getCount() {\n        return count;\n    }\n}",
+    "options": [
+      "getCount() might return stale value without volatile",
+      "int overflow when count exceeds Integer.MAX_VALUE",
+      "count++ is not atomic -- needs synchronized or AtomicInteger"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-008",
+    "track": "backend",
+    "language": "java",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "What's the security issue?",
+    "code": "@GetMapping(\"/search\")\npublic List<Product> search(@RequestParam String term) {\n    String sql = \"SELECT * FROM products WHERE name LIKE '%\"\n        + term + \"%'\";\n    return jdbcTemplate.query(sql, new ProductRowMapper());\n}",
+    "options": [
+      "SQL injection via string concatenation",
+      "LIKE without index causes full table scan",
+      "Missing pagination on unbounded result set"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-009",
+    "track": "backend",
+    "language": "java",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this change accomplish?",
+    "code": "// Before:\n@GetMapping(\"/users/{id}\")\npublic User getUser(@PathVariable Long id) {\n    return userRepo.findById(id).get();\n}\n\n// After:\n@GetMapping(\"/users/{id}\")\npublic ResponseEntity<User> getUser(@PathVariable Long id) {\n    return userRepo.findById(id)\n        .map(ResponseEntity::ok)\n        .orElse(ResponseEntity.notFound().build());\n}",
+    "options": [
+      "Avoids NoSuchElementException by returning 404 for missing users",
+      "Improves performance by skipping serialization on not found",
+      "Enables content negotiation for different response formats"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-010",
+    "track": "backend",
+    "language": "java",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which caching strategy scales best?",
+    "code": "// Option A: HashMap in controller\nprivate Map<Long, Product> cache = new HashMap<>();\n\n// Option B: Spring @Cacheable with Redis\n@Cacheable(value = \"products\", key = \"#id\")\npublic Product getProduct(Long id) { ... }\n\n// Option C: HTTP Cache-Control headers\n@GetMapping(\"/products/{id}\")\npublic ResponseEntity<Product> get(@PathVariable Long id) {\n    return ResponseEntity.ok()\n        .cacheControl(CacheControl.maxAge(5, TimeUnit.MINUTES))\n        .body(productService.get(id));\n}",
+    "options": [
+      "A -- in-process HashMap has lowest latency",
+      "C -- HTTP caching offloads work to the client",
+      "B -- Redis cache is shared across all application instances"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-011",
+    "track": "backend",
+    "language": "java",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this return?",
+    "code": "public String process(String input) {\n    try {\n        return input.toUpperCase();\n    } finally {\n        return \"default\";\n    }\n}",
+    "options": [
+      "The uppercase version of input",
+      "\"default\" -- finally block overrides the return",
+      "Compilation error -- two return statements"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-012",
+    "track": "backend",
+    "language": "java",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What's causing memory pressure?",
+    "code": "@Component\npublic class AuditLog {\n    private final List<AuditEntry> entries = new ArrayList<>();\n\n    public void log(String action, String userId) {\n        entries.add(new AuditEntry(action, userId, Instant.now()));\n    }\n\n    public List<AuditEntry> getRecent() {\n        return entries.subList(\n            Math.max(0, entries.size() - 100), entries.size());\n    }\n}",
+    "options": [
+      "subList creates a view that prevents garbage collection",
+      "Singleton bean accumulates entries forever -- unbounded memory growth",
+      "Instant.now() allocates unnecessary objects on each call"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-013",
+    "track": "backend",
+    "language": "java",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the deadlock risk.",
+    "code": "public void transferFunds(Account from, Account to, BigDecimal amount) {\n    synchronized (from) {\n        synchronized (to) {\n            from.debit(amount);\n            to.credit(amount);\n        }\n    }\n}",
+    "options": [
+      "BigDecimal operations are not thread-safe",
+      "debit and credit should be in a single atomic operation",
+      "Nested locks in inconsistent order can deadlock"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-014",
+    "track": "backend",
+    "language": "java",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this annotation change?",
+    "code": "// Before:\n@Entity\npublic class Order {\n    @ManyToOne\n    private Customer customer;\n}\n\n// After:\n@Entity\npublic class Order {\n    @ManyToOne(fetch = FetchType.LAZY)\n    private Customer customer;\n}",
+    "options": [
+      "Customer is now loaded in a separate transaction",
+      "Customer is only loaded when explicitly accessed",
+      "Customer data is cached between requests"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-015",
+    "track": "backend",
+    "language": "java",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this change accomplish?",
+    "code": "// Before:\n@PostMapping(\"/orders\")\npublic Order createOrder(@RequestBody OrderDto dto) {\n    Order order = orderService.create(dto);\n    emailService.sendConfirmation(order);\n    inventoryService.reserve(order);\n    return order;\n}\n\n// After:\n@PostMapping(\"/orders\")\npublic Order createOrder(@RequestBody OrderDto dto) {\n    Order order = orderService.create(dto);\n    eventPublisher.publish(new OrderCreatedEvent(order));\n    return order;\n}",
+    "options": [
+      "Reduces coupling by using event-driven architecture",
+      "Improves security by hiding service dependencies",
+      "Fixes a race condition between email and inventory"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-016",
+    "track": "backend",
+    "language": "java",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the bug in this handler.",
+    "code": "@PutMapping(\"/users/{id}\")\npublic ResponseEntity<User> updateUser(\n        @PathVariable Long id,\n        @Valid @RequestBody UserUpdateDto dto) {\n    User user = userRepo.findById(id)\n        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));\n    user.setEmail(dto.getEmail());\n    return ResponseEntity.ok(user);\n}",
+    "options": [
+      "Missing userRepo.save(user) -- changes are not persisted",
+      "Should use PATCH instead of PUT for partial updates",
+      "orElseThrow should use a custom exception class"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-017",
+    "track": "backend",
+    "language": "java",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What gets printed?",
+    "code": "Map<String, Integer> map = new HashMap<>();\nmap.put(\"a\", 1);\nmap.put(\"b\", 2);\nmap.put(\"a\", 3);\nSystem.out.println(map.size() + \" \" + map.get(\"a\"));",
+    "options": [
+      "3 3",
+      "2 3",
+      "2 1"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-018",
+    "track": "backend",
+    "language": "java",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the visibility bug.",
+    "code": "public class TaskRunner {\n    private boolean running = true;\n\n    public void stop() {\n        running = false;\n    }\n\n    public void run() {\n        while (running) {\n            // process tasks\n        }\n    }\n}",
+    "options": [
+      "stop() should be synchronized to prevent race conditions",
+      "running must be volatile -- JIT may cache it in a register",
+      "while loop needs Thread.yield() to avoid CPU spinning"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-019",
+    "track": "backend",
+    "language": "java",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "What's slow about this code?",
+    "code": "public String buildCsv(List<Record> records) {\n    String csv = \"\";\n    for (Record r : records) {\n        csv += r.getName() + \",\" + r.getValue() + \"\\n\";\n    }\n    return csv;\n}",
+    "options": [
+      "getName() and getValue() should be cached before the loop",
+      "Missing charset encoding causes slow string conversion",
+      "String concatenation in a loop creates many temporary objects"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-020",
+    "track": "backend",
+    "language": "java",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the transaction bug.",
+    "code": "@Transactional\npublic void processPayment(Long orderId) {\n    Order order = orderRepo.findById(orderId).orElseThrow();\n    order.setStatus(OrderStatus.PAID);\n    orderRepo.save(order);\n    paymentGateway.charge(order.getAmount());\n}",
+    "options": [
+      "If charge() fails, the order status is already committed",
+      "save() is redundant inside @Transactional with dirty checking",
+      "Side effect in transaction -- charge() runs before commit"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-021",
+    "track": "backend",
+    "language": "java",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which handles 10K concurrent WebSocket connections?",
+    "code": "// Option A: Thread-per-connection with blocking I/O\nnew Thread(() -> handleConnection(socket)).start();\n\n// Option B: Spring WebFlux with reactive streams\n@Bean\npublic RouterFunction<ServerResponse> wsRoute() {\n    return route(GET(\"/ws\"), this::handleReactive);\n}\n\n// Option C: Thread pool with fixed size\nExecutorService pool = Executors.newFixedThreadPool(200);\npool.submit(() -> handleConnection(socket));",
+    "options": [
+      "A -- dedicated threads give best per-connection performance",
+      "C -- thread pool limits resource usage predictably",
+      "B -- reactive non-blocking I/O handles many connections on few threads"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-022",
+    "track": "backend",
+    "language": "java",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What HTTP status is returned?",
+    "code": "@GetMapping(\"/health\")\npublic ResponseEntity<String> health() {\n    return ResponseEntity.ok(\"UP\");\n}",
+    "options": [
+      "200 OK",
+      "201 Created",
+      "204 No Content"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-023",
+    "track": "backend",
+    "language": "java",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this silently fail?",
+    "code": "@PostMapping(\"/upload\")\npublic ResponseEntity<String> upload(@RequestParam MultipartFile file) {\n    try {\n        storageService.store(file);\n        return ResponseEntity.ok(\"Uploaded\");\n    } catch (Exception e) {\n        log.error(\"Upload failed\");\n        return ResponseEntity.status(500).body(\"Error\");\n    }\n}",
+    "options": [
+      "MultipartFile should use @RequestPart annotation",
+      "storageService.store needs @Async for large files",
+      "log.error swallows the exception -- missing e in log args"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-024",
+    "track": "backend",
+    "language": "java",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "CompletableFuture<String> f1 = CompletableFuture.supplyAsync(() -> \"Hello\");\nCompletableFuture<String> f2 = CompletableFuture.supplyAsync(() -> \"World\");\n\nString result = f1.thenCombine(f2, (a, b) -> a + \" \" + b).join();\nSystem.out.println(result);",
+    "options": [
+      "Hello World",
+      "World Hello",
+      "Throws CompletionException"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-025",
+    "track": "backend",
+    "language": "java",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this migration fix?",
+    "code": "-- Before: no index\nSELECT * FROM orders\nWHERE customer_id = ? AND status = 'PENDING'\nORDER BY created_at DESC;\n\n-- After: composite index added\nCREATE INDEX idx_orders_customer_status_created\n    ON orders(customer_id, status, created_at DESC);",
+    "options": [
+      "Prevents full table scan on the filtered and sorted query",
+      "Enables database-level enum validation on status column",
+      "Reduces lock contention on concurrent order inserts"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-026",
+    "track": "backend",
+    "language": "java",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this refactor improve?",
+    "code": "// Before:\n@GetMapping(\"/export\")\npublic byte[] export() {\n    List<Record> all = recordRepo.findAll();\n    return csvConverter.toBytes(all);\n}\n\n// After:\n@GetMapping(\"/export\")\npublic StreamingResponseBody export() {\n    return out -> {\n        recordRepo.streamAll().forEach(record -> {\n            out.write(csvConverter.toLine(record));\n        });\n    };\n}",
+    "options": [
+      "Enables HTTP chunked transfer for faster first byte",
+      "Reduces memory usage by streaming instead of buffering all records",
+      "Allows client to cancel the download mid-stream"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-027",
+    "track": "backend",
+    "language": "java",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which pattern prevents cascading failures?",
+    "code": "// Option A: Increase timeout to 30 seconds\nrestTemplate.setReadTimeout(Duration.ofSeconds(30));\n\n// Option B: Circuit breaker with fallback\n@CircuitBreaker(name = \"paymentSvc\", fallbackMethod = \"fallback\")\npublic Payment charge(Order order) { ... }\n\n// Option C: Retry with exponential backoff\n@Retry(name = \"paymentSvc\", maxAttempts = 5)\npublic Payment charge(Order order) { ... }",
+    "options": [
+      "A -- longer timeouts give downstream services time to recover",
+      "C -- retries with backoff smooth out transient failures",
+      "B -- circuit breaker stops calling a failing service and fails fast"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-028",
+    "track": "backend",
+    "language": "java",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this annotation add?",
+    "code": "// Before:\n@PostMapping(\"/users\")\npublic User create(@RequestBody UserDto dto) {\n    return userService.create(dto);\n}\n\n// After:\n@PostMapping(\"/users\")\npublic User create(@Valid @RequestBody UserDto dto) {\n    return userService.create(dto);\n}",
+    "options": [
+      "Adds null-checking on the request body",
+      "Enables JSON schema validation on the request",
+      "Triggers Bean Validation on dto fields before the method runs"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-029",
+    "track": "backend",
+    "language": "java",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this cache misbehave?",
+    "code": "public class UserCache {\n    private final Map<User, String> cache = new HashMap<>();\n\n    public void put(User user) {\n        cache.put(user, user.getRole());\n    }\n\n    public String getRole(User user) {\n        return cache.get(user);\n    }\n}\n// User is a mutable POJO with equals/hashCode on all fields",
+    "options": [
+      "HashMap is not thread-safe for concurrent access",
+      "Mutating User after put changes hashCode -- entry becomes unreachable",
+      "getRole returns null for missing keys instead of throwing"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-030",
+    "track": "backend",
+    "language": "java",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What can this print?",
+    "code": "ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<>();\nmap.put(\"count\", 0);\n\nExecutorService pool = Executors.newFixedThreadPool(2);\nfor (int i = 0; i < 1000; i++) {\n    pool.submit(() -> map.compute(\"count\", (k, v) -> v + 1));\n}\npool.shutdown();\npool.awaitTermination(10, TimeUnit.SECONDS);\nSystem.out.println(map.get(\"count\"));",
+    "options": [
+      "Always 1000 -- compute is atomic per key",
+      "Less than 1000 -- ConcurrentHashMap has weak consistency",
+      "Throws ConcurrentModificationException"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-031",
+    "track": "backend",
+    "language": "java",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the bug in this repository method.",
+    "code": "@Transactional(readOnly = true)\npublic BigDecimal getTotalRevenue(LocalDate from, LocalDate to) {\n    List<Order> orders = orderRepo.findByDateBetween(from, to);\n    return orders.stream()\n        .map(Order::getAmount)\n        .reduce(BigDecimal.ZERO, BigDecimal::add);\n}\n// Called from a scheduled job that also writes audit logs",
+    "options": [
+      "reduce should use a combiner for parallel streams",
+      "readOnly = true prevents the calling method from writing",
+      "BigDecimal::add may lose precision without MathContext"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-032",
+    "track": "backend",
+    "language": "java",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the resource leak.",
+    "code": "public List<String> readNames(DataSource ds) throws SQLException {\n    Connection conn = ds.getConnection();\n    PreparedStatement ps = conn.prepareStatement(\n        \"SELECT name FROM users\");\n    ResultSet rs = ps.executeQuery();\n    List<String> names = new ArrayList<>();\n    while (rs.next()) {\n        names.add(rs.getString(\"name\"));\n    }\n    return names;\n}",
+    "options": [
+      "ResultSet should be closed before returning",
+      "Connection is never closed -- use try-with-resources",
+      "PreparedStatement should use a connection pool"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-033",
+    "track": "backend",
+    "language": "java",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this configuration change?",
+    "code": "// Before:\nspring.datasource.url=jdbc:mysql://primary:3306/app\n\n// After:\nspring.datasource.url=jdbc:mysql://primary:3306/app\nspring.datasource.replica.url=jdbc:mysql://replica:3306/app\n\n@Transactional(readOnly = true)\npublic List<User> search(String q) {\n    // Routed to replica via AbstractRoutingDataSource\n    return userRepo.search(q);\n}",
+    "options": [
+      "Adds automatic failover when primary database goes down",
+      "Routes read queries to a replica to reduce primary load",
+      "Enables cross-region data replication for disaster recovery"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-034",
+    "track": "backend",
+    "language": "java",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the vulnerability in this endpoint.",
+    "code": "@GetMapping(\"/users/{id}/profile\")\npublic UserProfile getProfile(\n        @PathVariable Long id,\n        @AuthenticationPrincipal UserDetails principal) {\n    return userService.getProfile(id);\n}",
+    "options": [
+      "Missing @PreAuthorize -- any user can view any profile",
+      "UserDetails should be validated against the token",
+      "@PathVariable Long can overflow on large IDs"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-035",
+    "track": "backend",
+    "language": "java",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this return?",
+    "code": "public Optional<String> findName(Long id) {\n    User user = userRepo.findById(id).orElse(null);\n    return Optional.ofNullable(user)\n        .map(User::getName)\n        .filter(name -> !name.isBlank());\n}\n// Called with an id that doesn't exist in the database",
+    "options": [
+      "Throws NoSuchElementException",
+      "Optional.empty()",
+      "Optional containing null"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-036",
+    "track": "backend",
+    "language": "java",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why does this degrade under load?",
+    "code": "@Service\npublic class ReportService {\n    public synchronized Report generate(ReportRequest req) {\n        List<Data> data = dataRepo.findByDateRange(req.getFrom(), req.getTo());\n        return Report.build(data);\n    }\n}",
+    "options": [
+      "synchronized on instance method serializes all report generation",
+      "findByDateRange holds a database lock for the entire range",
+      "Report.build should run on a separate thread pool"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-037",
+    "track": "backend",
+    "language": "java",
+    "category": "databases",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the subtle transaction issue.",
+    "code": "@Service\npublic class OrderService {\n    @Transactional\n    public void placeOrder(OrderDto dto) {\n        Order order = orderRepo.save(toEntity(dto));\n        inventoryService.reserve(order);\n    }\n}\n\n@Service\npublic class InventoryService {\n    @Transactional(propagation = Propagation.REQUIRES_NEW)\n    public void reserve(Order order) { ... }\n}",
+    "options": [
+      "Self-invocation bypasses the transactional proxy",
+      "Two services sharing an entity causes detached object errors",
+      "REQUIRES_NEW commits inventory even if placeOrder rolls back"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-038",
+    "track": "backend",
+    "language": "java",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "Why does throughput plateau at 200 RPS?",
+    "code": "// application.yml\nspring:\n  datasource:\n    hikari:\n      maximum-pool-size: 10\n\n@Service\npublic class NotificationService {\n    @Transactional\n    public void notify(Long userId) {\n        User user = userRepo.findById(userId).orElseThrow();\n        emailClient.send(user.getEmail(), buildMessage(user)); // ~50ms\n    }\n}",
+    "options": [
+      "HikariCP pool of 10 is exhausted by 50ms email calls inside transactions",
+      "emailClient.send should use connection keep-alive for throughput",
+      "@Transactional forces a new database connection per request"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-039",
+    "track": "backend",
+    "language": "java",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this comparison.",
+    "code": "public boolean isEligible(Integer age) {\n    Integer minAge = 128;\n    return age == minAge;\n}",
+    "options": [
+      "age could be null causing NullPointerException",
+      "Integer comparison with == checks reference, not value",
+      "128 should be declared as int, not Integer"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ja-be-040",
+    "track": "backend",
+    "language": "java",
+    "category": "systems_design",
+    "difficulty": 1,
+    "type": "scales",
+    "prompt": "Which handles session state across instances?",
+    "code": "// Option A: HttpSession stored in server memory\nsession.setAttribute(\"cart\", cart);\n\n// Option B: Spring Session backed by Redis\n@EnableRedisHttpSession\npublic class SessionConfig { }\n\n// Option C: Cookie-based session with encryption\nserver.servlet.session.cookie.name=SESSION\nserver.servlet.session.cookie.secure=true",
+    "options": [
+      "A -- server memory sessions are fastest",
+      "C -- encrypted cookies are shared via the browser",
+      "B -- Redis-backed sessions are shared across all instances"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  }
+]

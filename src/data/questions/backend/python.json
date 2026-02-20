@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "py-be-001",
+    "track": "backend",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the bug in this endpoint.",
+    "code": "@app.post('/users')\nasync def create_user(data: UserCreate):\n    user = User(**data.dict())\n    db.add(user)\n    db.commit()\n    return {'id': user.id}",
+    "options": [
+      "db.commit() is sync — blocks the event loop",
+      "data.dict() is deprecated in Pydantic v2",
+      "user.id is None before db.refresh()"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-002",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "import asyncio\n\nasync def fetch(n):\n    await asyncio.sleep(0)\n    return n * 2\n\nasync def main():\n    coros = [fetch(i) for i in range(3)]\n    results = []\n    for c in coros:\n        results.append(await c)\n    print(results)\n\nasyncio.run(main())",
+    "options": [
+      "[4, 2, 0]",
+      "RuntimeError: coroutines run out of order",
+      "[0, 2, 4]"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-003",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the performance issue?",
+    "code": "@app.get('/orders')\nasync def list_orders(db: AsyncSession = Depends(get_db)):\n    result = await db.execute(select(Order))\n    orders = result.scalars().all()\n    return [\n        {\n            'id': o.id,\n            'items': [i.name for i in o.items],\n            'customer': o.customer.email\n        }\n        for o in orders\n    ]",
+    "options": [
+      "async session can't handle list comprehensions",
+      "scalars().all() loads everything into memory at once",
+      "N+1 queries — items and customer are lazy-loaded per row"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-004",
+    "track": "backend",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which task queue pattern scales best?",
+    "code": "# Option A\n@celery.task\ndef process_order(order_id):\n    order = Order.query.get(order_id)\n    charge_payment(order)\n    send_email(order)\n    update_inventory(order)\n\n# Option B\n@celery.task\ndef process_order(order_id):\n    chain(\n        charge_payment.s(order_id),\n        send_email.s(),\n        update_inventory.s()\n    ).apply_async()",
+    "options": [
+      "A — single task is simpler and avoids serialization overhead",
+      "B — chain lets each step retry independently and run on different workers",
+      "Both are equivalent — Celery handles retries the same way"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-005",
+    "track": "backend",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this dependency.",
+    "code": "from fastapi import Depends\n\ndef get_settings(env: str = 'prod'):\n    return load_config(env)\n\n@app.get('/health')\nasync def health(settings = Depends(get_settings)):\n    return {'db': settings.db_host}\n\n@app.get('/info')\nasync def info(settings = Depends(get_settings)):\n    return {'version': settings.version}",
+    "options": [
+      "get_settings is called on every request — should use lru_cache",
+      "Depends() can't inject sync functions in async routes",
+      "settings parameter shadows a module-level name"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-006",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "import asyncio\n\nasync def producer(q):\n    for i in range(3):\n        await q.put(i)\n    await q.put(None)\n\nasync def consumer(q):\n    items = []\n    while (item := await q.get()) is not None:\n        items.append(item)\n    print(items)\n\nasync def main():\n    q = asyncio.Queue(maxsize=1)\n    await asyncio.gather(producer(q), consumer(q))\n\nasyncio.run(main())",
+    "options": [
+      "Deadlock — queue is full and producer blocks forever",
+      "[0, 1, 2]",
+      "[0] then hangs"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-007",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the SQL injection risk.",
+    "code": "from psycopg2 import sql\n\ndef search_users(conn, column, value):\n    query = sql.SQL(\n        'SELECT * FROM users WHERE {} = %s'\n    ).format(sql.Identifier(column))\n    cur = conn.cursor()\n    cur.execute(query, (value,))\n    return cur.fetchall()",
+    "options": [
+      "column is user input passed to sql.Identifier — allows injection",
+      "%s placeholder doesn't work with sql.SQL — use sql.Literal",
+      "No injection — sql.Identifier safely quotes the column name"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-008",
+    "track": "backend",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this endpoint slow?",
+    "code": "@app.get('/report')\nasync def generate_report():\n    users = await db.fetch_all(query='SELECT * FROM users')\n    report = []\n    for user in users:\n        stats = compute_user_stats(user)  # CPU-heavy, ~200ms\n        report.append(stats)\n    return report",
+    "options": [
+      "compute_user_stats is sync CPU work — blocks the event loop",
+      "SELECT * fetches unnecessary columns",
+      "report list grows unbounded — should stream the response"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-009",
+    "track": "backend",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "What's wrong with this cache?",
+    "code": "def get_connection(cache={}):\n    if 'conn' not in cache:\n        cache['conn'] = psycopg2.connect(DSN)\n    return cache['conn']\n\ndef query_users():\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute('SELECT * FROM users')\n    return cur.fetchall()",
+    "options": [
+      "psycopg2.connect() is blocking — needs await",
+      "cursor is never closed — causes a resource leak",
+      "Mutable default dict persists — connection is never refreshed if it drops"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-010",
+    "track": "backend",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which approach prevents double-processing?",
+    "code": "# Option A: Check-then-act\nif not redis.exists(f'job:{job_id}'):\n    redis.set(f'job:{job_id}', 'processing')\n    process(job_id)\n\n# Option B: Atomic SET NX\nacquired = redis.set(f'job:{job_id}', 'processing', nx=True, ex=300)\nif acquired:\n    process(job_id)\n\n# Option C: Database unique constraint\ntry:\n    db.execute('INSERT INTO jobs (id, status) VALUES (%s, %s)', [job_id, 'processing'])\n    process(job_id)\nexcept IntegrityError:\n    pass",
+    "options": [
+      "C — database constraint is the strongest guarantee",
+      "A — checking existence first is the standard pattern",
+      "B — SET NX is atomic, preventing the race window in A"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-011",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A\nasync def fetch_all(urls):\n    async with aiohttp.ClientSession() as session:\n        tasks = [session.get(url) for url in urls]\n        return await asyncio.gather(*tasks)\n\n# Version B\nasync def fetch_all(urls):\n    sem = asyncio.Semaphore(10)\n    async with aiohttp.ClientSession() as session:\n        async def bounded(url):\n            async with sem:\n                return await session.get(url)\n        return await asyncio.gather(*[bounded(u) for u in urls])",
+    "options": [
+      "A is faster because gather() handles backpressure internally",
+      "B leaks sessions because bounded() creates a closure over session",
+      "A opens all connections at once — B caps concurrency at 10"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-012",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A\nwith engine.connect() as conn:\n    conn.execute(text('UPDATE accounts SET balance = balance - 100 WHERE id = 1'))\n    conn.execute(text('UPDATE accounts SET balance = balance + 100 WHERE id = 2'))\n    conn.commit()\n\n# Version B\nwith Session(engine) as session:\n    a1 = session.get(Account, 1)\n    a2 = session.get(Account, 2)\n    a1.balance -= 100\n    a2.balance += 100\n    session.commit()",
+    "options": [
+      "A uses atomic SQL — B has a read-then-write race condition",
+      "B is safer because the ORM tracks dirty fields automatically",
+      "Both are equivalent — SQLAlchemy wraps them in the same transaction"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-013",
+    "track": "backend",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the bug in this middleware.",
+    "code": "@app.middleware('http')\nasync def auth_middleware(request: Request, call_next):\n    if request.url.path in ['/health', '/docs']:\n        return await call_next(request)\n    token = request.headers.get('Authorization')\n    try:\n        request.state.user = verify_token(token)\n    except InvalidToken:\n        return JSONResponse(status_code=401, content={'error': 'bad token'})\n    response = await call_next(request)\n    return response",
+    "options": [
+      "verify_token is sync — should be awaited",
+      "Missing token (None) raises TypeError, not InvalidToken",
+      "request.state is not shared with route handlers"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-014",
+    "track": "backend",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why is this background task slow?",
+    "code": "import json, redis\n\nr = redis.Redis()\n\ndef process_events():\n    while True:\n        event = r.lpop('events')\n        if event is None:\n            time.sleep(0.1)\n            continue\n        data = json.loads(event)\n        handle_event(data)",
+    "options": [
+      "Single-threaded loop — should use ThreadPoolExecutor",
+      "json.loads is slow — use msgpack or pickle instead",
+      "Polling with lpop + sleep wastes cycles — use blpop to block"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-015",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "import threading\n\ncounter = 0\nlock = threading.Lock()\n\ndef increment():\n    global counter\n    for _ in range(100_000):\n        with lock:\n            counter += 1\n\nthreads = [threading.Thread(target=increment) for _ in range(4)]\nfor t in threads:\n    t.start()\nfor t in threads:\n    t.join()\nprint(counter)",
+    "options": [
+      "A value less than 400000 due to the GIL",
+      "400000",
+      "A value less than 400000 due to lock contention"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-016",
+    "track": "backend",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A: Shared cache\ncache = {}\n\n@app.get('/users/{user_id}')\nasync def get_user(user_id: int):\n    if user_id not in cache:\n        cache[user_id] = await db.fetch_user(user_id)\n    return cache[user_id]\n\n# Version B: Redis cache\n@app.get('/users/{user_id}')\nasync def get_user(user_id: int):\n    cached = await redis.get(f'user:{user_id}')\n    if not cached:\n        user = await db.fetch_user(user_id)\n        await redis.setex(f'user:{user_id}', 300, user.json())\n        return user\n    return json.loads(cached)",
+    "options": [
+      "B is slower because Redis adds a network hop per request",
+      "A is thread-unsafe — B avoids this with Redis single-threading",
+      "A grows unbounded and is per-process — B has TTL and is shared"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-017",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this return?",
+    "code": "from sqlalchemy import create_engine, text\n\nengine = create_engine('sqlite://')\nwith engine.connect() as conn:\n    conn.execute(text('CREATE TABLE t (val INTEGER)'))\n    conn.execute(text('INSERT INTO t VALUES (1)'))\n    conn.execute(text('INSERT INTO t VALUES (2)'))\n    conn.execute(text('INSERT INTO t VALUES (3)'))\n    result = conn.execute(text('SELECT SUM(val) FROM t'))\n    print(result.scalar())",
+    "options": [
+      "6",
+      "None — the inserts were never committed",
+      "(6,)"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-018",
+    "track": "backend",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A: Return error in body\n@app.post('/transfer')\nasync def transfer(data: TransferRequest):\n    if data.amount <= 0:\n        return {'success': False, 'error': 'Invalid amount'}\n    await execute_transfer(data)\n    return {'success': True}\n\n# Version B: Raise HTTP exception\n@app.post('/transfer')\nasync def transfer(data: TransferRequest):\n    if data.amount <= 0:\n        raise HTTPException(status_code=422, detail='Invalid amount')\n    await execute_transfer(data)\n    return {'success': True}",
+    "options": [
+      "A always returns 200 — clients can't distinguish errors by status code",
+      "B is slower because exception handling has more overhead",
+      "A is better for frontend clients that parse JSON responses"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-019",
+    "track": "backend",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this serializer slow?",
+    "code": "@app.get('/products')\nasync def list_products():\n    products = await db.execute(select(Product))\n    result = []\n    for p in products.scalars().all():\n        result.append({\n            'id': p.id,\n            'name': p.name,\n            'price': str(p.price),\n            'tags': json.loads(p.tags_json),\n            'created': p.created_at.isoformat()\n        })\n    return result",
+    "options": [
+      "str(p.price) creates new string objects — use Decimal serializer",
+      "json.loads per row is expensive — store tags as a native array column",
+      "isoformat() is slow — use a pre-formatted date column"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-020",
+    "track": "backend",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this handler.",
+    "code": "@app.get('/items/{item_id}')\nasync def get_item(item_id: int):\n    item = await db.get(Item, item_id)\n    if not item:\n        raise HTTPException(status_code=404)\n    return item\n\n@app.get('/items/latest')\nasync def get_latest():\n    return await db.execute(\n        select(Item).order_by(Item.created_at.desc()).limit(1)\n    )",
+    "options": [
+      "/items/latest is matched by /items/{item_id} — route order matters",
+      "get_latest returns a Result object instead of an Item",
+      "db.get() doesn't work with async sessions"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-021",
+    "track": "backend",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this route.",
+    "code": "from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/users')\nasync def list_users(skip: int, limit: int):\n    users = await db.fetch_users(skip=skip, limit=limit)\n    return users",
+    "options": [
+      "skip and limit have no defaults — requests without them return 422",
+      "db.fetch_users should be called with positional arguments",
+      "list_users needs a return type annotation to work"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-022",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the transaction bug.",
+    "code": "async def transfer(db: AsyncSession, from_id: int, to_id: int, amount: float):\n    sender = await db.get(Account, from_id)\n    receiver = await db.get(Account, to_id)\n    if sender.balance < amount:\n        raise ValueError('Insufficient funds')\n    sender.balance -= amount\n    receiver.balance += amount\n    await db.commit()\n    return {'status': 'ok'}",
+    "options": [
+      "ValueError is raised inside session — should rollback first",
+      "amount should be Decimal, not float",
+      "No SELECT FOR UPDATE — concurrent transfers can overdraw"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-023",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "import asyncio\n\nasync def task(name, delay):\n    await asyncio.sleep(delay)\n    print(name)\n\nasync def main():\n    await asyncio.gather(\n        task('A', 0.3),\n        task('B', 0.1),\n        task('C', 0.2)\n    )\n\nasyncio.run(main())",
+    "options": [
+      "A B C",
+      "B C A",
+      "A C B"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-024",
+    "track": "backend",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this file upload slow?",
+    "code": "@app.post('/upload')\nasync def upload_file(file: UploadFile):\n    contents = await file.read()\n    checksum = hashlib.sha256(contents).hexdigest()\n    await s3.put_object(\n        Bucket='uploads',\n        Key=f'{checksum}.bin',\n        Body=contents\n    )\n    return {'checksum': checksum, 'size': len(contents)}",
+    "options": [
+      "hashlib.sha256 is sync CPU work — blocks the event loop",
+      "put_object should use multipart upload for large files",
+      "Reading entire file into memory — should stream in chunks"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-025",
+    "track": "backend",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which rate limiter scales across instances?",
+    "code": "# Option A: In-memory\nfrom collections import defaultdict\nimport time\n\nrequests = defaultdict(list)\n\ndef is_rate_limited(user_id):\n    now = time.time()\n    requests[user_id] = [t for t in requests[user_id] if now - t < 60]\n    if len(requests[user_id]) >= 100:\n        return True\n    requests[user_id].append(now)\n    return False\n\n# Option B: Redis sliding window\ndef is_rate_limited(user_id):\n    key = f'rate:{user_id}'\n    now = time.time()\n    pipe = redis.pipeline()\n    pipe.zremrangebyscore(key, 0, now - 60)\n    pipe.zadd(key, {str(now): now})\n    pipe.zcard(key)\n    pipe.expire(key, 60)\n    _, _, count, _ = pipe.execute()\n    return count > 100",
+    "options": [
+      "A — in-memory is faster and avoids Redis latency",
+      "B — Redis is shared across instances and survives restarts",
+      "Both work the same with a load balancer using sticky sessions"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-026",
+    "track": "backend",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the bug in this retry logic.",
+    "code": "import httpx\nimport asyncio\n\nasync def fetch_with_retry(url, retries=3):\n    for attempt in range(retries):\n        try:\n            async with httpx.AsyncClient() as client:\n                response = await client.get(url, timeout=5)\n                response.raise_for_status()\n                return response.json()\n        except httpx.HTTPError:\n            await asyncio.sleep(2 ** attempt)\n    return None",
+    "options": [
+      "AsyncClient is created per attempt — should be reused outside the loop",
+      "raise_for_status runs after json parsing — wrong order",
+      "Returns None on failure — caller can't distinguish error from empty response"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-027",
+    "track": "backend",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A\nclass UserResponse(BaseModel):\n    id: int\n    name: str\n    email: str\n    hashed_password: str\n    is_admin: bool\n\n# Version B\nclass UserResponse(BaseModel):\n    id: int\n    name: str\n    email: str\n\n    class Config:\n        from_attributes = True",
+    "options": [
+      "A exposes sensitive fields — B limits the response shape",
+      "B is slower because from_attributes adds ORM overhead",
+      "A is more flexible because it includes all user data"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-028",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the concurrency bug.",
+    "code": "from fastapi import FastAPI\nimport asyncio\n\napp = FastAPI()\nconnections = []\n\n@app.websocket('/ws')\nasync def websocket_endpoint(ws):\n    await ws.accept()\n    connections.append(ws)\n    try:\n        while True:\n            data = await ws.receive_text()\n            for conn in connections:\n                await conn.send_text(data)\n    finally:\n        connections.remove(ws)",
+    "options": [
+      "ws.accept() should be called outside the try block",
+      "Iterating connections while another task appends — raises RuntimeError",
+      "receive_text blocks — should use asyncio.wait_for with timeout"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-029",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why is this query slow?",
+    "code": "# models.py\nclass Event(Base):\n    __tablename__ = 'events'\n    id = Column(Integer, primary_key=True)\n    user_id = Column(Integer, ForeignKey('users.id'))\n    event_type = Column(String(50))\n    created_at = Column(DateTime, default=datetime.utcnow)\n\n# query\nresult = await db.execute(\n    select(Event)\n    .where(Event.user_id == user_id)\n    .where(Event.created_at >= last_week)\n    .order_by(Event.created_at.desc())\n)",
+    "options": [
+      "datetime.utcnow as default is evaluated once at class load time",
+      "select(Event) loads all columns — should use load_only()",
+      "Missing composite index on (user_id, created_at) — full table scan"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-030",
+    "track": "backend",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A: Sync webhook\n@app.post('/webhook')\nasync def handle_webhook(payload: WebhookPayload):\n    validate_signature(payload)\n    result = await process_event(payload)\n    return {'status': 'processed', 'result': result}\n\n# Version B: Async webhook\n@app.post('/webhook')\nasync def handle_webhook(payload: WebhookPayload, bg: BackgroundTasks):\n    validate_signature(payload)\n    bg.add_task(process_event, payload)\n    return {'status': 'accepted'}",
+    "options": [
+      "A blocks the sender until processing finishes — B responds immediately",
+      "B loses events if the server crashes before processing",
+      "A is safer because it confirms processing succeeded"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-031",
+    "track": "backend",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "from pydantic import BaseModel, field_validator\n\nclass User(BaseModel):\n    name: str\n    age: int\n\n    @field_validator('age')\n    @classmethod\n    def check_age(cls, v):\n        if v < 0:\n            raise ValueError('age must be positive')\n        return v\n\ntry:\n    u = User(name='Alice', age=-1)\n    print(u.age)\nexcept Exception as e:\n    print('error')",
+    "options": [
+      "-1",
+      "error",
+      "0"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-032",
+    "track": "backend",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A\n@app.get('/search')\nasync def search(q: str):\n    results = await db.execute(\n        select(Product).where(Product.name.contains(q))\n    )\n    return results.scalars().all()\n\n# Version B\n@app.get('/search')\nasync def search(q: str):\n    results = await db.execute(\n        select(Product).where(\n            Product.search_vector.match(q)\n        )\n    )\n    return results.scalars().all()",
+    "options": [
+      "A uses LIKE with wildcards — B uses full-text search index",
+      "B is case-sensitive while A is case-insensitive",
+      "A returns partial matches — B only returns exact matches"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-033",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "import asyncio\n\nasync def work(n):\n    if n == 2:\n        raise ValueError('bad')\n    return n\n\nasync def main():\n    results = await asyncio.gather(\n        work(1), work(2), work(3),\n        return_exceptions=True\n    )\n    print([type(r).__name__ for r in results])\n\nasyncio.run(main())",
+    "options": [
+      "Raises ValueError — gather re-raises the first exception",
+      "['int', 'int'] — the failed task is skipped",
+      "['int', 'ValueError', 'int']"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-034",
+    "track": "backend",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the bug in this validator.",
+    "code": "from pydantic import BaseModel, field_validator\nfrom typing import Optional\n\nclass CreateOrder(BaseModel):\n    product_id: int\n    quantity: int\n    coupon_code: Optional[str] = None\n\n    @field_validator('coupon_code')\n    @classmethod\n    def validate_coupon(cls, v):\n        if len(v) != 8:\n            raise ValueError('Coupon must be 8 chars')\n        return v.upper()",
+    "options": [
+      "field_validator doesn't work with Optional fields",
+      "classmethod decorator must come before field_validator",
+      "v can be None when coupon_code is omitted — len(None) raises TypeError"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-035",
+    "track": "backend",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which handles backpressure best?",
+    "code": "# Option A: Unbounded queue\nasync def ingest(stream):\n    queue = asyncio.Queue()\n    asyncio.create_task(consumer(queue))\n    async for msg in stream:\n        await queue.put(msg)\n\n# Option B: Bounded queue with drop\nasync def ingest(stream):\n    queue = asyncio.Queue(maxsize=1000)\n    asyncio.create_task(consumer(queue))\n    async for msg in stream:\n        try:\n            queue.put_nowait(msg)\n        except asyncio.QueueFull:\n            logger.warning('Dropped message')\n\n# Option C: Bounded queue with block\nasync def ingest(stream):\n    queue = asyncio.Queue(maxsize=1000)\n    asyncio.create_task(consumer(queue))\n    async for msg in stream:\n        await queue.put(msg)",
+    "options": [
+      "A — unbounded queue ensures no messages are lost",
+      "C — blocking the producer propagates backpressure upstream",
+      "B — dropping is the only way to prevent OOM under load"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-036",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the migration bug.",
+    "code": "# alembic migration\ndef upgrade():\n    op.add_column('users',\n        sa.Column('email', sa.String(255), nullable=False)\n    )\n    op.create_unique_constraint('uq_users_email', 'users', ['email'])\n\ndef downgrade():\n    op.drop_constraint('uq_users_email', 'users')\n    op.drop_column('users', 'email')",
+    "options": [
+      "Adding NOT NULL column without a default fails on tables with existing rows",
+      "create_unique_constraint should come before add_column",
+      "drop_constraint needs type_='unique' for some databases"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-037",
+    "track": "backend",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the bug in this signal handler.",
+    "code": "import signal\nimport sys\n\nconnections = []\n\ndef shutdown(sig, frame):\n    for conn in connections:\n        conn.close()\n    sys.exit(0)\n\nsignal.signal(signal.SIGTERM, shutdown)\nsignal.signal(signal.SIGINT, shutdown)\n\ndef serve():\n    while True:\n        conn = accept_connection()\n        connections.append(conn)\n        handle(conn)",
+    "options": [
+      "Signal handler modifies connections during iteration — not async-signal-safe",
+      "sys.exit(0) in a handler doesn't flush stdout or run atexit hooks",
+      "SIGTERM can't be caught — only SIGINT is valid"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-038",
+    "track": "backend",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this aggregation slow?",
+    "code": "@app.get('/dashboard')\nasync def dashboard(db: AsyncSession = Depends(get_db)):\n    users = await db.execute(select(User))\n    total = 0\n    active = 0\n    for u in users.scalars().all():\n        total += 1\n        if u.last_login and u.last_login > last_month:\n            active += 1\n    return {'total': total, 'active': active}",
+    "options": [
+      "Counting in Python instead of SQL — should use COUNT with a WHERE clause",
+      "scalars().all() returns duplicates without distinct()",
+      "last_month variable is not timezone-aware — comparison is wrong"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-039",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A\nasync def process_batch(items):\n    results = []\n    for item in items:\n        result = await process_item(item)\n        results.append(result)\n    return results\n\n# Version B\nasync def process_batch(items):\n    tasks = [process_item(item) for item in items]\n    return await asyncio.gather(*tasks)",
+    "options": [
+      "B raises on first error — A skips errors silently",
+      "A processes items sequentially — B runs them all concurrently",
+      "A preserves order — B returns results in completion order"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-040",
+    "track": "backend",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which pagination approach scales better?",
+    "code": "# Option A: Offset-based\n@app.get('/posts')\nasync def list_posts(page: int = 1, size: int = 20):\n    offset = (page - 1) * size\n    return await db.execute(\n        select(Post).offset(offset).limit(size)\n    )\n\n# Option B: Cursor-based\n@app.get('/posts')\nasync def list_posts(cursor: str | None = None, size: int = 20):\n    query = select(Post).order_by(Post.id).limit(size)\n    if cursor:\n        query = query.where(Post.id > int(cursor))\n    posts = (await db.execute(query)).scalars().all()\n    next_cursor = str(posts[-1].id) if posts else None\n    return {'data': posts, 'cursor': next_cursor}",
+    "options": [
+      "A — offset lets clients jump to any page directly",
+      "Both are equivalent for ordered results with an index on id",
+      "B — cursor avoids scanning skipped rows on deep pages"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-041",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this query return?",
+    "code": "from sqlalchemy import create_engine, text\n\nengine = create_engine('sqlite://')\nwith engine.connect() as conn:\n    conn.execute(text('CREATE TABLE items (name TEXT)'))\n    conn.execute(text(\"INSERT INTO items VALUES ('apple')\"))\n    conn.execute(text(\"INSERT INTO items VALUES ('banana')\"))\n    result = conn.execute(text('SELECT COUNT(*) FROM items'))\n    print(result.scalar())",
+    "options": [
+      "0 — autocommit is off and rows aren't committed",
+      "2",
+      "None — scalar() returns None for aggregate functions"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-042",
+    "track": "backend",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which session store scales best?",
+    "code": "# Option A: File-based sessions\nfrom starlette.middleware.sessions import SessionMiddleware\napp.add_middleware(SessionMiddleware, secret_key='secret')\n\n# Option B: Redis sessions\nfrom fastapi_sessions import RedisSessionBackend\nbackend = RedisSessionBackend(redis_url='redis://localhost')\n\n# Option C: JWT tokens\nfrom jose import jwt\ndef create_token(user_id):\n    return jwt.encode({'sub': user_id, 'exp': ...}, SECRET)",
+    "options": [
+      "A — cookie sessions are stateless and need no external store",
+      "B — Redis is fastest for session lookups",
+      "C — JWTs scale horizontally because servers don't store state"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-043",
+    "track": "backend",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "from contextlib import contextmanager\n\n@contextmanager\ndef transaction(conn):\n    try:\n        yield conn\n        conn.commit()\n    except Exception:\n        conn.rollback()\n        raise\n\ntry:\n    with transaction(db_conn) as conn:\n        conn.execute('INSERT INTO logs VALUES (1)')\n        raise ValueError('oops')\nexcept ValueError:\n    print('caught')\n\nprint(conn.execute('SELECT COUNT(*) FROM logs').fetchone()[0])",
+    "options": [
+      "caught then 1 — commit ran before the exception",
+      "ValueError is not caught — transaction re-raises it",
+      "caught then 0 — rollback ran because of the exception"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-044",
+    "track": "backend",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the bug in this CORS setup.",
+    "code": "from fastapi import FastAPI\nfrom fastapi.middleware.cors import CORSMiddleware\n\napp = FastAPI()\n\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=['*'],\n    allow_credentials=True,\n    allow_methods=['*'],\n    allow_headers=['*']\n)",
+    "options": [
+      "allow_methods=['*'] doesn't include OPTIONS — preflight fails",
+      "allow_origins=['*'] with allow_credentials=True is forbidden by browsers",
+      "CORSMiddleware must be added before any routes are defined"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-045",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the async bug.",
+    "code": "import asyncio\n\nasync def fetch_data():\n    return await get_from_api()\n\ndef process():\n    data = asyncio.run(fetch_data())\n    return transform(data)\n\n@app.get('/data')\nasync def get_data():\n    result = process()\n    return {'data': result}",
+    "options": [
+      "asyncio.run() inside an async handler — can't nest event loops",
+      "fetch_data should use asyncio.ensure_future instead of await",
+      "process() is sync — needs await keyword"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-046",
+    "track": "backend",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why is this connection pool inefficient?",
+    "code": "from sqlalchemy.ext.asyncio import create_async_engine\n\nengine = create_async_engine(\n    'postgresql+asyncpg://user:pass@db/app',\n    pool_size=5,\n    max_overflow=0\n)\n\n@app.get('/users/{user_id}')\nasync def get_user(user_id: int):\n    async with engine.begin() as conn:\n        user = await conn.execute(\n            select(User).where(User.id == user_id)\n        )\n        return user.mappings().first()",
+    "options": [
+      "engine.begin() opens a transaction for a read-only query",
+      "mappings().first() is slower than scalars().first()",
+      "pool_size=5 with max_overflow=0 — requests queue under load"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-047",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A: Soft delete\nclass User(Base):\n    __tablename__ = 'users'\n    id = Column(Integer, primary_key=True)\n    name = Column(String)\n    deleted_at = Column(DateTime, nullable=True)\n\nasync def delete_user(db, user_id):\n    user = await db.get(User, user_id)\n    user.deleted_at = datetime.utcnow()\n    await db.commit()\n\n# Version B: Hard delete\nasync def delete_user(db, user_id):\n    await db.execute(delete(User).where(User.id == user_id))\n    await db.commit()",
+    "options": [
+      "A preserves data for auditing — B permanently removes the row",
+      "B is safer because it avoids orphaned foreign key references",
+      "A is slower because it updates instead of deleting"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-048",
+    "track": "backend",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "scales",
+    "prompt": "Which caching strategy scales better?",
+    "code": "# Option A: Cache-aside\n@app.get('/product/{product_id}')\nasync def get_product(product_id: int):\n    cached = await redis.get(f'product:{product_id}')\n    if cached:\n        return json.loads(cached)\n    product = await db.get(Product, product_id)\n    await redis.setex(f'product:{product_id}', 300, product.json())\n    return product\n\n# Option B: Always from DB\n@app.get('/product/{product_id}')\nasync def get_product(product_id: int):\n    return await db.get(Product, product_id)",
+    "options": [
+      "B — database connection pooling handles scale better than caching",
+      "A — cache-aside reduces database load for read-heavy workloads",
+      "Both scale equally — the bottleneck is network latency not DB"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-049",
+    "track": "backend",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this handler.",
+    "code": "@app.post('/login')\nasync def login(form: LoginForm):\n    user = await db.execute(\n        select(User).where(User.email == form.email)\n    )\n    user = user.scalar_one_or_none()\n    if user and user.password == form.password:\n        return create_token(user)\n    raise HTTPException(status_code=401)",
+    "options": [
+      "scalar_one_or_none raises if multiple rows match",
+      "Comparing plain-text password — should use bcrypt hash check",
+      "create_token should be awaited"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-050",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "import asyncio\n\nasync def coro():\n    print('start')\n    await asyncio.sleep(0)\n    print('end')\n\nasync def main():\n    task = asyncio.create_task(coro())\n    print('created')\n    await asyncio.sleep(0)\n    print('after sleep')\n    await task\n\nasyncio.run(main())",
+    "options": [
+      "created start end after sleep",
+      "created start after sleep end",
+      "start created end after sleep"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-051",
+    "track": "backend",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the security bug.",
+    "code": "from fastapi import FastAPI, Request\nfrom jose import jwt\n\n@app.get('/admin/users')\nasync def admin_users(request: Request):\n    token = request.headers.get('Authorization', '').replace('Bearer ', '')\n    payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])\n    users = await db.execute(select(User))\n    return users.scalars().all()",
+    "options": [
+      "jwt.decode raises on expired token — needs try/except",
+      "No role check — any valid token grants admin access",
+      "replace('Bearer ', '') fails if header uses lowercase 'bearer'"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-052",
+    "track": "backend",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A: Sync ORM in thread\n@app.get('/report')\nasync def report():\n    def query():\n        with Session(engine) as s:\n            return s.execute(select(Sale)).scalars().all()\n    sales = await asyncio.to_thread(query)\n    return aggregate(sales)\n\n# Version B: Raw async SQL\n@app.get('/report')\nasync def report():\n    result = await async_engine.execute(text(\n        'SELECT date, SUM(amount) FROM sales GROUP BY date'\n    ))\n    return result.mappings().all()",
+    "options": [
+      "A fetches all rows into Python — B aggregates in the database",
+      "B is unsafe because it uses raw SQL instead of the ORM",
+      "A is faster because to_thread avoids async overhead"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-053",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the data integrity bug.",
+    "code": "from sqlalchemy.orm import Session\n\ndef update_stock(db: Session, product_id: int, quantity: int):\n    product = db.query(Product).filter_by(id=product_id).first()\n    if product.stock >= quantity:\n        product.stock -= quantity\n        db.commit()\n        return True\n    return False",
+    "options": [
+      "first() returns None if product doesn't exist — AttributeError",
+      "filter_by uses keyword args — should use filter with == operator",
+      "No row-level lock — two concurrent calls can oversell stock"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-054",
+    "track": "backend",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A: Synchronous email\n@app.post('/register')\nasync def register(data: RegisterForm):\n    user = await create_user(data)\n    send_welcome_email(user.email)  # takes ~2s\n    return {'id': user.id}\n\n# Version B: Queued email\n@app.post('/register')\nasync def register(data: RegisterForm):\n    user = await create_user(data)\n    celery.send_task('send_welcome_email', args=[user.email])\n    return {'id': user.id}",
+    "options": [
+      "B loses emails if Celery is down — A guarantees delivery",
+      "B requires a separate Celery process — more infrastructure overhead",
+      "A blocks the response for ~2s — B offloads to a background worker"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-055",
+    "track": "backend",
+    "language": "python",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the async bug.",
+    "code": "import asyncio\nfrom functools import lru_cache\n\n@lru_cache(maxsize=100)\nasync def get_config(key: str):\n    result = await redis.get(f'config:{key}')\n    return result or 'default'\n\n@app.get('/settings/{key}')\nasync def settings(key: str):\n    value = await get_config(key)\n    return {'key': key, 'value': value}",
+    "options": [
+      "redis.get is sync — needs to be run in a thread",
+      "lru_cache caches the coroutine object, not its result — returns already-awaited coroutine",
+      "lru_cache doesn't support async functions — raises TypeError"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-056",
+    "track": "backend",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What status code is returned?",
+    "code": "from fastapi import FastAPI\nfrom pydantic import BaseModel\n\napp = FastAPI()\n\nclass Item(BaseModel):\n    name: str\n    price: float\n\n@app.post('/items', status_code=201)\nasync def create_item(item: Item):\n    return item\n\n# Client sends: POST /items {\"name\": \"Widget\"}",
+    "options": [
+      "201 — missing price defaults to 0.0",
+      "500 — unhandled server error",
+      "422 — price field is required and missing"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-057",
+    "track": "backend",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the memory leak.",
+    "code": "import logging\n\nlogger = logging.getLogger('app')\n\n@app.middleware('http')\nasync def log_requests(request: Request, call_next):\n    body = await request.body()\n    logger.info(\n        'Request',\n        extra={\n            'path': request.url.path,\n            'body': body.decode(),\n            'headers': dict(request.headers)\n        }\n    )\n    response = await call_next(request)\n    return response",
+    "options": [
+      "Logging full body and headers for every request — unbounded log data in memory",
+      "dict(request.headers) is expensive — use request.headers directly",
+      "await request.body() consumes the stream — downstream handler gets empty body"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-058",
+    "track": "backend",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "# Version A\nclass User(Base):\n    __tablename__ = 'users'\n    id = Column(Integer, primary_key=True)\n    posts = relationship('Post', backref='author')\n\n# Version B\nclass User(Base):\n    __tablename__ = 'users'\n    id = Column(Integer, primary_key=True)\n    posts = relationship('Post', backref='author', lazy='selectin')",
+    "options": [
+      "A uses lazy loading by default — B eagerly loads posts in a subquery",
+      "B prevents writing to the posts relationship — it's read-only",
+      "A creates a join table — B uses a foreign key"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-059",
+    "track": "backend",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which handles distributed locks best?",
+    "code": "# Option A: Simple Redis lock\ndef acquire_lock(name, ttl=10):\n    return redis.set(f'lock:{name}', '1', nx=True, ex=ttl)\n\n# Option B: Redlock across 5 instances\ndef acquire_lock(name, ttl=10):\n    acquired = 0\n    for r in redis_instances:\n        if r.set(f'lock:{name}', token, nx=True, ex=ttl):\n            acquired += 1\n    return acquired >= 3\n\n# Option C: Database advisory lock\ndef acquire_lock(name):\n    conn.execute(text('SELECT pg_advisory_lock(:id)'), {'id': hash(name)})",
+    "options": [
+      "A — single Redis is sufficient since Redis is single-threaded",
+      "B — Redlock survives individual Redis node failures",
+      "C — Postgres advisory locks are strongest but don't release on crash"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-be-060",
+    "track": "backend",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 1,
+    "type": "slow",
+    "prompt": "What's the obvious performance issue?",
+    "code": "@app.get('/users')\nasync def list_users():\n    result = await db.execute(select(User))\n    users = result.scalars().all()\n    output = []\n    for user in users:\n        output.append({\n            'id': user.id,\n            'name': user.name,\n            'avatar': base64.b64encode(user.avatar_blob).decode()\n        })\n    return output",
+    "options": [
+      "base64 encoding is CPU-intensive for large blobs",
+      "Loading binary avatar blobs from DB — should serve files via URL",
+      "scalars().all() should be replaced with yield for streaming"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  }
+]

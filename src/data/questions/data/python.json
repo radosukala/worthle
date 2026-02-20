@@ -1,0 +1,682 @@
+[
+  {
+    "id": "py-da-001",
+    "track": "data",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the SQL bug.",
+    "code": "import sqlite3\n\nconn = sqlite3.connect('analytics.db')\ncursor = conn.cursor()\n\nuser_id = request.args.get('user_id')\ncursor.execute(\n    f\"SELECT * FROM events WHERE user_id = '{user_id}'\"\n)\nrows = cursor.fetchall()",
+    "options": [
+      "SQL injection via f-string interpolation",
+      "fetchall() returns tuples, not dicts",
+      "Missing conn.close() causes connection leak"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-002",
+    "track": "data",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this return?",
+    "code": "import pandas as pd\n\ndf = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})\nresult = df[df['a'] > 1].shape[0]\nprint(result)",
+    "options": [
+      "3",
+      "2",
+      "(2, 2)"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-003",
+    "track": "data",
+    "language": "python",
+    "category": "data_modeling",
+    "difficulty": 1,
+    "type": "diff",
+    "prompt": "What does this change fix?",
+    "code": "# Before\nrevenue = Column(Float)\n\n# After\nfrom decimal import Decimal\nrevenue = Column(Numeric(precision=10, scale=2))",
+    "options": [
+      "Prevents floating-point rounding errors in currency",
+      "Reduces storage size for large datasets",
+      "Enables indexing on the revenue column"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-004",
+    "track": "data",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "Why is this DataFrame operation slow?",
+    "code": "import pandas as pd\n\ndf = pd.read_csv('events.csv')  # 10M rows\n\nresult = []\nfor idx, row in df.iterrows():\n    if row['status'] == 'active':\n        result.append(row['amount'] * 1.1)\n\ndf_out = pd.DataFrame(result, columns=['adjusted'])",
+    "options": [
+      "read_csv loads the entire file into memory",
+      "Appending to a list causes repeated memory allocation",
+      "iterrows() is slow — use vectorized boolean indexing"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-005",
+    "track": "data",
+    "language": "python",
+    "category": "algorithms",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What is the output?",
+    "code": "import numpy as np\n\narr = np.array([3, 1, 4, 1, 5, 9])\nmask = arr > 3\nprint(arr[mask].sum())",
+    "options": [
+      "23",
+      "18",
+      "9"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-006",
+    "track": "data",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this query.",
+    "code": "from sqlalchemy import select\nfrom models import Order\n\nasync def get_recent_orders(session):\n    stmt = select(Order).where(\n        Order.created_at > '2024-01-01'\n    ).limit(100)\n    result = await session.execute(stmt)\n    return result.scalars().all()",
+    "options": [
+      "String date comparison instead of datetime object",
+      "Missing await on scalars().all()",
+      "limit() without order_by gives nondeterministic results"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-007",
+    "track": "data",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "scales",
+    "prompt": "Which ingestion pattern scales best?",
+    "code": "# Processing 500K events/minute from Kafka\n\n# Option A: Process one at a time\nfor msg in consumer:\n    insert_to_db(msg.value)\n\n# Option B: Micro-batch\nbatch = []\nfor msg in consumer:\n    batch.append(msg.value)\n    if len(batch) >= 1000:\n        bulk_insert(batch)\n        batch = []",
+    "options": [
+      "A — simpler error handling per message",
+      "B — bulk inserts reduce per-row overhead and DB round trips",
+      "Both perform the same — Kafka handles the throughput"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-008",
+    "track": "data",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "What's wrong with this validation?",
+    "code": "import pandas as pd\n\ndef validate_ages(df: pd.DataFrame) -> pd.DataFrame:\n    df['age'] = df['age'].fillna(0)\n    valid = df[df['age'] > 0]\n    return valid",
+    "options": [
+      "fillna(0) then filtering > 0 silently drops null ages",
+      "fillna modifies df in place, corrupting the original",
+      "Type mismatch — age column might contain strings"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-009",
+    "track": "data",
+    "language": "python",
+    "category": "data_modeling",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this schema change accomplish?",
+    "code": "# Before\nCREATE TABLE orders (\n    id SERIAL PRIMARY KEY,\n    customer_name TEXT,\n    product_name TEXT,\n    quantity INT\n);\n\n# After\nCREATE TABLE customers (id SERIAL PRIMARY KEY, name TEXT);\nCREATE TABLE products (id SERIAL PRIMARY KEY, name TEXT);\nCREATE TABLE orders (\n    id SERIAL PRIMARY KEY,\n    customer_id INT REFERENCES customers(id),\n    product_id INT REFERENCES products(id),\n    quantity INT\n);",
+    "options": [
+      "Improves query speed by reducing table size",
+      "Adds cascade delete for referential integrity",
+      "Normalizes the schema to eliminate data duplication"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-010",
+    "track": "data",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "What's the bottleneck here?",
+    "code": "import pandas as pd\n\ndef enrich_users(users_df, api_client):\n    users_df['profile'] = users_df['user_id'].apply(\n        lambda uid: api_client.get(f'/users/{uid}')\n    )\n    return users_df",
+    "options": [
+      "apply() with a lambda is slower than a list comprehension",
+      "String formatting in the lambda creates excessive allocations",
+      "Sequential HTTP calls per row — no batching or parallelism"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-011",
+    "track": "data",
+    "language": "python",
+    "category": "algorithms",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "import pandas as pd\n\ndf = pd.DataFrame({\n    'dept': ['eng', 'eng', 'sales', 'sales'],\n    'salary': [100, 200, 150, 250]\n})\nresult = df.groupby('dept')['salary'].transform('mean')\nprint(result.tolist())",
+    "options": [
+      "[150.0, 150.0, 200.0, 200.0]",
+      "[100, 200, 150, 250]",
+      "[175.0, 175.0, 175.0, 175.0]"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-012",
+    "track": "data",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the bug in this upsert.",
+    "code": "from sqlalchemy.dialects.postgresql import insert\n\ndef upsert_metrics(session, records):\n    stmt = insert(MetricsTable).values(records)\n    stmt = stmt.on_conflict_do_update(\n        index_elements=['metric_id'],\n        set_={'value': stmt.excluded.value}\n    )\n    session.execute(stmt)\n    session.commit()",
+    "options": [
+      "on_conflict_do_update needs all columns in set_",
+      "Missing session.flush() before commit",
+      "No updated_at timestamp — stale reads on repeated upserts"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-013",
+    "track": "data",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this Spark job slow?",
+    "code": "from pyspark.sql import SparkSession\n\nspark = SparkSession.builder.getOrCreate()\ndf = spark.read.parquet('s3://lake/events/')\n\nlarge_list = get_active_user_ids()  # returns 500K IDs\nfiltered = df.filter(df.user_id.isin(large_list))\nfiltered.write.parquet('s3://lake/active_events/')",
+    "options": [
+      "isin() with 500K values broadcasts a huge list to every executor",
+      "Parquet read without partition pruning scans all files",
+      "write.parquet() without coalesce creates too many small files"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-014",
+    "track": "data",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which Airflow pattern scales better?",
+    "code": "# Option A: One task per file\nfor f in get_files():\n    PythonOperator(\n        task_id=f'process_{f}',\n        python_callable=process_file,\n        op_args=[f]\n    )\n\n# Option B: Single task with internal loop\nPythonOperator(\n    task_id='process_all',\n    python_callable=process_all_files\n)",
+    "options": [
+      "A — Airflow can parallelize individual tasks across workers",
+      "B — fewer tasks means less scheduler overhead",
+      "Both are equivalent — Airflow runs them on the same worker"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-015",
+    "track": "data",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this pipeline produce duplicates?",
+    "code": "from airflow.decorators import task, dag\nfrom datetime import datetime\n\n@dag(schedule='@hourly', start_date=datetime(2024, 1, 1))\ndef ingest_events():\n    @task\n    def extract():\n        return api.get_events(since='1 hour ago')\n\n    @task\n    def load(events):\n        db.insert_many('events', events)\n\n    load(extract())",
+    "options": [
+      "Missing catchup=False causes historical runs to overlap",
+      "insert_many doesn't deduplicate on retry after failure",
+      "'1 hour ago' is relative to wall clock, not execution_date"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-016",
+    "track": "data",
+    "language": "python",
+    "category": "data_modeling",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this migration fix?",
+    "code": "# Before\nclass Event(Base):\n    __tablename__ = 'events'\n    id = Column(Integer, primary_key=True)\n    payload = Column(JSON)\n\n# After\nclass Event(Base):\n    __tablename__ = 'events'\n    id = Column(Integer, primary_key=True)\n    event_type = Column(String(50), index=True)\n    user_id = Column(Integer, index=True)\n    timestamp = Column(DateTime, index=True)\n    payload = Column(JSON)",
+    "options": [
+      "Extracts commonly queried fields so they can be indexed",
+      "Removes the schemaless JSON column for strict typing",
+      "Adds NOT NULL constraints to prevent bad data"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-017",
+    "track": "data",
+    "language": "python",
+    "category": "algorithms",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this return?",
+    "code": "import pandas as pd\n\ndf = pd.DataFrame({\n    'ts': pd.to_datetime(['2024-01-01', '2024-01-01',\n                          '2024-01-02', '2024-01-02']),\n    'val': [10, 20, 30, 40]\n})\nresult = df.groupby('ts')['val'].agg(['sum', 'count'])\nprint(result.loc['2024-01-02', 'sum'])",
+    "options": [
+      "40",
+      "70",
+      "30"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-018",
+    "track": "data",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the performance problem?",
+    "code": "-- Query run via pandas read_sql\nSELECT o.id, o.total,\n       (SELECT COUNT(*) FROM order_items oi\n        WHERE oi.order_id = o.id) AS item_count\nFROM orders o\nWHERE o.created_at > '2024-01-01'",
+    "options": [
+      "Correlated subquery runs once per row in orders",
+      "Missing index on created_at slows the WHERE filter",
+      "SELECT * pattern pulls unnecessary columns"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-019",
+    "track": "data",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "What's wrong with this caching?",
+    "code": "import functools\n\n@functools.lru_cache(maxsize=None)\ndef get_user_data(user_id: int) -> dict:\n    return db.query(User).get(user_id).to_dict()\n\ndef process_events(events):\n    for event in events:\n        user = get_user_data(event['user_id'])\n        yield enrich(event, user)",
+    "options": [
+      "lru_cache returns the same dict reference — mutations corrupt the cache",
+      "to_dict() is called inside the cache, wasting computation",
+      "maxsize=None causes unbounded memory growth over time"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-020",
+    "track": "data",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this refactor improve?",
+    "code": "# Before\ndef run_pipeline():\n    raw = extract_from_api()\n    cleaned = transform(raw)\n    load_to_warehouse(cleaned)\n\n# After\ndef run_pipeline():\n    raw = extract_from_api()\n    save_to_staging(raw, 'raw/events/')\n    cleaned = transform(raw)\n    save_to_staging(cleaned, 'staging/events/')\n    load_to_warehouse(cleaned)",
+    "options": [
+      "Adds intermediate persistence for replayability and debugging",
+      "Improves throughput by writing in parallel",
+      "Enables schema validation between stages"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-021",
+    "track": "data",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "import pandas as pd\n\ndf = pd.DataFrame({'a': [1, 2, None, 4]})\nresult = df['a'].mean()\nprint(result)",
+    "options": [
+      "NaN",
+      "1.75",
+      "2.3333333333333335"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-022",
+    "track": "data",
+    "language": "python",
+    "category": "algorithms",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What makes this deduplication slow?",
+    "code": "import pandas as pd\n\ndef deduplicate(df: pd.DataFrame) -> pd.DataFrame:\n    seen = set()\n    keep = []\n    for idx, row in df.iterrows():\n        key = (row['user_id'], row['event_type'])\n        if key not in seen:\n            seen.add(key)\n            keep.append(idx)\n    return df.loc[keep]",
+    "options": [
+      "set() lookup is O(n) for tuple keys",
+      "iterrows() plus row-by-row checks instead of drop_duplicates()",
+      "df.loc[keep] copies the entire DataFrame"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-023",
+    "track": "data",
+    "language": "python",
+    "category": "data_modeling",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "What's wrong with this Pydantic model?",
+    "code": "from pydantic import BaseModel\nfrom typing import Optional\nfrom datetime import datetime\n\nclass Event(BaseModel):\n    event_id: str\n    user_id: int\n    timestamp: Optional[datetime]\n    amount: float\n    metadata: dict = {}",
+    "options": [
+      "Optional[datetime] should have a default of None",
+      "Mutable default dict is shared across all instances",
+      "float should be Decimal for financial amounts"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-024",
+    "track": "data",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which query pattern scales to billions?",
+    "code": "# Table: page_views (10B rows, partitioned by date)\n\n# Option A\nSELECT COUNT(DISTINCT user_id)\nFROM page_views\nWHERE date BETWEEN '2024-01-01' AND '2024-12-31'\n\n# Option B\nSELECT COUNT(*) FROM (\n    SELECT user_id\n    FROM page_views\n    WHERE date BETWEEN '2024-01-01' AND '2024-12-31'\n    GROUP BY user_id\n) t",
+    "options": [
+      "B — GROUP BY allows parallel aggregation across partitions",
+      "A — COUNT(DISTINCT) is optimized by the query planner",
+      "Both are equivalent — the optimizer rewrites them identically"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-025",
+    "track": "data",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this Spark change improve?",
+    "code": "# Before\ndf = spark.read.parquet('s3://data/events/')\ndf.write.parquet('s3://data/output/')\n\n# After\ndf = spark.read.parquet('s3://data/events/')\ndf.repartition(200, 'date').write \\\n    .partitionBy('date') \\\n    .parquet('s3://data/output/')",
+    "options": [
+      "Compresses output files more efficiently",
+      "Enables partition pruning on reads and controls file count",
+      "Speeds up the write by parallelizing across 200 tasks"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-026",
+    "track": "data",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this join lose rows?",
+    "code": "import pandas as pd\n\norders = pd.DataFrame({\n    'order_id': [1, 2, 3],\n    'user_id': [10, None, 30]\n})\nusers = pd.DataFrame({\n    'user_id': [10, 20, 30],\n    'name': ['Alice', 'Bob', 'Charlie']\n})\nresult = orders.merge(users, on='user_id')\nprint(len(result))",
+    "options": [
+      "Inner join excludes users without orders",
+      "merge() requires sorted DataFrames to match correctly",
+      "NaN != NaN — the None user_id row is dropped on merge"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-027",
+    "track": "data",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this dbt macro produce?",
+    "code": "-- models/staging/stg_orders.sql\n{%- set payment_methods = ['credit_card', 'paypal', 'bank_transfer'] -%}\n\nSELECT\n    order_id,\n    {% for method in payment_methods -%}\n    SUM(CASE WHEN payment_method = '{{ method }}'\n         THEN amount ELSE 0 END) AS {{ method }}_total\n    {%- if not loop.last %},{% endif %}\n    {% endfor %}\nFROM {{ ref('raw_payments') }}\nGROUP BY order_id",
+    "options": [
+      "One column per payment method with pivoted totals",
+      "One row per payment method with the sum",
+      "A CTE for each payment method joined together"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-028",
+    "track": "data",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What's the hidden performance issue?",
+    "code": "from pyspark.sql import functions as F\n\ndef add_rank(df):\n    from pyspark.sql.window import Window\n    w = Window.orderBy('score')\n    return df.withColumn('rank', F.row_number().over(w))",
+    "options": [
+      "row_number() is less efficient than rank() for ties",
+      "Window without partitionBy sends all data to a single partition",
+      "orderBy in a window triggers an unnecessary extra sort stage"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-029",
+    "track": "data",
+    "language": "python",
+    "category": "algorithms",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this produce?",
+    "code": "import numpy as np\n\na = np.array([[1, 2], [3, 4]])\nb = np.array([[5, 6], [7, 8]])\nresult = a @ b\nprint(result[0, 1])",
+    "options": [
+      "12",
+      "16",
+      "22"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-030",
+    "track": "data",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the concurrency bug.",
+    "code": "from sqlalchemy.orm import Session\n\ndef transfer_balance(session: Session, from_id, to_id, amount):\n    sender = session.query(Account).get(from_id)\n    receiver = session.query(Account).get(to_id)\n    if sender.balance >= amount:\n        sender.balance -= amount\n        receiver.balance += amount\n        session.commit()",
+    "options": [
+      "Missing rollback on insufficient balance",
+      "get() doesn't lock the row for update",
+      "TOCTOU race — another transaction can change balance between read and write"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-031",
+    "track": "data",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach handles late-arriving data?",
+    "code": "# Streaming pipeline: aggregate hourly page views\n\n# Option A: Fixed window, drop late events\n.windowedBy(FixedWindows(60 * 60))\n.aggregate(Count())\n\n# Option B: Fixed window + allowed lateness + accumulation\n.windowedBy(FixedWindows(60 * 60))\n.withAllowedLateness(Duration(hours=6))\n.accumulatingFiredPanes()\n.aggregate(Count())",
+    "options": [
+      "A — simpler model avoids reprocessing costs",
+      "B — accommodates late events and updates aggregates correctly",
+      "Both handle late data — windowing already buffers events"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-032",
+    "track": "data",
+    "language": "python",
+    "category": "data_modeling",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What problem does this solve?",
+    "code": "# Before: single wide fact table\nCREATE TABLE fact_sales (\n    sale_id INT, date DATE, product_id INT,\n    store_id INT, quantity INT, amount DECIMAL,\n    customer_name TEXT, customer_email TEXT,\n    product_name TEXT, product_category TEXT\n);\n\n# After: star schema\nCREATE TABLE dim_customer (id INT PK, name TEXT, email TEXT);\nCREATE TABLE dim_product (id INT PK, name TEXT, category TEXT);\nCREATE TABLE fact_sales (\n    sale_id INT, date DATE, customer_id INT FK,\n    product_id INT FK, store_id INT,\n    quantity INT, amount DECIMAL\n);",
+    "options": [
+      "Separates slowly changing dimensions from transactional facts",
+      "Reduces join complexity by denormalizing dimensions",
+      "Enables cascade deletes across related tables"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-033",
+    "track": "data",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this Spark job silently lose data?",
+    "code": "from pyspark.sql import SparkSession\nfrom pyspark.sql.types import StructType, IntegerType, StringType\n\nschema = StructType() \\\n    .add('id', IntegerType()) \\\n    .add('name', StringType())\n\ndf = spark.read.schema(schema) \\\n    .option('mode', 'DROPMALFORMED') \\\n    .csv('s3://lake/users.csv')\ndf.write.parquet('s3://lake/users_clean/')",
+    "options": [
+      "CSV reader ignores header row, shifting all values",
+      "DROPMALFORMED silently discards rows that don't match the schema",
+      "schema enforcement on CSV doesn't validate data types"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-034",
+    "track": "data",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why is this pandas merge slow?",
+    "code": "import pandas as pd\n\nleft = pd.read_parquet('events.parquet')   # 50M rows\nright = pd.read_parquet('users.parquet')   # 5M rows\n\nresult = left.merge(right, on='user_id', how='left')\nresult.to_parquet('enriched.parquet')",
+    "options": [
+      "Both DataFrames are fully loaded into memory — use chunked or Dask",
+      "Left join produces more rows than inner join",
+      "to_parquet serialization is slower than to_csv for wide tables"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-035",
+    "track": "data",
+    "language": "python",
+    "category": "algorithms",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this window function return?",
+    "code": "import pandas as pd\n\ndf = pd.DataFrame({\n    'user': ['A', 'A', 'A', 'B', 'B'],\n    'ts': pd.to_datetime(['01-01', '01-02', '01-03', '01-01', '01-02']),\n    'val': [10, 20, 30, 100, 200]\n})\ndf = df.sort_values(['user', 'ts'])\ndf['cumsum'] = df.groupby('user')['val'].cumsum()\nprint(df['cumsum'].tolist())",
+    "options": [
+      "[10, 20, 30, 100, 200]",
+      "[10, 30, 60, 100, 300]",
+      "[60, 60, 60, 300, 300]"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-036",
+    "track": "data",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which data lake write pattern scales?",
+    "code": "# Daily pipeline writing to a shared table\n\n# Option A: Overwrite full table\ndf.write.mode('overwrite').parquet('s3://lake/events/')\n\n# Option B: Partition overwrite\ndf.write.mode('overwrite') \\\n    .option('partitionOverwriteMode', 'dynamic') \\\n    .partitionBy('date') \\\n    .parquet('s3://lake/events/')",
+    "options": [
+      "A — simpler, avoids partition management overhead",
+      "B — only overwrites affected partitions, preserving other data",
+      "Both are equivalent with Spark's write-ahead log enabled"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-037",
+    "track": "data",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "What causes the data skew?",
+    "code": "from pyspark.sql import functions as F\n\nevents = spark.read.parquet('s3://lake/events/')  # 1B rows\nusers = spark.read.parquet('s3://lake/users/')     # 10M rows\n\n# 80% of events belong to 1% of users (power-law)\nresult = events.join(users, 'user_id')\nresult.groupBy('country').agg(F.count('*')).show()",
+    "options": [
+      "groupBy after join forces a second shuffle stage",
+      "Reading two large parquet datasets exceeds executor memory",
+      "Hot user_ids cause few partitions to hold most of the data"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-038",
+    "track": "data",
+    "language": "python",
+    "category": "databases",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "What's the subtle transaction bug?",
+    "code": "async def update_inventory(session, order):\n    for item in order.items:\n        product = await session.get(Product, item.product_id)\n        product.stock -= item.quantity\n        if product.stock < 0:\n            await session.rollback()\n            raise ValueError('Out of stock')\n    await session.commit()\n    await publish_event('order.confirmed', order.id)",
+    "options": [
+      "Event is published after commit — if publish fails, order is confirmed but event is lost",
+      "Partial rollback leaves prior items' stock decremented in memory",
+      "session.get() doesn't acquire a row lock — concurrent orders can oversell"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-039",
+    "track": "data",
+    "language": "python",
+    "category": "algorithms",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What is the time complexity?",
+    "code": "import pandas as pd\nimport numpy as np\n\ndef rolling_distinct(series: pd.Series, window: int) -> list:\n    result = []\n    for i in range(len(series)):\n        start = max(0, i - window + 1)\n        result.append(len(set(series[start:i+1])))\n    return result\n\n# Called on a Series of length n with window w",
+    "options": [
+      "O(n * w)",
+      "O(n * w * log w)",
+      "O(n^2)"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "py-da-040",
+    "track": "data",
+    "language": "python",
+    "category": "data_modeling",
+    "difficulty": 5,
+    "type": "diff",
+    "prompt": "What problem does this schema evolution solve?",
+    "code": "# Before: hard-coded schema\ndf = spark.read.parquet('events/') \\\n    .select('event_id', 'user_id', 'payload')\n\n# After: schema registry with compatibility check\nfrom confluent_kafka.schema_registry import SchemaRegistryClient\n\nsr = SchemaRegistryClient({'url': 'http://registry:8081'})\nlatest = sr.get_latest_version('events-value')\nschema = latest.schema\ndf = spark.read \\\n    .format('avro') \\\n    .option('avroSchema', schema.schema_str) \\\n    .load('events/')",
+    "options": [
+      "Avro is faster than Parquet for nested event data",
+      "Schema registry ensures backward-compatible evolution across producers and consumers",
+      "Centralized schema eliminates the need for data validation"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  }
+]

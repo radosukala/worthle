@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "ts-be-001",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this Express middleware.",
+    "code": "app.use(async (req, res, next) => {\n  try {\n    const user = await getUserFromToken(req.headers.authorization);\n    req.user = user;\n    next();\n  } catch (err) {\n    res.status(401).json({ error: 'Unauthorized' });\n    next(err);\n  }\n});",
+    "options": [
+      "Calling next(err) after res.json() sends response twice",
+      "authorization header might be undefined",
+      "getUserFromToken is not awaited properly"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-002",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "const results: number[] = [];\n\nawait Promise.all(\n  [1, 2, 3].map(async (n) => {\n    await new Promise(r => setTimeout(r, (4 - n) * 100));\n    results.push(n);\n  })\n);\n\nconsole.log(results);",
+    "options": [
+      "[1, 2, 3]",
+      "[3, 2, 1]",
+      "[3, 1, 2]"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-003",
+    "track": "backend",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the performance issue?",
+    "code": "app.get('/users', async (req, res) => {\n  const users = await prisma.user.findMany();\n  const result = await Promise.all(\n    users.map(async (user) => ({\n      ...user,\n      posts: await prisma.post.findMany({\n        where: { authorId: user.id }\n      })\n    }))\n  );\n  res.json(result);\n});",
+    "options": [
+      "Promise.all creates too many concurrent connections",
+      "Classic N+1 query -- should use include/join",
+      "findMany without pagination loads entire table"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-004",
+    "track": "backend",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach scales for distributed rate limiting?",
+    "code": "// Option A: In-memory Map\nconst counts = new Map<string, number>();\n\n// Option B: Redis INCR with TTL\nawait redis.multi()\n  .incr(`rate:${ip}`)\n  .expire(`rate:${ip}`, 60)\n  .exec();\n\n// Option C: Database row lock\nawait db.query(\n  'SELECT * FROM rate_limits WHERE ip = $1 FOR UPDATE', [ip]\n);",
+    "options": [
+      "A -- Map is fastest with zero latency",
+      "B -- Redis INCR is atomic and shared across instances",
+      "C -- Database locks guarantee consistency"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-005",
+    "track": "backend",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this route handler.",
+    "code": "app.post('/users', async (req, res) => {\n  const { email, name } = req.body;\n  const existing = await prisma.user.findUnique({ where: { email } });\n  if (existing) {\n    return res.status(409).json({ error: 'Email taken' });\n  }\n  const user = await prisma.user.create({ data: { email, name } });\n  res.status(200).json(user);\n});",
+    "options": [
+      "Race condition: two requests can pass the check simultaneously",
+      "findUnique should be findFirst for nullable fields",
+      "Missing try/catch around Prisma calls"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-006",
+    "track": "backend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this endpoint slow under load?",
+    "code": "import crypto from 'crypto';\n\napp.post('/verify', (req, res) => {\n  const { password, hash } = req.body;\n  const derived = crypto.pbkdf2Sync(\n    password, 'salt', 100000, 64, 'sha512'\n  );\n  const isValid = derived.toString('hex') === hash;\n  res.json({ valid: isValid });\n});",
+    "options": [
+      "Using hex encoding is slower than base64",
+      "pbkdf2Sync blocks the event loop -- use async pbkdf2",
+      "100000 iterations is too few for security"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-007",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the concurrency bug.",
+    "code": "let connectionCount = 0;\n\nwss.on('connection', (ws) => {\n  connectionCount++;\n  console.log(`Connections: ${connectionCount}`);\n\n  ws.on('close', () => {\n    connectionCount--;\n    if (connectionCount === 0) {\n      gracefulShutdown();\n    }\n  });\n});",
+    "options": [
+      "connectionCount can go negative if close fires twice",
+      "No bug -- Node.js is single-threaded so no race condition",
+      "gracefulShutdown may fire between rapid disconnect/reconnect"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-008",
+    "track": "backend",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the SQL injection vulnerability.",
+    "code": "app.get('/search', async (req, res) => {\n  const { term } = req.query;\n  const results = await db.query(\n    `SELECT * FROM products\n     WHERE name ILIKE '%${term}%'\n     ORDER BY created_at DESC\n     LIMIT 20`\n  );\n  res.json(results.rows);\n});",
+    "options": [
+      "ILIKE is not a valid SQL operator",
+      "String interpolation in query enables SQL injection",
+      "Missing OFFSET for proper pagination"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-009",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What happens when this runs?",
+    "code": "app.get('/data', async (req, res) => {\n  const data = await fetchExternalAPI();\n  res.json(data);\n});\n\napp.get('/data', async (req, res) => {\n  const cached = await redis.get('data');\n  if (cached) return res.json(JSON.parse(cached));\n  const data = await fetchExternalAPI();\n  await redis.set('data', JSON.stringify(data), 'EX', 300);\n  res.json(data);\n});",
+    "options": [
+      "Second handler adds caching to the first",
+      "Only the first handler ever executes",
+      "Express merges both handlers into a chain"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-010",
+    "track": "backend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What causes memory issues in production?",
+    "code": "const cache = new Map<string, any>();\n\napp.get('/user/:id', async (req, res) => {\n  const { id } = req.params;\n  if (!cache.has(id)) {\n    const user = await prisma.user.findUnique({ where: { id } });\n    cache.set(id, user);\n  }\n  res.json(cache.get(id));\n});",
+    "options": [
+      "findUnique returns null for missing users, cache stores nulls",
+      "Map grows unbounded -- no eviction policy or TTL",
+      "Concurrent requests for same ID cause duplicate DB queries"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-011",
+    "track": "backend",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What did this refactor change?",
+    "code": "// BEFORE:\napp.get('/orders', auth, async (req, res) => {\n  const orders = await prisma.order.findMany();\n  res.json(orders);\n});\n\n// AFTER:\napp.get('/orders', auth, async (req, res) => {\n  const orders = await prisma.order.findMany({\n    where: { userId: req.user.id }\n  });\n  res.json(orders);\n});",
+    "options": [
+      "Added pagination to prevent large payloads",
+      "Scoped query to authenticated user -- fixes authorization bug",
+      "Added user join to reduce follow-up queries"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-012",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the bug in this queue processor.",
+    "code": "async function processQueue(jobs: Job[]) {\n  for (const job of jobs) {\n    try {\n      await processJob(job);\n      await markComplete(job.id);\n    } catch (err) {\n      await markFailed(job.id);\n    }\n  }\n}\n\n// Called as:\nprocessQueue(pendingJobs);",
+    "options": [
+      "Sequential processing is too slow -- use Promise.all",
+      "Missing await on processQueue -- errors go unhandled",
+      "markFailed should re-throw to stop the loop"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-013",
+    "track": "backend",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which approach handles 10K concurrent WebSocket connections?",
+    "code": "// Option A: Broadcast to all in-memory\nconst clients = new Set<WebSocket>();\nfunction broadcast(msg: string) {\n  clients.forEach(ws => ws.send(msg));\n}\n\n// Option B: Redis pub/sub per server instance\nconst sub = redis.duplicate();\nsub.subscribe('events');\nsub.on('message', (_, msg) => {\n  clients.forEach(ws => ws.send(msg));\n});",
+    "options": [
+      "A -- direct broadcast avoids serialization overhead",
+      "B -- pub/sub allows horizontal scaling across instances",
+      "Neither -- use HTTP polling at that scale"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-014",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this middleware break the app?",
+    "code": "app.use((req, res, next) => {\n  const start = Date.now();\n  res.on('finish', () => {\n    const duration = Date.now() - start;\n    logger.info(`${req.method} ${req.url} ${res.statusCode} ${duration}ms`);\n  });\n});\n\napp.get('/health', (req, res) => {\n  res.json({ ok: true });\n});",
+    "options": [
+      "res.on('finish') causes a memory leak",
+      "Missing next() call -- request hangs forever",
+      "Date.now() should use process.hrtime()"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-015",
+    "track": "backend",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What problem does this migration fix?",
+    "code": "// BEFORE:\nmodel Order {\n  id        String   @id @default(uuid())\n  userId    String\n  total     Float\n  createdAt DateTime @default(now())\n}\n\n// AFTER:\nmodel Order {\n  id        String   @id @default(uuid())\n  userId    String\n  total     Decimal  @db.Decimal(10, 2)\n  createdAt DateTime @default(now())\n  @@index([userId, createdAt])\n}",
+    "options": [
+      "Float causes rounding errors in currency -- Decimal is exact",
+      "uuid() was generating collisions under load",
+      "createdAt needed a timezone-aware type"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-016",
+    "track": "backend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why does this stream handler use excessive memory?",
+    "code": "app.post('/upload', async (req, res) => {\n  const chunks: Buffer[] = [];\n  req.on('data', (chunk: Buffer) => chunks.push(chunk));\n  req.on('end', async () => {\n    const body = Buffer.concat(chunks);\n    await s3.putObject({\n      Bucket: 'uploads',\n      Key: `${Date.now()}.bin`,\n      Body: body\n    }).promise();\n    res.json({ ok: true });\n  });\n});",
+    "options": [
+      "Buffer.concat creates a copy -- doubles memory usage",
+      "Entire file buffered in memory -- should pipe stream to S3",
+      "Missing content-length check allows unlimited upload size"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-017",
+    "track": "backend",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the security bug in this JWT verification.",
+    "code": "import jwt from 'jsonwebtoken';\n\napp.use((req, res, next) => {\n  const token = req.headers.authorization?.split(' ')[1];\n  if (!token) return res.status(401).end();\n  try {\n    const payload = jwt.decode(token);\n    req.user = payload;\n    next();\n  } catch {\n    res.status(401).end();\n  }\n});",
+    "options": [
+      "split(' ')[1] fails if no space in header",
+      "jwt.decode doesn't verify signature -- use jwt.verify",
+      "catch block should pass error to next()"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-018",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What does this log?",
+    "code": "const mutex = new Map<string, Promise<void>>();\n\nasync function withLock(key: string, fn: () => Promise<void>) {\n  const prev = mutex.get(key) ?? Promise.resolve();\n  const next = prev.then(fn);\n  mutex.set(key, next);\n  await next;\n}\n\nawait Promise.all([\n  withLock('a', async () => { console.log('1'); }),\n  withLock('a', async () => { console.log('2'); }),\n  withLock('b', async () => { console.log('3'); }),\n]);",
+    "options": [
+      "1, 3, 2 (b runs in parallel, a is serialized)",
+      "1, 2, 3 (all serialized in order)",
+      "3, 1, 2 (b resolves first since no contention)"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-019",
+    "track": "backend",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this refactor improve?",
+    "code": "// BEFORE:\napp.post('/notify', async (req, res) => {\n  const users = await getSubscribers(req.body.event);\n  for (const user of users) {\n    await sendEmail(user.email, req.body.message);\n  }\n  res.json({ sent: users.length });\n});\n\n// AFTER:\napp.post('/notify', async (req, res) => {\n  const users = await getSubscribers(req.body.event);\n  await queue.addBulk(\n    users.map(u => ({ name: 'email', data: { to: u.email, msg: req.body.message } }))\n  );\n  res.json({ queued: users.length });\n});",
+    "options": [
+      "Switched from sequential to parallel email sending",
+      "Offloaded to a job queue -- response no longer blocks on I/O",
+      "Added bulk insert for database write efficiency"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-020",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this endpoint return stale data?",
+    "code": "const CACHE_TTL = 60_000;\nlet cached: { data: any; ts: number } | null = null;\n\napp.get('/stats', async (req, res) => {\n  if (cached && Date.now() - cached.ts > CACHE_TTL) {\n    return res.json(cached.data);\n  }\n  const data = await computeStats();\n  cached = { data, ts: Date.now() };\n  res.json(data);\n});",
+    "options": [
+      "computeStats result is not cloned before caching",
+      "Condition is inverted -- serves cache when expired, fetches when fresh",
+      "cached.ts should use monotonic clock, not wall time"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-021",
+    "track": "backend",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this Express handler.",
+    "code": "app.get('/users/:id', async (req, res) => {\n  const user = await prisma.user.findUnique({\n    where: { id: req.params.id }\n  });\n  res.json({ name: user.name, email: user.email });\n});",
+    "options": [
+      "No null check -- user could be null if ID not found",
+      "findUnique cannot accept string IDs",
+      "res.json should be called with status code first"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-022",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this endpoint return?",
+    "code": "app.get('/ping', (req, res) => {\n  res.status(200);\n  res.json({ message: 'pong' });\n});\n\napp.get('/ping', (req, res) => {\n  res.json({ message: 'hello' });\n});",
+    "options": [
+      "{ \"message\": \"hello\" }",
+      "{ \"message\": \"pong\" }",
+      "Error: cannot set headers after they are sent"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-023",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What order do these log?",
+    "code": "console.log('A');\n\nsetImmediate(() => console.log('B'));\n\nPromise.resolve().then(() => console.log('C'));\n\nprocess.nextTick(() => console.log('D'));\n\nconsole.log('E');",
+    "options": [
+      "A, E, D, C, B",
+      "A, E, C, D, B",
+      "A, E, B, C, D"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-024",
+    "track": "backend",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this transaction.",
+    "code": "app.post('/transfer', async (req, res) => {\n  const { fromId, toId, amount } = req.body;\n  await prisma.account.update({\n    where: { id: fromId },\n    data: { balance: { decrement: amount } }\n  });\n  await prisma.account.update({\n    where: { id: toId },\n    data: { balance: { increment: amount } }\n  });\n  res.json({ success: true });\n});",
+    "options": [
+      "amount should be validated as a positive number",
+      "Two separate queries -- not wrapped in a transaction",
+      "decrement/increment are not valid Prisma operations"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-025",
+    "track": "backend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "Why is this API response slow?",
+    "code": "app.get('/products', async (req, res) => {\n  const products = await prisma.product.findMany();\n  const enriched = [];\n  for (const p of products) {\n    const reviews = await prisma.review.aggregate({\n      where: { productId: p.id },\n      _avg: { rating: true }\n    });\n    enriched.push({ ...p, avgRating: reviews._avg.rating });\n  }\n  res.json(enriched);\n});",
+    "options": [
+      "aggregate is slower than a raw SQL AVG query",
+      "Sequential loop causes N+1 -- use a single grouped query",
+      "Missing pagination returns too many products"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-026",
+    "track": "backend",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "scales",
+    "prompt": "Which session store scales across servers?",
+    "code": "// Option A: Express default memory store\napp.use(session({ secret: 'key' }));\n\n// Option B: Redis session store\napp.use(session({\n  store: new RedisStore({ client: redis }),\n  secret: 'key'\n}));\n\n// Option C: Signed cookie session\napp.use(cookieSession({ keys: ['key'] }));",
+    "options": [
+      "A -- memory store has lowest latency",
+      "B -- Redis is shared across all server instances",
+      "C -- cookies are stateless, no store needed"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-027",
+    "track": "backend",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the validation bug.",
+    "code": "const CreateUserSchema = z.object({\n  email: z.string().email(),\n  age: z.number().min(13),\n  role: z.enum(['user', 'admin'])\n});\n\napp.post('/users', async (req, res) => {\n  const data = CreateUserSchema.parse(req.body);\n  const user = await prisma.user.create({ data });\n  res.json(user);\n});",
+    "options": [
+      "parse throws on invalid input -- unhandled ZodError crashes server",
+      "z.number() rejects string '25' from JSON body",
+      "enum should use z.nativeEnum for TypeScript enums"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-028",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the race condition.",
+    "code": "const limiter = new Map<string, number>();\n\napp.use(async (req, res, next) => {\n  const key = req.ip;\n  const count = limiter.get(key) ?? 0;\n  if (count >= 100) {\n    return res.status(429).json({ error: 'Rate limited' });\n  }\n  limiter.set(key, count + 1);\n  await next();\n  limiter.set(key, (limiter.get(key) ?? 1) - 1);\n});",
+    "options": [
+      "count is never reset -- grows forever until limit hit",
+      "await next() yields -- concurrent requests read stale count",
+      "Map is not safe for concurrent access in Node.js"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-029",
+    "track": "backend",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this migration improve?",
+    "code": "// BEFORE:\nmodel Post {\n  id        String   @id @default(uuid())\n  title     String\n  authorId  String\n  createdAt DateTime @default(now())\n}\n\n// AFTER:\nmodel Post {\n  id        String   @id @default(uuid())\n  title     String\n  authorId  String\n  createdAt DateTime @default(now())\n  @@index([authorId])\n  @@index([createdAt(sort: Desc)])\n}",
+    "options": [
+      "Added indexes to speed up filtered and sorted queries",
+      "Changed id generation to avoid uuid collisions",
+      "Made authorId a foreign key for referential integrity"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-030",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this error handler never trigger?",
+    "code": "app.get('/data', async (req, res) => {\n  const data = await fetchFromAPI();\n  res.json(data);\n});\n\napp.use((err: Error, req: Request, res: Response, next: NextFunction) => {\n  console.error(err.stack);\n  res.status(500).json({ error: 'Internal server error' });\n});",
+    "options": [
+      "Error handler must be defined before routes",
+      "Async errors are not caught -- need express-async-errors or try/catch",
+      "Error handler signature is missing the next parameter type"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-031",
+    "track": "backend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why does this JSON endpoint block others?",
+    "code": "app.get('/export', async (req, res) => {\n  const rows = await prisma.event.findMany({\n    where: { createdAt: { gte: thirtyDaysAgo() } }\n  });\n  const json = JSON.stringify(rows);\n  res.setHeader('Content-Type', 'application/json');\n  res.send(json);\n});",
+    "options": [
+      "findMany loads all rows into memory at once",
+      "JSON.stringify on large arrays blocks the event loop",
+      "res.send is slower than res.json for large payloads"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-032",
+    "track": "backend",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which caching strategy reduces DB load best?",
+    "code": "// Option A: Cache-aside with TTL\nconst cached = await redis.get(`user:${id}`);\nif (cached) return JSON.parse(cached);\nconst user = await prisma.user.findUnique({ where: { id } });\nawait redis.set(`user:${id}`, JSON.stringify(user), 'EX', 300);\n\n// Option B: Always read from DB\nconst user = await prisma.user.findUnique({ where: { id } });\n\n// Option C: Cache forever on first read\nconst cached = await redis.get(`user:${id}`);\nif (cached) return JSON.parse(cached);\nconst user = await prisma.user.findUnique({ where: { id } });\nawait redis.set(`user:${id}`, JSON.stringify(user));",
+    "options": [
+      "B -- avoids cache consistency issues entirely",
+      "C -- permanent cache gives best hit rate",
+      "A -- TTL balances freshness with DB load reduction"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-033",
+    "track": "backend",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this tRPC refactor fix?",
+    "code": "// BEFORE:\nexport const userRouter = router({\n  getUser: publicProcedure\n    .input(z.object({ id: z.string() }))\n    .query(async ({ input }) => {\n      return prisma.user.findUnique({ where: { id: input.id } });\n    }),\n});\n\n// AFTER:\nexport const userRouter = router({\n  getUser: protectedProcedure\n    .input(z.object({ id: z.string() }))\n    .query(async ({ input, ctx }) => {\n      return prisma.user.findUnique({ where: { id: input.id } });\n    }),\n});",
+    "options": [
+      "Added ctx for database connection pooling",
+      "Changed to protectedProcedure -- requires authentication",
+      "Switched to query batching for better performance"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-034",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "async function retry<T>(fn: () => Promise<T>, attempts: number): Promise<T> {\n  for (let i = 0; i < attempts; i++) {\n    try {\n      return await fn();\n    } catch (e) {\n      if (i === attempts - 1) throw e;\n      console.log(`retry ${i + 1}`);\n    }\n  }\n  throw new Error('unreachable');\n}\n\nlet call = 0;\nawait retry(() => { call++; if (call < 3) throw new Error(); return Promise.resolve('ok'); }, 5);\nconsole.log(`done after ${call} calls`);",
+    "options": [
+      "retry 1, retry 2, done after 3 calls",
+      "retry 1, retry 2, retry 3, done after 3 calls",
+      "done after 1 calls"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-035",
+    "track": "backend",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the data integrity bug.",
+    "code": "app.post('/checkout', async (req, res) => {\n  const { userId, productId, qty } = req.body;\n  const product = await prisma.product.findUnique({ where: { id: productId } });\n  if (product!.stock < qty) {\n    return res.status(400).json({ error: 'Insufficient stock' });\n  }\n  await prisma.product.update({\n    where: { id: productId },\n    data: { stock: { decrement: qty } }\n  });\n  await prisma.order.create({ data: { userId, productId, qty } });\n  res.json({ success: true });\n});",
+    "options": [
+      "product! assertion crashes if product is null",
+      "Check-then-update is not atomic -- stock can go negative",
+      "order.create should include the product price"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-036",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this middleware chain do?",
+    "code": "app.use((req, res, next) => {\n  res.locals.start = Date.now();\n  next();\n});\n\napp.use((req, res, next) => {\n  res.on('finish', () => {\n    const ms = Date.now() - res.locals.start;\n    console.log(`${req.method} ${req.path} ${res.statusCode} ${ms}ms`);\n  });\n  next();\n});\n\napp.get('/test', (req, res) => {\n  res.json({ ok: true });\n});\n\n// GET /test is called",
+    "options": [
+      "Logs 'GET /test 200' with timing after response completes",
+      "Throws error because res.locals is undefined",
+      "Logs nothing -- finish event fires before locals are set"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-037",
+    "track": "backend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What performance problem does this fix?",
+    "code": "// BEFORE:\napp.get('/feed', async (req, res) => {\n  const posts = await prisma.post.findMany({\n    orderBy: { createdAt: 'desc' }\n  });\n  res.json(posts);\n});\n\n// AFTER:\napp.get('/feed', async (req, res) => {\n  const cursor = req.query.cursor as string | undefined;\n  const posts = await prisma.post.findMany({\n    take: 20,\n    ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),\n    orderBy: { createdAt: 'desc' }\n  });\n  res.json(posts);\n});",
+    "options": [
+      "Added cursor-based pagination -- avoids loading entire table",
+      "Switched from offset to cursor to fix duplicate results",
+      "Added sorting index to speed up ORDER BY queries"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-038",
+    "track": "backend",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which handles bursty file processing best?",
+    "code": "// Option A: Process inline\napp.post('/upload', async (req, res) => {\n  const file = req.file;\n  await processFile(file); // CPU-intensive, ~5s\n  res.json({ done: true });\n});\n\n// Option B: Queue with worker\napp.post('/upload', async (req, res) => {\n  await queue.add('process', { path: req.file.path });\n  res.json({ jobId: uuid() });\n});\n\n// Option C: setImmediate wrapper\napp.post('/upload', async (req, res) => {\n  setImmediate(() => processFile(req.file));\n  res.json({ started: true });\n});",
+    "options": [
+      "A -- simplest, avoids distributed complexity",
+      "C -- setImmediate frees the event loop for other requests",
+      "B -- queue decouples ingestion from processing, enables scaling workers"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-039",
+    "track": "backend",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the error handling bug.",
+    "code": "app.post('/pay', async (req, res) => {\n  const { amount, token } = req.body;\n  try {\n    const charge = await stripe.charges.create({ amount, currency: 'usd', source: token });\n    await prisma.payment.create({ data: { chargeId: charge.id, amount } });\n    res.json({ success: true });\n  } catch (err) {\n    res.status(500).json({ error: 'Payment failed' });\n  }\n});",
+    "options": [
+      "If DB insert fails after charge, payment is lost -- no rollback",
+      "stripe.charges.create should use idempotency key",
+      "amount should be in cents, not dollars"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-040",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this batch operation slow?",
+    "code": "app.post('/import', async (req, res) => {\n  const records: ImportRow[] = req.body.records;\n  for (const record of records) {\n    await prisma.item.upsert({\n      where: { sku: record.sku },\n      create: record,\n      update: record\n    });\n  }\n  res.json({ imported: records.length });\n});",
+    "options": [
+      "upsert is slower than separate create/update calls",
+      "Sequential awaits -- should batch with createMany or transaction",
+      "req.body.records is not validated before processing"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-041",
+    "track": "backend",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the subtle query bug.",
+    "code": "app.get('/search', async (req, res) => {\n  const { q, page = '1' } = req.query;\n  const pageNum = parseInt(page as string);\n  const results = await prisma.product.findMany({\n    where: {\n      OR: [\n        { name: { contains: q as string } },\n        { description: { contains: q as string } }\n      ]\n    },\n    skip: (pageNum - 1) * 20,\n    take: 20\n  });\n  res.json(results);\n});",
+    "options": [
+      "contains is case-sensitive -- should use mode: 'insensitive'",
+      "Offset pagination with skip is O(n) -- degrades on deep pages",
+      "parseInt without radix may parse octal numbers"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-042",
+    "track": "backend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What causes latency spikes in this service?",
+    "code": "const pool = new Pool({ max: 5 });\n\napp.get('/dashboard', async (req, res) => {\n  const [users, orders, revenue, signups, churn] = await Promise.all([\n    pool.query('SELECT COUNT(*) FROM users'),\n    pool.query('SELECT COUNT(*) FROM orders WHERE date > NOW() - INTERVAL \\'30d\\''),\n    pool.query('SELECT SUM(total) FROM orders WHERE date > NOW() - INTERVAL \\'30d\\''),\n    pool.query('SELECT COUNT(*) FROM users WHERE created > NOW() - INTERVAL \\'7d\\''),\n    pool.query('SELECT COUNT(*) FROM users WHERE deleted IS NOT NULL AND deleted > NOW() - INTERVAL \\'30d\\''),\n  ]);\n  res.json({ users, orders, revenue, signups, churn });\n});",
+    "options": [
+      "5 parallel queries saturate the pool (max: 5) -- blocks other requests",
+      "Promise.all fails fast -- one slow query cancels the rest",
+      "COUNT(*) without WHERE clause causes full table scan"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-043",
+    "track": "backend",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach handles event ordering at scale?",
+    "code": "// Option A: Single queue, single consumer\nawait queue.add('events', payload);\n// One worker processes sequentially\n\n// Option B: Partitioned queue by entity ID\nawait queue.add('events', payload, {\n  jobId: `${entityId}-${Date.now()}`,\n  group: entityId\n});\n// Multiple workers, one per partition\n\n// Option C: Fan-out to all consumers\nawait pubsub.publish('events', payload);\n// Every instance processes every event",
+    "options": [
+      "A -- single consumer guarantees global ordering",
+      "B -- partitioned queue gives per-entity ordering with parallelism",
+      "C -- fan-out ensures no event is missed"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-044",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the memory leak.",
+    "code": "const emitter = new EventEmitter();\n\napp.get('/stream/:topic', (req, res) => {\n  res.writeHead(200, { 'Content-Type': 'text/event-stream' });\n\n  const handler = (data: string) => {\n    res.write(`data: ${data}\\n\\n`);\n  };\n\n  emitter.on(req.params.topic, handler);\n\n  req.on('close', () => {\n    res.end();\n  });\n});",
+    "options": [
+      "res.writeHead should use 'text/stream' not 'text/event-stream'",
+      "Handler is never removed from emitter on disconnect -- listeners accumulate",
+      "emitter.on should be emitter.once for SSE connections"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-045",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this log?",
+    "code": "const results: string[] = [];\n\nasync function task(name: string, ms: number) {\n  results.push(`${name}-start`);\n  await new Promise(r => setTimeout(r, ms));\n  results.push(`${name}-end`);\n}\n\nawait Promise.race([\n  task('A', 100),\n  task('B', 50),\n]);\n\nconsole.log(results);",
+    "options": [
+      "[\"A-start\", \"B-start\", \"B-end\"]",
+      "[\"A-start\", \"B-start\", \"B-end\", \"A-end\"]",
+      "[\"B-start\", \"B-end\"]"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-046",
+    "track": "backend",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What security issue does this fix?",
+    "code": "// BEFORE:\napp.get('/files/:name', (req, res) => {\n  const filePath = path.join('/uploads', req.params.name);\n  res.sendFile(filePath);\n});\n\n// AFTER:\napp.get('/files/:name', (req, res) => {\n  const name = path.basename(req.params.name);\n  const filePath = path.join('/uploads', name);\n  res.sendFile(filePath);\n});",
+    "options": [
+      "Prevents directory traversal via ../ in file name",
+      "Normalizes file extension for MIME type detection",
+      "Prevents symlink following outside upload directory"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-047",
+    "track": "backend",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What causes this query to degrade over time?",
+    "code": "app.get('/notifications', async (req, res) => {\n  const notifications = await prisma.notification.findMany({\n    where: {\n      userId: req.user.id,\n      read: false\n    },\n    orderBy: { createdAt: 'desc' },\n    take: 50\n  });\n  res.json(notifications);\n});",
+    "options": [
+      "Boolean column 'read' has low cardinality -- index is ignored",
+      "take: 50 still requires sorting all matching rows first",
+      "Composite index on (userId, read, createdAt) is missing"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-048",
+    "track": "backend",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What resilience pattern was added?",
+    "code": "// BEFORE:\nasync function fetchPrice(symbol: string): Promise<number> {\n  const res = await axios.get(`https://api.stocks.com/${symbol}`);\n  return res.data.price;\n}\n\n// AFTER:\nconst breaker = new CircuitBreaker(async (symbol: string) => {\n  const res = await axios.get(`https://api.stocks.com/${symbol}`);\n  return res.data.price;\n}, { timeout: 3000, errorThreshold: 50, resetTimeout: 30000 });\n\nasync function fetchPrice(symbol: string): Promise<number> {\n  return breaker.fire(symbol);\n}",
+    "options": [
+      "Added request timeout to prevent hanging connections",
+      "Added circuit breaker -- stops calling failing service, allows recovery",
+      "Added retry logic with exponential backoff"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-049",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What happens when /api/data is requested?",
+    "code": "app.use('/api', (req, res, next) => {\n  if (!req.headers['x-api-key']) {\n    res.status(403).json({ error: 'Forbidden' });\n  }\n  next();\n});\n\napp.get('/api/data', async (req, res) => {\n  const data = await fetchData();\n  res.json(data);\n});",
+    "options": [
+      "Returns 403 JSON response only",
+      "Returns 403 then crashes with 'headers already sent'",
+      "Skips middleware and returns data directly"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-050",
+    "track": "backend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which connection strategy handles traffic spikes?",
+    "code": "// Option A: New connection per query\napp.get('/user/:id', async (req, res) => {\n  const client = new Client(connString);\n  await client.connect();\n  const result = await client.query('SELECT * FROM users WHERE id = $1', [req.params.id]);\n  await client.end();\n  res.json(result.rows[0]);\n});\n\n// Option B: Shared pool with limits\nconst pool = new Pool({ min: 5, max: 20, idleTimeoutMillis: 30000 });\napp.get('/user/:id', async (req, res) => {\n  const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);\n  res.json(result.rows[0]);\n});",
+    "options": [
+      "A -- avoids connection pool exhaustion under load",
+      "B -- pool reuses connections, avoids TCP/TLS handshake per request",
+      "Neither -- use an ORM connection manager instead"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-051",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the deadlock risk.",
+    "code": "app.post('/transfer', async (req, res) => {\n  const { fromId, toId, amount } = req.body;\n  await prisma.$transaction(async (tx) => {\n    const from = await tx.account.update({\n      where: { id: fromId },\n      data: { balance: { decrement: amount } }\n    });\n    const to = await tx.account.update({\n      where: { id: toId },\n      data: { balance: { increment: amount } }\n    });\n    if (from.balance < 0) throw new Error('Insufficient funds');\n  });\n  res.json({ success: true });\n});",
+    "options": [
+      "Balance check after decrement allows negative balances briefly",
+      "Concurrent transfers between same accounts can deadlock on row locks",
+      "prisma.$transaction should use isolation level serializable"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-052",
+    "track": "backend",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this middleware change add?",
+    "code": "// BEFORE:\napp.use(express.json());\n\n// AFTER:\napp.use(express.json({ limit: '100kb' }));\napp.use(helmet());\napp.use(cors({ origin: 'https://myapp.com' }));",
+    "options": [
+      "Added body size limit, security headers, and CORS restriction",
+      "Switched from JSON to form-data parsing",
+      "Added compression and caching middleware"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-053",
+    "track": "backend",
+    "language": "typescript",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this Prisma query return?",
+    "code": "const result = await prisma.user.findMany({\n  where: {\n    posts: {\n      some: {\n        published: true\n      }\n    }\n  },\n  select: {\n    name: true,\n    _count: {\n      select: { posts: true }\n    }\n  }\n});\nconsole.log(result[0]);",
+    "options": [
+      "{ name: 'Alice', _count: { posts: 5 } }",
+      "{ name: 'Alice', posts: [{ published: true }] }",
+      "{ name: 'Alice', postsCount: 5 }"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-054",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this Fastify route.",
+    "code": "fastify.get('/items', async (request, reply) => {\n  const items = await db.getItems();\n  reply.send(items);\n  return items;\n});",
+    "options": [
+      "db.getItems() is not validated before sending",
+      "Both reply.send and return send a response -- double response",
+      "Fastify requires reply.code(200) before send"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-055",
+    "track": "backend",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which handles idempotent payment processing?",
+    "code": "// Option A: Check status before charge\nconst existing = await db.query('SELECT * FROM payments WHERE order_id = $1', [orderId]);\nif (!existing) await stripe.charges.create({ amount, idempotencyKey: orderId });\n\n// Option B: Unique constraint + idempotency key\nawait stripe.charges.create({ amount, idempotencyKey: orderId });\nawait db.query('INSERT INTO payments (order_id, amount) VALUES ($1, $2)', [orderId, amount]);\n\n// Option C: Transaction with unique + idempotency key\nawait db.transaction(async (tx) => {\n  await tx.query('INSERT INTO payments (order_id, amount) VALUES ($1, $2)', [orderId, amount]);\n  await stripe.charges.create({ amount, idempotencyKey: orderId });\n});",
+    "options": [
+      "A -- check-first prevents duplicate charges",
+      "C -- transaction ensures DB and Stripe are always in sync",
+      "B -- idempotency key prevents duplicate charges, unique constraint prevents duplicate records"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-056",
+    "track": "backend",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "What causes this worker to consume excessive memory?",
+    "code": "import { parentPort } from 'worker_threads';\n\nconst seen = new Set<string>();\n\nparentPort?.on('message', async (batch: string[]) => {\n  const unique = batch.filter(id => {\n    if (seen.has(id)) return false;\n    seen.add(id);\n    return true;\n  });\n  const results = await processIds(unique);\n  parentPort?.postMessage(results);\n});",
+    "options": [
+      "worker_threads copies data on postMessage -- use SharedArrayBuffer",
+      "Set grows unbounded across batches -- never cleared or bounded",
+      "filter creates a new array copy of the entire batch"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-057",
+    "track": "backend",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What does this AbortController pattern do?",
+    "code": "async function fetchWithTimeout(url: string, ms: number) {\n  const controller = new AbortController();\n  const timer = setTimeout(() => controller.abort(), ms);\n  try {\n    const res = await fetch(url, { signal: controller.signal });\n    return await res.json();\n  } finally {\n    clearTimeout(timer);\n  }\n}\n\ntry {\n  const data = await fetchWithTimeout('https://slow.api/data', 100);\n  console.log('got data');\n} catch (e: any) {\n  console.log(e.name);\n}",
+    "options": [
+      "AbortError",
+      "TimeoutError",
+      "got data"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-058",
+    "track": "backend",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the subtle async bug.",
+    "code": "class ConnectionPool {\n  private pool: Client[] = [];\n  private waiters: ((c: Client) => void)[] = [];\n\n  async acquire(): Promise<Client> {\n    const client = this.pool.pop();\n    if (client) return client;\n    return new Promise(resolve => this.waiters.push(resolve));\n  }\n\n  release(client: Client) {\n    const waiter = this.waiters.shift();\n    if (waiter) waiter(client);\n    else this.pool.push(client);\n  }\n}",
+    "options": [
+      "Pool can return a closed/errored client without health check",
+      "LIFO pool (pop) causes uneven connection usage and timeouts",
+      "No max size -- acquire creates unbounded pending waiters"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-059",
+    "track": "backend",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What status code is returned?",
+    "code": "app.post('/login', async (req, res) => {\n  const { email, password } = req.body;\n  const user = await prisma.user.findUnique({ where: { email } });\n  if (!user || !(await bcrypt.compare(password, user.hash))) {\n    return res.status(401).json({ error: 'Invalid credentials' });\n  }\n  const token = jwt.sign({ id: user.id }, SECRET);\n  res.json({ token });\n});\n\n// Called with wrong password",
+    "options": [
+      "200 with empty token",
+      "401 with 'Invalid credentials'",
+      "500 internal server error"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-be-060",
+    "track": "backend",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 1,
+    "type": "diff",
+    "prompt": "What does this change accomplish?",
+    "code": "// BEFORE:\napp.get('/health', (req, res) => {\n  res.json({ status: 'ok' });\n});\n\n// AFTER:\napp.get('/health', async (req, res) => {\n  try {\n    await prisma.$queryRaw`SELECT 1`;\n    await redis.ping();\n    res.json({ status: 'ok', db: true, cache: true });\n  } catch {\n    res.status(503).json({ status: 'degraded' });\n  }\n});",
+    "options": [
+      "Added async keyword to support streaming responses",
+      "Health check now verifies DB and Redis connectivity",
+      "Switched from static response to dynamic status page"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  }
+]

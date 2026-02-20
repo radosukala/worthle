@@ -1,0 +1,682 @@
+[
+  {
+    "id": "ts-do-001",
+    "track": "devops",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this Dockerfile.",
+    "code": "FROM node:20-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\nEXPOSE 3000\nCMD [\"npm\", \"start\"]",
+    "options": [
+      "No issue -- this Dockerfile is correct",
+      "COPY . . before npm ci invalidates the layer cache",
+      "EXPOSE does not actually publish the port at runtime"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-002",
+    "track": "devops",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Spot the secrets management bug.",
+    "code": "import { SecretsManager } from '@aws-sdk/client-secrets-manager';\n\nconst client = new SecretsManager();\n\nexport async function getDbPassword(): Promise<string> {\n  const secret = await client.getSecretValue({\n    SecretId: 'prod/db-password'\n  });\n  console.log('Fetched secret:', secret.SecretString);\n  return secret.SecretString!;\n}",
+    "options": [
+      "SecretString may be undefined if secret is binary",
+      "Logging the secret value to stdout leaks credentials",
+      "Missing region config on SecretsManager client"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-003",
+    "track": "devops",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which container strategy scales best?",
+    "code": "// Option A: Single container, vertical scaling\n// 1 pod with 8 CPU, 16GB RAM\n\n// Option B: Horizontal pod autoscaler\napiVersion: autoscaling/v2\nspec:\n  minReplicas: 2\n  maxReplicas: 20\n  metrics:\n  - type: Resource\n    resource:\n      name: cpu\n      target:\n        averageUtilization: 70\n\n// Option C: CronJob scaling on schedule\n// Scale to 10 replicas at 9am, back to 2 at 6pm",
+    "options": [
+      "HPA dynamically adjusts replicas to actual load",
+      "Vertical scaling avoids distributed complexity",
+      "Scheduled scaling is predictable and cost-efficient"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-004",
+    "track": "devops",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "What slows this Docker build?",
+    "code": "FROM node:20\nWORKDIR /app\nCOPY . .\nRUN npm ci\nRUN npm run build\nCMD [\"node\", \"dist/index.js\"]",
+    "options": [
+      "Using node:20 instead of node:20-alpine adds overhead",
+      "COPY . . before npm ci busts the dependency cache every time",
+      "npm ci is slower than npm install for production builds"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-005",
+    "track": "devops",
+    "language": "typescript",
+    "category": "data_modeling",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What Prometheus metric type is this?",
+    "code": "import { Counter, Histogram } from 'prom-client';\n\nconst httpRequests = new Counter({\n  name: 'http_requests_total',\n  help: 'Total HTTP requests',\n  labelNames: ['method', 'status']\n});\n\napp.use((req, res, next) => {\n  res.on('finish', () => {\n    httpRequests.inc({ method: req.method, status: res.statusCode });\n  });\n  next();\n});",
+    "options": [
+      "Gauge -- it tracks the current request count",
+      "Counter -- it only increments and never resets",
+      "Histogram -- it buckets requests by response time"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-006",
+    "track": "devops",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the race condition.",
+    "code": "import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';\n\nconst s3 = new S3Client({});\nlet uploadCount = 0;\n\nexport async function uploadFiles(files: Buffer[]) {\n  await Promise.all(files.map(async (file) => {\n    uploadCount++;\n    await s3.send(new PutObjectCommand({\n      Bucket: 'my-bucket',\n      Key: `file-${uploadCount}.txt`,\n      Body: file\n    }));\n  }));\n}",
+    "options": [
+      "uploadCount++ is not atomic across concurrent iterations",
+      "Promise.all will fail if any single upload fails",
+      "S3Client is not safe to reuse across concurrent calls"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-007",
+    "track": "devops",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this GitHub Actions change fix?",
+    "code": "# Before:\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo ${{ github.event.pull_request.title }}\n\n# After:\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo \"$TITLE\"\n        env:\n          TITLE: ${{ github.event.pull_request.title }}",
+    "options": [
+      "Prevents command injection via PR title interpolation",
+      "Fixes environment variable scoping between steps",
+      "Avoids exposing the PR title in workflow logs"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-008",
+    "track": "devops",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this health check fail?",
+    "code": "// Kubernetes liveness probe config:\n// livenessProbe:\n//   httpGet:\n//     path: /health\n//     port: 3000\n//   initialDelaySeconds: 5\n//   periodSeconds: 10\n\napp.get('/healthz', (req, res) => {\n  res.status(200).json({ status: 'ok' });\n});",
+    "options": [
+      "Health endpoint should return 204 not 200",
+      "Probe checks /health but handler is registered at /healthz",
+      "initialDelaySeconds is too short for Node.js startup"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-009",
+    "track": "devops",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which deployment strategy minimizes downtime?",
+    "code": "// Option A: Recreate deployment\nspec:\n  strategy:\n    type: Recreate\n\n// Option B: Rolling update\nspec:\n  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxUnavailable: 0\n      maxSurge: 1\n\n// Option C: Blue-green with service switch\n// Deploy v2, run smoke tests, switch Service selector",
+    "options": [
+      "A -- Recreate is simplest with clean state transitions",
+      "B -- Rolling update with maxUnavailable: 0 ensures availability",
+      "C -- Blue-green allows full validation before switching traffic"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-010",
+    "track": "devops",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What makes this CI pipeline slow?",
+    "code": "# .github/workflows/ci.yml\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 20\n      - run: npm install\n      - run: npm run lint\n      - run: npm run test\n      - run: npm run build",
+    "options": [
+      "Using npm install instead of npm ci ignores lockfile",
+      "No dependency caching -- npm install runs from scratch every time",
+      "Lint, test, and build run sequentially instead of in parallel"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-011",
+    "track": "devops",
+    "language": "typescript",
+    "category": "data_modeling",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the alerting rule bug.",
+    "code": "// Prometheus alerting rule\ngroups:\n- name: api-alerts\n  rules:\n  - alert: HighErrorRate\n    expr: |\n      rate(http_requests_total{status=~\"5..\"}[5m])\n      / rate(http_requests_total[5m]) > 0.05\n    for: 1m\n    labels:\n      severity: critical",
+    "options": [
+      "rate() needs a counter, not a gauge metric",
+      "Division by zero if no requests in the 5m window",
+      "status=~\"5..\" regex should be \"5\\\\d{2}\" in PromQL"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-012",
+    "track": "devops",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Spot the security issue in this Dockerfile.",
+    "code": "FROM node:20-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --production\nCOPY . .\nRUN npm run build\nEXPOSE 3000\nCMD [\"node\", \"dist/index.js\"]",
+    "options": [
+      "Running as root -- should add USER node directive",
+      "npm ci --production skips devDependencies needed for build",
+      "COPY . . includes node_modules from local machine"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-013",
+    "track": "devops",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this script output?",
+    "code": "import { execSync } from 'child_process';\n\ntry {\n  const result = execSync('exit 1', { encoding: 'utf-8' });\n  console.log('Success:', result);\n} catch (err: any) {\n  console.log('Code:', err.status);\n}",
+    "options": [
+      "Success: (empty string)",
+      "Unhandled error -- execSync throws a string, not an object",
+      "Code: 1"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-014",
+    "track": "devops",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this Terraform change accomplish?",
+    "code": "# Before:\nresource \"aws_s3_bucket\" \"logs\" {\n  bucket = \"app-logs-prod\"\n}\n\n# After:\nresource \"aws_s3_bucket\" \"logs\" {\n  bucket = \"app-logs-prod\"\n  lifecycle {\n    prevent_destroy = true\n  }\n}",
+    "options": [
+      "Enables S3 Object Lock for compliance retention",
+      "Prevents accidental deletion of the bucket via Terraform",
+      "Adds versioning to prevent overwriting existing logs"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-015",
+    "track": "devops",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the message ordering bug.",
+    "code": "import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';\n\nconst sqs = new SQSClient({});\n\nexport async function publishEvents(events: Event[]) {\n  await Promise.all(events.map((event) =>\n    sqs.send(new SendMessageCommand({\n      QueueUrl: process.env.QUEUE_URL!,\n      MessageBody: JSON.stringify(event)\n    }))\n  ));\n}",
+    "options": [
+      "Standard SQS queues don't guarantee message ordering",
+      "Promise.all may reorder messages if some sends are slower",
+      "Both -- use FIFO queue with MessageGroupId for ordering"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-016",
+    "track": "devops",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "Why is this container image so large?",
+    "code": "FROM node:20\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\nCMD [\"node\", \"dist/index.js\"]",
+    "options": [
+      "Using full node:20 image instead of node:20-alpine",
+      "Not using a multi-stage build to exclude dev dependencies",
+      "Both base image size and included devDependencies bloat it"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-017",
+    "track": "devops",
+    "language": "typescript",
+    "category": "data_modeling",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which observability approach scales for microservices?",
+    "code": "// Option A: Structured logs per service, centralized search\nlogger.info({ traceId, service: 'auth', event: 'login' });\n\n// Option B: Distributed tracing with OpenTelemetry\nconst span = tracer.startSpan('auth.login');\nspan.setAttribute('user.id', userId);\n\n// Option C: Combined -- structured logs correlated with traces\nlogger.info({ traceId: span.spanContext().traceId,\n  service: 'auth', event: 'login' });",
+    "options": [
+      "A -- centralized logs are sufficient with good search",
+      "B -- distributed tracing shows full request flow across services",
+      "C -- correlated logs and traces give complete observability"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-018",
+    "track": "devops",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What security improvement does this add?",
+    "code": "# Before:\njobs:\n  deploy:\n    steps:\n      - uses: actions/checkout@v4\n      - uses: some-org/deploy-action@main\n\n# After:\njobs:\n  deploy:\n    permissions:\n      contents: read\n    steps:\n      - uses: actions/checkout@v4\n      - uses: some-org/deploy-action@a1b2c3d",
+    "options": [
+      "Pinning action by SHA prevents supply chain attacks",
+      "Adding permissions block limits the GITHUB_TOKEN scope",
+      "Both -- least privilege token and pinned action hash"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-019",
+    "track": "devops",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this container crash on startup?",
+    "code": "// Dockerfile\nFROM node:20-alpine AS build\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\n\nFROM node:20-alpine\nWORKDIR /app\nCOPY --from=build /app/dist ./dist\nCMD [\"node\", \"dist/index.js\"]",
+    "options": [
+      "dist/index.js path is wrong -- should be ./dist/index.js",
+      "Multi-stage build loses environment variables from build stage",
+      "Production stage is missing node_modules"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-020",
+    "track": "devops",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the distributed lock bug.",
+    "code": "import Redis from 'ioredis';\nconst redis = new Redis();\n\nexport async function acquireLock(key: string, ttl: number) {\n  const acquired = await redis.setnx(`lock:${key}`, '1');\n  if (acquired) {\n    await redis.expire(`lock:${key}`, ttl);\n  }\n  return acquired === 1;\n}",
+    "options": [
+      "setnx and expire are not atomic -- crash between them causes deadlock",
+      "Lock value should be a unique ID to prevent releasing another client's lock",
+      "Missing retry logic -- caller has no way to wait for lock release"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-021",
+    "track": "devops",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this AWS CDK code create?",
+    "code": "import * as cdk from 'aws-cdk-lib';\nimport * as sqs from 'aws-cdk-lib/aws-sqs';\nimport * as lambda from 'aws-cdk-lib/aws-lambda';\nimport * as sources from 'aws-cdk-lib/aws-lambda-event-sources';\n\nconst dlq = new sqs.Queue(this, 'DLQ');\nconst queue = new sqs.Queue(this, 'Queue', {\n  deadLetterQueue: { queue: dlq, maxReceiveCount: 3 }\n});\nconst fn = new lambda.Function(this, 'Fn', { ... });\nfn.addEventSource(new sources.SqsEventSource(queue));",
+    "options": [
+      "Lambda triggered by SQS with dead-letter queue after 3 failures",
+      "SQS queue that forwards messages to Lambda then to DLQ",
+      "Lambda fan-out pattern with parallel queue consumers"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-022",
+    "track": "devops",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this Lambda function slow?",
+    "code": "import { DynamoDBClient, GetItemCommand } from '@aws-sdk/client-dynamodb';\n\nexport const handler = async (event: any) => {\n  const client = new DynamoDBClient({});\n  const result = await client.send(new GetItemCommand({\n    TableName: 'users',\n    Key: { id: { S: event.userId } }\n  }));\n  return result.Item;\n};",
+    "options": [
+      "GetItemCommand without ProjectionExpression fetches all attributes",
+      "Missing error handling causes Lambda to retry on every failure",
+      "DynamoDBClient created inside handler -- should be outside for reuse"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-023",
+    "track": "devops",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Spot the container security issue.",
+    "code": "FROM node:20-alpine\nWORKDIR /app\nCOPY . .\nRUN npm ci --production\nENV DATABASE_URL=postgres://admin:s3cret@db:5432/app\nEXPOSE 3000\nCMD [\"node\", \"index.js\"]",
+    "options": [
+      "ENV bakes credentials into the image layer history",
+      "COPY . . may include .env files with additional secrets",
+      "Missing .dockerignore exposes source code in the image"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-024",
+    "track": "devops",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this shell command return?",
+    "code": "import { execSync } from 'child_process';\n\nconst branch = execSync('git rev-parse --abbrev-ref HEAD', {\n  encoding: 'utf-8'\n});\nconsole.log(`Branch: \"${branch.trim()}\"`);",
+    "options": [
+      "Error -- execSync cannot run git commands",
+      "Branch: \"main\" -- the current branch name, trimmed",
+      "Branch: \"HEAD\" -- if in detached HEAD state"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-025",
+    "track": "devops",
+    "language": "typescript",
+    "category": "data_modeling",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this Prometheus change improve?",
+    "code": "// Before:\nconst requestDuration = new Summary({\n  name: 'http_request_duration_seconds',\n  help: 'Request duration in seconds'\n});\n\n// After:\nconst requestDuration = new Histogram({\n  name: 'http_request_duration_seconds',\n  help: 'Request duration in seconds',\n  buckets: [0.01, 0.05, 0.1, 0.5, 1, 5]\n});",
+    "options": [
+      "Histograms allow computing percentiles across instances",
+      "Summaries are deprecated in favor of histograms",
+      "Buckets reduce memory usage compared to streaming quantiles"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-026",
+    "track": "devops",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does adding this .dockerignore do?",
+    "code": "# .dockerignore (new file)\nnode_modules\n.git\n.env\ndist\n*.md\n.github\ncoverage\n.vscode",
+    "options": [
+      "Prevents Docker from overwriting those directories in the container",
+      "Excludes files from the final image but not from the build step",
+      "Reduces build context size and speeds up docker build"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-027",
+    "track": "devops",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What makes this deployment script slow?",
+    "code": "const services = ['auth', 'api', 'worker', 'mailer', 'cron'];\n\nfor (const service of services) {\n  console.log(`Deploying ${service}...`);\n  await execAsync(`kubectl rollout restart deploy/${service}`);\n  await execAsync(`kubectl rollout status deploy/${service} --timeout=120s`);\n  console.log(`${service} deployed.`);\n}",
+    "options": [
+      "kubectl rollout status blocks until all pods are ready",
+      "Services are deployed sequentially instead of in parallel",
+      "restart triggers a full pod replacement, not a rolling update"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-028",
+    "track": "devops",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What's the performance bottleneck?",
+    "code": "import { readFileSync } from 'fs';\n\nexport function parseLogs(path: string): LogEntry[] {\n  const content = readFileSync(path, 'utf-8');\n  const lines = content.split('\\n');\n  return lines\n    .filter(line => line.includes('ERROR'))\n    .map(line => JSON.parse(line));\n}",
+    "options": [
+      "Should use a streaming readline interface for large log files",
+      "readFileSync loads the entire file into memory at once",
+      "JSON.parse on each line is CPU-intensive for large files"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-029",
+    "track": "devops",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the IAM policy vulnerability.",
+    "code": "import * as iam from 'aws-cdk-lib/aws-iam';\n\nconst lambdaRole = new iam.Role(this, 'LambdaRole', {\n  assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),\n});\n\nlambdaRole.addToPolicy(new iam.PolicyStatement({\n  actions: ['s3:*'],\n  resources: ['*'],\n}));",
+    "options": [
+      "Wildcard actions and resources violate least-privilege",
+      "ServicePrincipal should specify the account ID",
+      "Role is missing the AWSLambdaBasicExecutionRole managed policy"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-030",
+    "track": "devops",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this graceful shutdown fail?",
+    "code": "import express from 'express';\nconst app = express();\nconst server = app.listen(3000);\n\nprocess.on('SIGTERM', () => {\n  console.log('Shutting down...');\n  server.close();\n  process.exit(0);\n});",
+    "options": [
+      "Should listen for SIGINT not SIGTERM in containers",
+      "server.close() is async -- process.exit() kills in-flight requests",
+      "express server.close() doesn't stop accepting new connections"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-031",
+    "track": "devops",
+    "language": "typescript",
+    "category": "data_modeling",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What SLO does this represent?",
+    "code": "// SLO definition\nconst totalRequests = 1_000_000;\nconst failedRequests = 500;\n\nconst availability = (\n  (totalRequests - failedRequests) / totalRequests\n) * 100;\n\nconsole.log(`Availability: ${availability}%`);",
+    "options": [
+      "Availability: 99.5%",
+      "Availability: 99.95%",
+      "Availability: 99.995%"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-032",
+    "track": "devops",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which secret injection method scales best?",
+    "code": "// Option A: Env vars from Kubernetes Secret\nenvFrom:\n  - secretRef:\n      name: app-secrets\n\n// Option B: Init container fetches from Vault\ninitContainers:\n  - name: vault-agent\n    image: vault:latest\n    command: ['vault', 'agent', '-config=/etc/vault/config.hcl']\n\n// Option C: Sidecar with auto-rotation\ncontainers:\n  - name: vault-sidecar\n    image: vault:latest\n    # Continuously syncs secrets, supports rotation",
+    "options": [
+      "A -- K8s Secrets are native and require no extra infrastructure",
+      "B -- init container ensures secrets are ready before app starts",
+      "C -- sidecar handles rotation without pod restarts"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-033",
+    "track": "devops",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What happens when this runs?",
+    "code": "import { Worker, isMainThread, parentPort } from 'worker_threads';\n\nif (isMainThread) {\n  const worker = new Worker(__filename);\n  worker.on('message', (msg) => console.log('Main:', msg));\n  worker.postMessage('ping');\n} else {\n  parentPort!.on('message', (msg) => {\n    parentPort!.postMessage(`${msg}-pong`);\n  });\n}",
+    "options": [
+      "Main: ping-pong",
+      "Deadlock -- both threads wait for each other",
+      "Error -- worker cannot import itself as __filename"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-034",
+    "track": "devops",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this GitHub Actions change improve?",
+    "code": "# Before:\nsteps:\n  - uses: actions/checkout@v4\n  - run: npm ci\n  - run: npm test\n\n# After:\nsteps:\n  - uses: actions/checkout@v4\n  - uses: actions/cache@v4\n    with:\n      path: ~/.npm\n      key: npm-${{ hashFiles('**/package-lock.json') }}\n  - run: npm ci\n  - run: npm test",
+    "options": [
+      "Caches node_modules to skip npm ci entirely",
+      "Pins dependencies by lockfile hash for reproducibility",
+      "Caches npm registry metadata to speed up npm ci"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-035",
+    "track": "devops",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the DNS resolution bug.",
+    "code": "import http from 'http';\nimport { lookup } from 'dns';\n\nconst agent = new http.Agent({\n  keepAlive: true,\n  maxSockets: 50\n});\n\n// Called for each request to an internal service\nexport function fetchService(url: string) {\n  return fetch(url, { agent } as any);\n}",
+    "options": [
+      "maxSockets 50 is too low for high-throughput services",
+      "fetch() does not support the agent option natively",
+      "keepAlive caches DNS and misses service IP changes"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-036",
+    "track": "devops",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which log aggregation approach scales?",
+    "code": "// Option A: Write logs to shared NFS volume\nfs.appendFileSync('/mnt/logs/app.log', logLine);\n\n// Option B: Send logs directly to Elasticsearch\nawait esClient.index({ index: 'logs', body: logEntry });\n\n// Option C: Stdout + Fluentd sidecar to Elasticsearch\nconsole.log(JSON.stringify(logEntry));\n// Fluentd DaemonSet collects and forwards",
+    "options": [
+      "A -- NFS is simple and avoids network complexity",
+      "C -- stdout with collector decouples app from log infra",
+      "B -- direct indexing has lowest latency for search"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-037",
+    "track": "devops",
+    "language": "typescript",
+    "category": "data_modeling",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the metric cardinality problem.",
+    "code": "import { Counter } from 'prom-client';\n\nconst httpRequests = new Counter({\n  name: 'http_requests_total',\n  help: 'Total HTTP requests',\n  labelNames: ['method', 'path', 'status', 'userId']\n});\n\napp.use((req, res, next) => {\n  res.on('finish', () => {\n    httpRequests.inc({\n      method: req.method, path: req.path,\n      status: res.statusCode, userId: req.user?.id\n    });\n  });\n  next();\n});",
+    "options": [
+      "userId label creates unbounded cardinality -- will exhaust memory",
+      "path label should be normalized to route patterns",
+      "Both userId and raw path labels create cardinality explosion"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-038",
+    "track": "devops",
+    "language": "typescript",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the event-driven consistency bug.",
+    "code": "// Order service\nexport async function createOrder(data: OrderInput) {\n  const order = await db.orders.create({ data });\n  await publishEvent('order.created', { orderId: order.id });\n  return order;\n}\n\n// Inventory service (subscriber)\nasync function onOrderCreated(event: OrderEvent) {\n  await db.inventory.decrement(event.productId);\n}",
+    "options": [
+      "Inventory decrement is not idempotent on duplicate events",
+      "Both -- no outbox pattern and no idempotency on consumer",
+      "DB write and event publish are not in the same transaction"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-039",
+    "track": "devops",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What security fix does this add?",
+    "code": "# Before:\nFROM node:20-alpine\nWORKDIR /app\nCOPY . .\nRUN npm ci --production\nCMD [\"node\", \"index.js\"]\n\n# After:\nFROM node:20-alpine\nRUN addgroup -S app && adduser -S app -G app\nWORKDIR /app\nCOPY . .\nRUN npm ci --production\nUSER app\nCMD [\"node\", \"index.js\"]",
+    "options": [
+      "Adds a non-root user to reduce container escape risk",
+      "Creates a group to manage file permission inheritance",
+      "Prevents npm scripts from running with elevated privileges"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "ts-do-040",
+    "track": "devops",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this multi-stage build produce?",
+    "code": "FROM node:20-alpine AS build\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\n\nFROM node:20-alpine\nWORKDIR /app\nCOPY --from=build /app/dist ./dist\nCOPY --from=build /app/node_modules ./node_modules\nCMD [\"node\", \"dist/index.js\"]",
+    "options": [
+      "A smaller image with only production artifacts and dependencies",
+      "Two separate container images for build and runtime",
+      "A cached builder image that speeds up subsequent builds"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  }
+]

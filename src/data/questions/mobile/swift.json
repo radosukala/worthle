@@ -1,0 +1,682 @@
+[
+  {
+    "id": "sw-mo-001",
+    "track": "mobile",
+    "language": "swift",
+    "category": "ui_components",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this view.",
+    "code": "struct ProfileView: View {\n    @State var name: String\n\n    var body: some View {\n        VStack {\n            TextField(\"Name\", text: $name)\n            Text(\"Hello, \\(name)\")\n        }\n    }\n}",
+    "options": [
+      "@State should have a default value — initializer won't work as expected",
+      "VStack needs explicit spacing parameter",
+      "TextField requires an onCommit handler"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-002",
+    "track": "mobile",
+    "language": "swift",
+    "category": "state_management",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "class Counter: ObservableObject {\n    @Published var count = 0\n}\n\nlet counter = Counter()\nlet cancellable = counter.$count.sink { value in\n    print(value)\n}\ncounter.count = 5\ncounter.count = 10",
+    "options": [
+      "5, 10",
+      "0, 5",
+      "0, 5, 10"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-003",
+    "track": "mobile",
+    "language": "swift",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the concurrency bug.",
+    "code": "class ImageCache {\n    var cache: [String: UIImage] = [:]\n\n    func loadImage(url: String) async -> UIImage {\n        if let cached = cache[url] {\n            return cached\n        }\n        let image = await downloadImage(url: url)\n        cache[url] = image\n        return image\n    }\n}",
+    "options": [
+      "Dictionary is not thread-safe — concurrent access causes data race",
+      "async function should return optional UIImage",
+      "downloadImage result is not cached before returning"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-004",
+    "track": "mobile",
+    "language": "swift",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What causes the scroll stutter?",
+    "code": "struct FeedView: View {\n    let posts: [Post]\n\n    var body: some View {\n        ScrollView {\n            VStack {\n                ForEach(posts) { post in\n                    PostCard(post: post)\n                }\n            }\n        }\n    }\n}",
+    "options": [
+      "ForEach should use explicit id parameter",
+      "ScrollView doesn't support recycling — use List instead",
+      "VStack renders all children upfront — use LazyVStack instead"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-005",
+    "track": "mobile",
+    "language": "swift",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does navigation fail?",
+    "code": "struct ContentView: View {\n    @State private var showDetail = false\n\n    var body: some View {\n        NavigationView {\n            Button(\"Show Detail\") {\n                showDetail = true\n            }\n            .sheet(isPresented: $showDetail) {\n                DetailView()\n            }\n        }\n    }\n}",
+    "options": [
+      "sheet should be attached to NavigationView, not Button",
+      "NavigationView is deprecated — use NavigationStack",
+      "Navigation works — the sheet presents correctly"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-006",
+    "track": "mobile",
+    "language": "swift",
+    "category": "security",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "What's the security issue?",
+    "code": "func saveToken(_ token: String) {\n    UserDefaults.standard.set(token, forKey: \"authToken\")\n}\n\nfunc loadToken() -> String? {\n    return UserDefaults.standard.string(forKey: \"authToken\")\n}",
+    "options": [
+      "UserDefaults is not encrypted — use Keychain for auth tokens",
+      "string(forKey:) can throw — needs try/catch",
+      "Token should be saved as Data, not String"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-007",
+    "track": "mobile",
+    "language": "swift",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this change fix?",
+    "code": "// Before\nList(items) { item in\n    ItemRow(item: item)\n}\n\n// After\nList(items) { item in\n    ItemRow(item: item)\n}\n.listStyle(.plain)\n.refreshable {\n    await viewModel.refresh()\n}",
+    "options": [
+      "Removes the default grouped style and adds pull-to-refresh",
+      "Fixes a memory leak in the List scrolling behavior",
+      "Enables lazy loading for items off screen"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-008",
+    "track": "mobile",
+    "language": "swift",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the state management bug.",
+    "code": "struct ParentView: View {\n    var body: some View {\n        ChildView()\n    }\n}\n\nstruct ChildView: View {\n    @StateObject var viewModel = ViewModel()\n\n    var body: some View {\n        Text(viewModel.title)\n    }\n}",
+    "options": [
+      "ViewModel should be created in ParentView and passed down",
+      "@StateObject in ChildView is correct — it owns the lifecycle",
+      "@ObservedObject should be used instead of @StateObject"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-009",
+    "track": "mobile",
+    "language": "swift",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "func test() async {\n    let result = await withTaskGroup(of: Int.self) { group in\n        for i in 1...3 {\n            group.addTask { i * 10 }\n        }\n        var sum = 0\n        for await value in group {\n            sum += value\n        }\n        return sum\n    }\n    print(result)\n}",
+    "options": [
+      "60",
+      "The order is undefined so the result varies",
+      "30"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-010",
+    "track": "mobile",
+    "language": "swift",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "What slows this list down?",
+    "code": "struct ContactList: View {\n    let contacts: [Contact]\n\n    var body: some View {\n        List(contacts) { contact in\n            HStack {\n                AsyncImage(url: contact.avatarURL)\n                    .frame(width: 50, height: 50)\n                Text(contact.name)\n            }\n        }\n    }\n}",
+    "options": [
+      "List doesn't recycle rows properly",
+      "AsyncImage re-downloads images on every scroll — needs caching",
+      "HStack layout is recalculated on each cell reuse"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-011",
+    "track": "mobile",
+    "language": "swift",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does the view not update?",
+    "code": "class SettingsManager: ObservableObject {\n    var isDarkMode = false\n    var fontSize: CGFloat = 14.0\n}\n\nstruct SettingsView: View {\n    @ObservedObject var settings: SettingsManager\n\n    var body: some View {\n        Toggle(\"Dark Mode\", isOn: $settings.isDarkMode)\n    }\n}",
+    "options": [
+      "@ObservedObject should be @StateObject",
+      "Toggle binding requires a separate @State variable",
+      "Properties need @Published wrapper to trigger updates"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-012",
+    "track": "mobile",
+    "language": "swift",
+    "category": "security",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach secures API calls best?",
+    "code": "// Option A: Token in URL\nlet url = URL(string: \"https://api.example.com/data?token=\\(apiKey)\")!\n\n// Option B: Token in header\nvar request = URLRequest(url: apiEndpoint)\nrequest.setValue(\"Bearer \\(token)\", forHTTPHeaderField: \"Authorization\")\n\n// Option C: Certificate pinning + header token\nlet session = URLSession(configuration: .default,\n    delegate: PinningDelegate(), delegateQueue: nil)\nvar request = URLRequest(url: apiEndpoint)\nrequest.setValue(\"Bearer \\(token)\", forHTTPHeaderField: \"Authorization\")",
+    "options": [
+      "A — simpler and avoids header injection risks",
+      "B — Authorization header is the standard approach",
+      "C — certificate pinning prevents MITM attacks on top of auth headers"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-013",
+    "track": "mobile",
+    "language": "swift",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What layout does this produce?",
+    "code": "VStack(alignment: .leading, spacing: 8) {\n    Text(\"Title\")\n        .font(.headline)\n    Text(\"Subtitle\")\n        .font(.subheadline)\n        .foregroundColor(.secondary)\n    Spacer()\n    Button(\"Action\") { }\n}",
+    "options": [
+      "Title and subtitle at top, button pushed to bottom",
+      "All items centered vertically with equal spacing",
+      "Title and subtitle stacked with button immediately below"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-014",
+    "track": "mobile",
+    "language": "swift",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "What's wrong with this actor?",
+    "code": "actor BankAccount {\n    var balance: Double = 0\n\n    func deposit(_ amount: Double) {\n        balance += amount\n    }\n\n    func transfer(to other: BankAccount, amount: Double) async {\n        guard balance >= amount else { return }\n        balance -= amount\n        await other.deposit(amount)\n    }\n}",
+    "options": [
+      "deposit should be async to match the actor isolation",
+      "Balance check and deduction are not atomic — suspension between allows overdraft",
+      "Actor methods cannot call other actor methods"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-015",
+    "track": "mobile",
+    "language": "swift",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this refactor achieve?",
+    "code": "// Before\nstruct CounterView: View {\n    @State private var count = 0\n    var body: some View {\n        Button(\"\\(count)\") { count += 1 }\n    }\n}\n\n// After\nstruct CounterView: View {\n    @StateObject private var vm = CounterViewModel()\n    var body: some View {\n        Button(\"\\(vm.count)\") { vm.increment() }\n    }\n}",
+    "options": [
+      "Moves business logic out of the view for testability",
+      "Fixes a memory leak caused by @State on value types",
+      "Enables the count to persist across app launches"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-016",
+    "track": "mobile",
+    "language": "swift",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What causes the memory spike?",
+    "code": "func processImages(_ urls: [URL]) async throws -> [UIImage] {\n    var images: [UIImage] = []\n    for url in urls {\n        let (data, _) = try await URLSession.shared.data(from: url)\n        let image = UIImage(data: data)!\n        images.append(image)\n    }\n    return images\n}",
+    "options": [
+      "URLSession.shared has a connection limit that stalls downloads",
+      "All images are held in memory at once — process in batches and resize",
+      "UIImage(data:) decompresses on the main thread"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-017",
+    "track": "mobile",
+    "language": "swift",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this crash?",
+    "code": "func fetchUser(id: Int) async {\n    let url = URL(string: \"https://api.example.com/users/\\(id)\")!\n    let (data, _) = try! await URLSession.shared.data(from: url)\n    let user = try! JSONDecoder().decode(User.self, from: data)\n    nameLabel.text = user.name\n}",
+    "options": [
+      "URL initializer returns nil for invalid strings",
+      "JSONDecoder cannot decode directly from URLSession data",
+      "try! will crash on any network or decoding error"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-018",
+    "track": "mobile",
+    "language": "swift",
+    "category": "security",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this change improve?",
+    "code": "// Before\nfunc authenticate() {\n    let password = passwordField.text ?? \"\"\n    if password == storedPassword { ... }\n}\n\n// After\nimport LocalAuthentication\nfunc authenticate() {\n    let context = LAContext()\n    context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics,\n        localizedReason: \"Unlock app\") { success, _ in\n        if success { ... }\n    }\n}",
+    "options": [
+      "Adds biometric authentication instead of plain text password comparison",
+      "Fixes a timing attack vulnerability in string comparison",
+      "Moves authentication to a background thread"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-019",
+    "track": "mobile",
+    "language": "swift",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the bug in this list.",
+    "code": "struct TodoListView: View {\n    @State private var todos: [Todo] = []\n\n    var body: some View {\n        List {\n            ForEach(todos) { todo in\n                Text(todo.title)\n            }\n            .onDelete { indexSet in\n                todos.remove(atOffsets: indexSet)\n            }\n        }\n    }\n}",
+    "options": [
+      "onDelete should be on List, not ForEach",
+      "This code is correct — onDelete works on ForEach inside List",
+      "@State array won't trigger re-render on element removal"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-020",
+    "track": "mobile",
+    "language": "swift",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the threading issue.",
+    "code": "func fetchData() {\n    URLSession.shared.dataTask(with: url) { data, _, _ in\n        guard let data = data else { return }\n        let items = try? JSONDecoder().decode([Item].self, from: data)\n        self.tableView.reloadData()\n        self.items = items ?? []\n    }.resume()\n}",
+    "options": [
+      "dataTask completion runs on background thread — UI update must be on main",
+      "JSONDecoder needs a custom dateDecodingStrategy",
+      "resume() should be called before setting the completion handler"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-021",
+    "track": "mobile",
+    "language": "swift",
+    "category": "state_management",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this leak memory?",
+    "code": "class DetailViewModel: ObservableObject {\n    @Published var data: String = \"\"\n    var cancellable: AnyCancellable?\n\n    init(publisher: AnyPublisher<String, Never>) {\n        cancellable = publisher.sink { [self] value in\n            self.data = value\n        }\n    }\n}",
+    "options": [
+      "AnyCancellable should be stored in a Set, not optional",
+      "@Published cannot be set inside a Combine sink",
+      "[self] in capture list creates a strong reference — use [weak self]"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-022",
+    "track": "mobile",
+    "language": "swift",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which image loading strategy scales best?",
+    "code": "// Option A: Load full images\nAsyncImage(url: photo.fullURL)\n    .frame(width: 80, height: 80)\n\n// Option B: Request thumbnails\nAsyncImage(url: photo.thumbnailURL)\n    .frame(width: 80, height: 80)\n\n// Option C: Thumbnail + disk cache\nCachedAsyncImage(url: photo.thumbnailURL)\n    .frame(width: 80, height: 80)",
+    "options": [
+      "A — full images look sharper when zoomed",
+      "B — thumbnails reduce bandwidth but still re-download on scroll",
+      "C — thumbnails with disk caching minimize network and re-decode cost"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-023",
+    "track": "mobile",
+    "language": "swift",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this view freeze?",
+    "code": "struct SearchView: View {\n    @State private var query = \"\"\n    @State private var results: [Item] = []\n\n    var body: some View {\n        TextField(\"Search\", text: $query)\n            .onChange(of: query) { newValue in\n                results = database.search(newValue)\n            }\n        List(results) { item in\n            Text(item.name)\n        }\n    }\n}",
+    "options": [
+      "onChange fires on every keystroke running a synchronous DB query on the main thread",
+      "TextField binding to @State causes infinite loop on text change",
+      "List and TextField in the same view causes layout conflicts"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-024",
+    "track": "mobile",
+    "language": "swift",
+    "category": "security",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "What's the security flaw?",
+    "code": "func loadWebContent() {\n    let html = \"<h1>Welcome, \\(user.name)</h1>\"\n    webView.loadHTMLString(html, baseURL: nil)\n}",
+    "options": [
+      "baseURL: nil prevents relative resource loading",
+      "loadHTMLString blocks the main thread",
+      "User name is not sanitized — enables HTML/JS injection"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-025",
+    "track": "mobile",
+    "language": "swift",
+    "category": "ui_components",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this modifier produce?",
+    "code": "Text(\"Hello\")\n    .padding()\n    .background(Color.blue)\n    .padding()\n    .background(Color.red)\n    .clipShape(RoundedRectangle(cornerRadius: 10))",
+    "options": [
+      "Blue text on red background with rounded corners",
+      "Only the red background is visible because it overrides blue",
+      "Blue inner padding, red outer padding, both rounded"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-026",
+    "track": "mobile",
+    "language": "swift",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "func test() async {\n    async let a = fetchValue(1)\n    async let b = fetchValue(2)\n    let results = await [a, b]\n    print(results.count)\n}\n\nfunc fetchValue(_ n: Int) async -> Int {\n    return n * 10\n}",
+    "options": [
+      "1",
+      "2",
+      "Compile error — async let cannot be collected into array"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-027",
+    "track": "mobile",
+    "language": "swift",
+    "category": "state_management",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the subtle state bug.",
+    "code": "struct ItemListView: View {\n    @StateObject var vm = ItemListViewModel()\n\n    var body: some View {\n        NavigationStack {\n            List(vm.items) { item in\n                NavigationLink(item.name) {\n                    ItemDetailView(vm: DetailViewModel(item: item))\n                }\n            }\n        }\n    }\n}",
+    "options": [
+      "DetailViewModel is re-created every time the list re-renders",
+      "NavigationLink requires an explicit value-based initializer in NavigationStack",
+      "@StateObject should be @ObservedObject for child views"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-028",
+    "track": "mobile",
+    "language": "swift",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this change optimize?",
+    "code": "// Before\nvar body: some View {\n    VStack {\n        Text(computeTitle())\n        Text(computeSubtitle())\n    }\n}\n\n// After\nvar body: some View {\n    let title = computeTitle()\n    let subtitle = computeSubtitle()\n    VStack {\n        Text(title)\n        Text(subtitle)\n    }\n}",
+    "options": [
+      "Reduces re-renders by pre-computing values outside the view builder",
+      "No meaningful difference — both are evaluated during body",
+      "Prevents SwiftUI from caching stale computed values"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-029",
+    "track": "mobile",
+    "language": "swift",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this crash at launch?",
+    "code": "@main\nstruct MyApp: App {\n    @StateObject var store = DataStore()\n\n    var body: some Scene {\n        WindowGroup {\n            ContentView()\n                .environment(\\.managedObjectContext,\n                    store.container.viewContext)\n        }\n    }\n}",
+    "options": [
+      "@StateObject in App struct causes lifecycle issues",
+      "Core Data container is not loaded yet — loadPersistentStores is async",
+      "environment modifier should be environmentObject instead"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-030",
+    "track": "mobile",
+    "language": "swift",
+    "category": "security",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which protects sensitive data best?",
+    "code": "// Option A: Keychain with kSecAttrAccessible\nSecItemAdd([\n    kSecAttrAccessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,\n    kSecValueData: tokenData\n] as CFDictionary, nil)\n\n// Option B: Keychain with biometric access control\nlet access = SecAccessControlCreateWithFlags(nil,\n    kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,\n    .biometryCurrentSet, nil)!\nSecItemAdd([kSecAttrAccessControl: access,\n    kSecValueData: tokenData] as CFDictionary, nil)",
+    "options": [
+      "A — simpler and available even after biometric enrollment changes",
+      "B — biometryCurrentSet invalidates data if biometrics change, preventing unauthorized access",
+      "Both are equivalent — Keychain encryption is the same regardless of access control"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-031",
+    "track": "mobile",
+    "language": "swift",
+    "category": "ui_components",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this show?",
+    "code": "ZStack {\n    Color.blue\n    Text(\"Hello\")\n        .foregroundColor(.white)\n}\n.frame(width: 200, height: 100)\n.cornerRadius(12)",
+    "options": [
+      "White text centered on a blue rounded rectangle",
+      "Blue text on white background with rounded corners",
+      "Only the text is visible — Color.blue is behind the ZStack"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-032",
+    "track": "mobile",
+    "language": "swift",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this refactor improve?",
+    "code": "// Before\nclass DataService {\n    var cache: [String: Data] = [:]\n    let lock = NSLock()\n    func getData(_ key: String) -> Data? {\n        lock.lock(); defer { lock.unlock() }\n        return cache[key]\n    }\n}\n\n// After\nactor DataService {\n    var cache: [String: Data] = [:]\n    func getData(_ key: String) -> Data? {\n        return cache[key]\n    }\n}",
+    "options": [
+      "Removes the NSLock to improve read performance",
+      "Allows multiple concurrent reads that NSLock would serialize",
+      "Replaces manual locking with actor isolation for compile-time safety"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-033",
+    "track": "mobile",
+    "language": "swift",
+    "category": "state_management",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why doesn't the child update?",
+    "code": "struct ParentView: View {\n    @State private var settings = Settings()\n\n    var body: some View {\n        ChildView(settings: settings)\n        Button(\"Toggle\") {\n            settings.isDarkMode.toggle()\n        }\n    }\n}\n\nstruct ChildView: View {\n    let settings: Settings\n    var body: some View {\n        Text(settings.isDarkMode ? \"Dark\" : \"Light\")\n    }\n}",
+    "options": [
+      "Settings is a class — @State doesn't detect reference type mutations",
+      "ChildView should use @Binding to receive mutable state",
+      "If Settings is a struct, ChildView receives a copy and does update correctly"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-034",
+    "track": "mobile",
+    "language": "swift",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "What causes the frame drops?",
+    "code": "struct AnimatedListView: View {\n    @State private var items: [Item] = []\n\n    var body: some View {\n        List(items) { item in\n            ItemRow(item: item)\n                .onAppear {\n                    withAnimation(.easeInOut(duration: 0.3)) {\n                        item.isVisible = true\n                    }\n                }\n        }\n        .onAppear { items = loadItems() }\n    }\n}",
+    "options": [
+      "withAnimation inside onAppear triggers re-render of the entire List",
+      "loadItems() is synchronous and blocks the main thread",
+      "Each row animation causes the List to diff all visible rows simultaneously"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-035",
+    "track": "mobile",
+    "language": "swift",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What happens when this runs?",
+    "code": "class ViewController: UIViewController {\n    var timer: Timer?\n\n    override func viewDidLoad() {\n        super.viewDidLoad()\n        timer = Timer.scheduledTimer(withTimeInterval: 1,\n            repeats: true) { _ in\n            self.updateUI()\n        }\n    }\n\n    deinit { print(\"deallocated\") }\n}",
+    "options": [
+      "Timer fires every second and deallocates normally when dismissed",
+      "Timer retains self — ViewController never deallocates, deinit never prints",
+      "Timer fires once and stops — repeats parameter is ignored"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-036",
+    "track": "mobile",
+    "language": "swift",
+    "category": "security",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "What's the security risk here?",
+    "code": "func validateCertificate(\n    _ session: URLSession,\n    didReceive challenge: URLAuthenticationChallenge\n) -> (URLSession.AuthChallengeDisposition, URLCredential?) {\n    let credential = URLCredential(\n        trust: challenge.protectionSpace.serverTrust!\n    )\n    return (.useCredential, credential)\n}",
+    "options": [
+      "Force-unwrapping serverTrust will crash on non-TLS connections",
+      "Accepting any server trust without validation disables TLS verification",
+      "URLCredential should use .performDefaultHandling instead"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-037",
+    "track": "mobile",
+    "language": "swift",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this change accomplish?",
+    "code": "// Before\nstruct UserRow: View {\n    let user: User\n    var body: some View {\n        HStack {\n            Image(systemName: \"person\")\n            Text(user.name)\n        }\n    }\n}\n\n// After\nstruct UserRow: View {\n    let user: User\n    var body: some View {\n        HStack {\n            Image(systemName: \"person\")\n                .accessibilityHidden(true)\n            Text(user.name)\n        }\n        .accessibilityElement(children: .combine)\n    }\n}",
+    "options": [
+      "Hides the icon from VoiceOver and treats the row as a single accessible element",
+      "Prevents the Image from being tapped separately",
+      "Removes the icon on devices with accessibility settings enabled"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-038",
+    "track": "mobile",
+    "language": "swift",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which async pattern handles errors best?",
+    "code": "// Option A: Sequential\nlet profile = try await fetchProfile()\nlet posts = try await fetchPosts(profile.id)\nlet comments = try await fetchComments(posts)\n\n// Option B: Parallel with TaskGroup\ntry await withThrowingTaskGroup(of: Void.self) { group in\n    group.addTask { self.profile = try await fetchProfile() }\n    group.addTask { self.posts = try await fetchPosts(id) }\n    try await group.waitForAll()\n}",
+    "options": [
+      "A — sequential ensures each step has the data it needs",
+      "B — TaskGroup cancels remaining tasks if one throws",
+      "Both handle errors the same — try propagates identically"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-039",
+    "track": "mobile",
+    "language": "swift",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Why is the list always empty?",
+    "code": "struct ItemListView: View {\n    @State private var items: [String] = []\n\n    var body: some View {\n        List(items, id: \\.self) { item in\n            Text(item)\n        }\n        .task {\n            let fetched = await fetchItems()\n            items = fetched\n        }\n    }\n}",
+    "options": [
+      "The .task modifier isn't calling fetchItems correctly",
+      "List requires ForEach inside it for dynamic content",
+      "This code is correct — list will populate after fetch completes"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "sw-mo-040",
+    "track": "mobile",
+    "language": "swift",
+    "category": "security",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this change prevent?",
+    "code": "// Before\nfunc handleDeepLink(_ url: URL) {\n    let path = url.path\n    router.navigate(to: path)\n}\n\n// After\nfunc handleDeepLink(_ url: URL) {\n    guard let scheme = url.scheme,\n          [\"myapp\", \"https\"].contains(scheme),\n          let host = url.host,\n          allowedHosts.contains(host) else { return }\n    let path = url.path\n    router.navigate(to: path)\n}",
+    "options": [
+      "Prevents navigation to file:// URLs that access local data",
+      "Validates scheme and host to prevent open redirect and arbitrary URL handling",
+      "Ensures deep links only work when the app is in the foreground"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  }
+]

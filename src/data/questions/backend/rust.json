@@ -1,0 +1,682 @@
+[
+  {
+    "id": "rs-be-001",
+    "track": "backend",
+    "language": "rust",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this handler.",
+    "code": "#[get(\"/users/{id}\")]\nasync fn get_user(id: web::Path<i32>, db: web::Data<Pool>) -> impl Responder {\n    let user = sqlx::query_as!(User, \"SELECT * FROM users WHERE id = $1\", *id)\n        .fetch_one(db.get_ref())\n        .await\n        .unwrap();\n    HttpResponse::Ok().json(user)\n}",
+    "options": [
+      "unwrap() panics on missing user instead of returning 404",
+      "db.get_ref() borrows the pool incorrectly",
+      "query_as! macro can't use $1 parameter syntax"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-002",
+    "track": "backend",
+    "language": "rust",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "use tokio::sync::mpsc;\n\n#[tokio::main]\nasync fn main() {\n    let (tx, mut rx) = mpsc::channel(2);\n    tx.send(1).await.unwrap();\n    tx.send(2).await.unwrap();\n    drop(tx);\n    let mut results = vec![];\n    while let Some(v) = rx.recv().await {\n        results.push(v);\n    }\n    println!(\"{:?}\", results);\n}",
+    "options": [
+      "[1]",
+      "[1, 2]",
+      "Hangs — channel never closes"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-003",
+    "track": "backend",
+    "language": "rust",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the performance issue?",
+    "code": "async fn list_orders(pool: &PgPool) -> Result<Vec<OrderDetail>> {\n    let orders = sqlx::query_as!(Order, \"SELECT * FROM orders\")\n        .fetch_all(pool).await?;\n    let mut details = vec![];\n    for order in &orders {\n        let items = sqlx::query_as!(Item,\n            \"SELECT * FROM items WHERE order_id = $1\", order.id\n        ).fetch_all(pool).await?;\n        details.push(OrderDetail { order: order.clone(), items });\n    }\n    Ok(details)\n}",
+    "options": [
+      "fetch_all loads all orders into memory at once",
+      "N+1 queries — items fetched per order in a loop",
+      "clone() on order creates unnecessary heap allocations"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-004",
+    "track": "backend",
+    "language": "rust",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach scales for rate limiting?",
+    "code": "// Option A: In-process HashMap\nlet limiter: Arc<Mutex<HashMap<IpAddr, (u32, Instant)>>> = ...;\n\n// Option B: Redis with INCR + EXPIRE\nlet count: u32 = redis.incr(&key).await?;\nif count == 1 { redis.expire(&key, 60).await?; }\n\n// Option C: Database row per IP\nUPDATE rate_limits SET count = count + 1\nWHERE ip = $1 AND window = $2;",
+    "options": [
+      "A — Mutex is fast and avoids network round-trips",
+      "C — database provides durable, queryable rate limit history",
+      "B — Redis is shared across instances and handles TTL natively"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-005",
+    "track": "backend",
+    "language": "rust",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this extractor.",
+    "code": "#[derive(Deserialize)]\nstruct Pagination {\n    page: u32,\n    per_page: u32,\n}\n\n#[get(\"/items\")]\nasync fn list_items(query: web::Query<Pagination>) -> impl Responder {\n    let offset = query.page * query.per_page;\n    let items = fetch_items(offset, query.per_page).await;\n    HttpResponse::Ok().json(items)\n}",
+    "options": [
+      "page is 0-indexed — first page skips per_page items",
+      "web::Query requires Serialize, not Deserialize",
+      "offset should be (page - 1) * per_page for 1-based pages"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-006",
+    "track": "backend",
+    "language": "rust",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's slow in this handler?",
+    "code": "#[post(\"/upload\")]\nasync fn upload(body: web::Bytes) -> impl Responder {\n    let data = body.to_vec();\n    let hash = sha256::digest(&data);\n    let compressed = zstd::encode_all(&data[..], 3).unwrap();\n    sqlx::query!(\"INSERT INTO files (hash, data) VALUES ($1, $2)\",\n        hash, compressed\n    ).execute(&pool).await.unwrap();\n    HttpResponse::Ok().json(json!({ \"hash\": hash }))\n}",
+    "options": [
+      "sha256 and zstd are CPU-bound — they block the async runtime",
+      "body.to_vec() copies the entire payload unnecessarily",
+      "zstd compression level 3 is too low to save meaningful space"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-007",
+    "track": "backend",
+    "language": "rust",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the concurrency bug.",
+    "code": "async fn update_balance(state: web::Data<AppState>, amount: f64) -> impl Responder {\n    let balance = state.balance.lock().unwrap();\n    let new_balance = *balance + amount;\n    drop(balance);\n    // ... validate new_balance ...\n    let mut balance = state.balance.lock().unwrap();\n    *balance = new_balance;\n    HttpResponse::Ok().json(json!({ \"balance\": new_balance }))\n}",
+    "options": [
+      "f64 should not be used for monetary values",
+      "TOCTOU race — balance can change between the two locks",
+      "Mutex::lock().unwrap() panics if another thread panicked"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-008",
+    "track": "backend",
+    "language": "rust",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this change accomplish?",
+    "code": "// Before\n#[post(\"/orders\")]\nasync fn create(body: web::Json<Order>) -> impl Responder {\n    let order = body.into_inner();\n    db::insert_order(&order).await.unwrap();\n    HttpResponse::Ok().json(order)\n}\n\n// After\n#[post(\"/orders\")]\nasync fn create(body: web::Json<Order>) -> Result<HttpResponse, AppError> {\n    let order = body.into_inner();\n    db::insert_order(&order).await?;\n    Ok(HttpResponse::Created().json(order))\n}",
+    "options": [
+      "Adds input validation on the Order struct",
+      "Returns proper error responses instead of panicking on failure",
+      "Changes response format from JSON to plain text"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-009",
+    "track": "backend",
+    "language": "rust",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "What's wrong with this query?",
+    "code": "async fn search(pool: &PgPool, term: &str) -> Result<Vec<Product>> {\n    let query = format!(\n        \"SELECT * FROM products WHERE name LIKE '%{}%'\", term\n    );\n    let products = sqlx::query_as::<_, Product>(&query)\n        .fetch_all(pool)\n        .await?;\n    Ok(products)\n}",
+    "options": [
+      "LIKE without an index causes a sequential scan",
+      "SQL injection — user input interpolated into query string",
+      "query_as needs the query at compile time, not runtime"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-010",
+    "track": "backend",
+    "language": "rust",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which caching approach scales best?",
+    "code": "// Option A: In-process LRU cache\nlet cache: Arc<Mutex<LruCache<String, Product>>> = ...;\n\n// Option B: Redis with TTL\nlet cached: Option<Product> = redis.get(&key).await?;\nif cached.is_none() {\n    let p = db.fetch_product(id).await?;\n    redis.set_ex(&key, &p, 300).await?;\n}\n\n// Option C: HTTP Cache-Control headers\nHttpResponse::Ok()\n    .insert_header((\"Cache-Control\", \"max-age=300\"))\n    .json(product)",
+    "options": [
+      "A — in-process is fastest with zero network latency",
+      "B — Redis shares cache across instances and survives restarts",
+      "C — client-side caching eliminates all server load"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-011",
+    "track": "backend",
+    "language": "rust",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this return?",
+    "code": "fn parse_config(input: &str) -> Result<Config, ConfigError> {\n    let port: u16 = input.parse().map_err(|_| ConfigError::InvalidPort)?;\n    Ok(Config { port })\n}\n\nfn main() {\n    let result = parse_config(\"not_a_number\");\n    match result {\n        Ok(cfg) => println!(\"port: {}\", cfg.port),\n        Err(e) => println!(\"error: {:?}\", e),\n    }\n}",
+    "options": [
+      "Panics at parse()",
+      "error: InvalidPort",
+      "port: 0"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-012",
+    "track": "backend",
+    "language": "rust",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What's the performance bottleneck?",
+    "code": "async fn broadcast(clients: &Arc<Mutex<Vec<TcpStream>>>, msg: &[u8]) {\n    let mut clients = clients.lock().unwrap();\n    for client in clients.iter_mut() {\n        client.write_all(msg).await.unwrap();\n    }\n}",
+    "options": [
+      "Mutex is held across await points — blocks all other tasks",
+      "write_all copies the message buffer for each client",
+      "iter_mut() borrows Vec mutably, preventing concurrent reads"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-013",
+    "track": "backend",
+    "language": "rust",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the deadlock risk.",
+    "code": "async fn transfer(\n    accounts: &Arc<Mutex<HashMap<u32, Account>>>,\n    from: u32, to: u32, amount: f64,\n) {\n    let mut map = accounts.lock().unwrap();\n    let src = map.get_mut(&from).unwrap();\n    src.balance -= amount;\n    let dst = map.get_mut(&to).unwrap();\n    dst.balance += amount;\n}",
+    "options": [
+      "Two mutable borrows from the same HashMap — won't compile",
+      "Mutex held during the entire operation blocks concurrent transfers",
+      "from and to could be the same account, causing double borrow"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-014",
+    "track": "backend",
+    "language": "rust",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this refactor improve?",
+    "code": "// Before\n#[derive(Deserialize)]\nstruct CreateUser {\n    name: String,\n    email: String,\n    age: i32,\n}\n\n// After\n#[derive(Deserialize, Validate)]\nstruct CreateUser {\n    #[validate(length(min = 1, max = 100))]\n    name: String,\n    #[validate(email)]\n    email: String,\n    #[validate(range(min = 0, max = 150))]\n    age: i32,\n}",
+    "options": [
+      "Adds compile-time type checking for struct fields",
+      "Enforces input validation rules at deserialization boundary",
+      "Generates database schema constraints from struct annotations"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-015",
+    "track": "backend",
+    "language": "rust",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the transaction bug.",
+    "code": "async fn place_order(pool: &PgPool, order: NewOrder) -> Result<()> {\n    let mut tx = pool.begin().await?;\n    sqlx::query!(\"INSERT INTO orders (user_id, total) VALUES ($1, $2)\",\n        order.user_id, order.total\n    ).execute(&mut *tx).await?;\n    for item in &order.items {\n        sqlx::query!(\"INSERT INTO order_items (order_id, product_id) VALUES ($1, $2)\",\n            item.order_id, item.product_id\n        ).execute(pool).await?;\n    }\n    tx.commit().await?;\n    Ok(())\n}",
+    "options": [
+      "order_items INSERT uses pool instead of tx — runs outside transaction",
+      "tx.commit() should be called before the loop finishes",
+      "begin() needs an isolation level argument for correctness"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-016",
+    "track": "backend",
+    "language": "rust",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which message pattern scales best?",
+    "code": "// A: Direct HTTP call\nlet resp = client.post(\"http://email-service/send\")\n    .json(&email).send().await?;\n\n// B: Async message queue\nchannel.basic_publish(\"\", \"email_queue\",\n    BasicProperties::default(), payload.as_bytes()\n).await?;\n\n// C: Spawn background task\ntokio::spawn(async move {\n    send_email(email).await;\n});",
+    "options": [
+      "A — synchronous call guarantees delivery confirmation",
+      "C — tokio::spawn avoids network overhead entirely",
+      "B — queue decouples services and handles backpressure"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-017",
+    "track": "backend",
+    "language": "rust",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this handler fail?",
+    "code": "#[post(\"/webhook\")]\nasync fn webhook(body: web::Json<WebhookPayload>) -> impl Responder {\n    let signature = body.headers.get(\"X-Signature\").unwrap();\n    if !verify_signature(&body, signature) {\n        return HttpResponse::Unauthorized().finish();\n    }\n    process_event(&body.event).await;\n    HttpResponse::Ok().finish()\n}",
+    "options": [
+      "body is deserialized JSON — HTTP headers aren't in the payload",
+      "verify_signature borrows body while signature borrows it too",
+      "process_event should return a Result to propagate errors"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-018",
+    "track": "backend",
+    "language": "rust",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this optimization do?",
+    "code": "// Before\nasync fn read_file(path: &str) -> Result<Vec<u8>> {\n    let data = tokio::fs::read(path).await?;\n    Ok(data)\n}\n\n// After\nasync fn read_file(path: &str) -> Result<impl Stream<Item = Result<Bytes>>> {\n    let file = tokio::fs::File::open(path).await?;\n    Ok(ReaderStream::new(BufReader::new(file)))\n}",
+    "options": [
+      "Switches from buffered to unbuffered I/O for lower latency",
+      "Streams file in chunks instead of loading entirely into memory",
+      "Enables concurrent reads from multiple consumers"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-019",
+    "track": "backend",
+    "language": "rust",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "use std::sync::{Arc, Mutex};\n\nfn main() {\n    let counter = Arc::new(Mutex::new(0));\n    let mut handles = vec![];\n    for _ in 0..5 {\n        let c = Arc::clone(&counter);\n        handles.push(std::thread::spawn(move || {\n            *c.lock().unwrap() += 1;\n        }));\n    }\n    for h in handles { h.join().unwrap(); }\n    println!(\"{}\", *counter.lock().unwrap());\n}",
+    "options": [
+      "5",
+      "Race condition — result is unpredictable",
+      "0"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-020",
+    "track": "backend",
+    "language": "rust",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What status code is returned?",
+    "code": "#[derive(Serialize)]\nstruct Message { text: String }\n\n#[get(\"/hello\")]\nasync fn hello() -> impl Responder {\n    HttpResponse::Ok().json(Message {\n        text: \"Hello, world!\".to_string(),\n    })\n}",
+    "options": [
+      "200 with JSON body",
+      "204 No Content",
+      "500 — Message must implement Responder"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-021",
+    "track": "backend",
+    "language": "rust",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this migration fix?",
+    "code": "// Before\nCREATE TABLE events (\n    id SERIAL PRIMARY KEY,\n    user_id INTEGER REFERENCES users(id),\n    event_type TEXT,\n    created_at TIMESTAMP DEFAULT NOW()\n);\n\n// After\nCREATE TABLE events (\n    id SERIAL PRIMARY KEY,\n    user_id INTEGER REFERENCES users(id),\n    event_type TEXT NOT NULL,\n    created_at TIMESTAMP DEFAULT NOW()\n);\nCREATE INDEX idx_events_user_created\n    ON events (user_id, created_at DESC);",
+    "options": [
+      "Adds NOT NULL constraint and a composite index for faster lookups",
+      "Changes the primary key strategy for better distribution",
+      "Adds foreign key cascading for referential integrity"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-022",
+    "track": "backend",
+    "language": "rust",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the async bug.",
+    "code": "async fn fetch_all(urls: Vec<String>) -> Vec<String> {\n    let mut results = vec![];\n    for url in urls {\n        let resp = reqwest::get(&url).await.unwrap();\n        results.push(resp.text().await.unwrap());\n    }\n    results\n}",
+    "options": [
+      "Results may be returned in non-deterministic order",
+      "Requests are sequential — should use join_all for concurrency",
+      "reqwest::get returns bytes, not a response object"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-023",
+    "track": "backend",
+    "language": "rust",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which session storage scales horizontally?",
+    "code": "// A: In-memory HashMap\nlet sessions: Arc<RwLock<HashMap<String, Session>>> = ...;\n\n// B: Signed JWT in cookie\nlet token = encode(&Header::default(), &claims, &key)?;\n\n// C: Redis with TTL\nredis.set_ex(&session_id, &data, 3600).await?;",
+    "options": [
+      "A — RwLock allows concurrent reads for maximum throughput",
+      "B — stateless tokens need no shared storage across instances",
+      "C — Redis is fast but adds a single point of failure"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-024",
+    "track": "backend",
+    "language": "rust",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this panic at runtime?",
+    "code": "fn find_user(users: &[User], id: u32) -> &User {\n    for user in users {\n        if user.id == id {\n            return user;\n        }\n    }\n    panic!(\"user not found\")\n}\n\nfn main() {\n    let users = load_users();\n    let user = find_user(&users, 999);\n    println!(\"{}\", user.name);\n}",
+    "options": [
+      "load_users() returns an empty Vec, causing a panic",
+      "Function panics if user ID 999 doesn't exist — should return Option",
+      "Returning a reference to a local variable causes use-after-free"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-025",
+    "track": "backend",
+    "language": "rust",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "What's the hidden allocation problem?",
+    "code": "fn build_response(records: &[Record]) -> String {\n    let mut output = String::new();\n    for r in records {\n        output = output + &format!(\"{},{},{}\\n\", r.id, r.name, r.value);\n    }\n    output\n}",
+    "options": [
+      "format! allocates a new String per iteration that is immediately dropped",
+      "String::new() starts with zero capacity, causing repeated reallocations",
+      "output + &format!(...) creates a new String each iteration via Add trait"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-026",
+    "track": "backend",
+    "language": "rust",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the deserialization bug.",
+    "code": "#[derive(Deserialize)]\nstruct UpdateUser {\n    name: String,\n    email: String,\n}\n\n#[patch(\"/users/{id}\")]\nasync fn update_user(\n    id: web::Path<i32>,\n    body: web::Json<UpdateUser>,\n) -> impl Responder {\n    db::update(*id, &body).await;\n    HttpResponse::Ok().finish()\n}",
+    "options": [
+      "PATCH expects partial updates but all fields are required",
+      "web::Path<i32> should be web::Path<(i32,)> for tuple extraction",
+      "body is consumed by db::update — can't be used after"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-027",
+    "track": "backend",
+    "language": "rust",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "output",
+    "prompt": "What happens when this runs?",
+    "code": "use tokio::sync::oneshot;\n\n#[tokio::main]\nasync fn main() {\n    let (tx, rx) = oneshot::channel::<i32>();\n    tokio::spawn(async move {\n        tokio::time::sleep(Duration::from_secs(1)).await;\n        let _ = tx.send(42);\n    });\n    drop(rx);\n    println!(\"done\");\n}",
+    "options": [
+      "Prints \"done\" — rx is dropped so send returns Err but doesn't panic",
+      "Hangs — spawned task waits for receiver to exist",
+      "Panics — dropping rx before send causes a channel error"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-028",
+    "track": "backend",
+    "language": "rust",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this query return?",
+    "code": "let count: (i64,) = sqlx::query_as(\n    \"SELECT COUNT(*) FROM users WHERE active = true\"\n).fetch_one(pool).await?;\n\nprintln!(\"{}\", count.0);",
+    "options": [
+      "Compile error — COUNT(*) type mismatch with i64",
+      "The number of active users as an i64",
+      "A Vec of all active user rows"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-029",
+    "track": "backend",
+    "language": "rust",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this architecture change do?",
+    "code": "// Before\n#[post(\"/orders\")]\nasync fn create_order(body: web::Json<Order>) -> impl Responder {\n    let order = db::insert_order(&body).await?;\n    email::send_confirmation(&order).await?;\n    inventory::update_stock(&order).await?;\n    Ok(HttpResponse::Created().json(order))\n}\n\n// After\n#[post(\"/orders\")]\nasync fn create_order(body: web::Json<Order>) -> impl Responder {\n    let order = db::insert_order(&body).await?;\n    queue.publish(\"order.created\", &order).await?;\n    Ok(HttpResponse::Created().json(order))\n}",
+    "options": [
+      "Decouples side effects via event-driven messaging",
+      "Removes email and inventory features to simplify the API",
+      "Adds retry logic for failed downstream service calls"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-030",
+    "track": "backend",
+    "language": "rust",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What's the memory issue?",
+    "code": "lazy_static! {\n    static ref CACHE: Mutex<HashMap<String, Vec<u8>>> = Mutex::new(HashMap::new());\n}\n\nasync fn get_image(id: &str, pool: &PgPool) -> Vec<u8> {\n    let mut cache = CACHE.lock().unwrap();\n    if let Some(data) = cache.get(id) {\n        return data.clone();\n    }\n    let img = db::fetch_image(id, pool).await.unwrap();\n    cache.insert(id.to_string(), img.clone());\n    img\n}",
+    "options": [
+      "clone() on Vec<u8> doubles memory usage for each cache hit",
+      "Unbounded cache grows forever — no eviction or size limit",
+      "Mutex blocks async runtime while holding the lock"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-031",
+    "track": "backend",
+    "language": "rust",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which error handling pattern scales best?",
+    "code": "// A: String errors\nasync fn handler() -> Result<HttpResponse, String> {\n    let user = db::get_user(id).await.map_err(|e| e.to_string())?;\n    Ok(HttpResponse::Ok().json(user))\n}\n\n// B: Custom enum with ResponseError\n#[derive(Debug, thiserror::Error)]\nenum AppError {\n    #[error(\"not found\")] NotFound,\n    #[error(\"db error\")] Db(#[from] sqlx::Error),\n}\nimpl ResponseError for AppError { ... }\n\n// C: anyhow::Error\nasync fn handler() -> Result<HttpResponse, anyhow::Error> { ... }",
+    "options": [
+      "A — string errors are simple and easy to debug",
+      "C — anyhow captures full error chain with backtraces",
+      "B — typed errors map to proper HTTP status codes automatically"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-032",
+    "track": "backend",
+    "language": "rust",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "fn process(data: &mut Vec<i32>) {\n    let first = &data[0];\n    data.push(42);\n    println!(\"{}\", first);\n}",
+    "options": [
+      "42",
+      "The original first element value",
+      "Won't compile — push borrows data mutably while first borrows it"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-033",
+    "track": "backend",
+    "language": "rust",
+    "category": "databases",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the subtle connection issue.",
+    "code": "async fn health_check(pool: &PgPool) -> Result<bool> {\n    let result = sqlx::query(\"SELECT 1\")\n        .fetch_optional(pool)\n        .await;\n    match result {\n        Ok(Some(_)) => Ok(true),\n        Ok(None) => Ok(false),\n        Err(_) => Ok(false),\n    }\n}",
+    "options": [
+      "Swallowing Err means connection pool exhaustion goes undetected",
+      "fetch_optional returns the wrong type for SELECT 1",
+      "SELECT 1 doesn't test actual table access or permissions"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-034",
+    "track": "backend",
+    "language": "rust",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this change fix?",
+    "code": "// Before\nlet data = Arc::new(Mutex::new(shared_state));\nfor req in requests {\n    let d = data.clone();\n    tokio::spawn(async move {\n        let mut guard = d.lock().unwrap();\n        guard.process(req).await;\n    });\n}\n\n// After\nlet data = Arc::new(tokio::sync::Mutex::new(shared_state));\nfor req in requests {\n    let d = data.clone();\n    tokio::spawn(async move {\n        let mut guard = d.lock().await;\n        guard.process(req).await;\n    });\n}",
+    "options": [
+      "Replaces std::sync::Mutex with tokio::sync::Mutex to avoid blocking the runtime across .await",
+      "Switches from sync to async cloning for better performance",
+      "Enables concurrent access — tokio Mutex allows multiple readers"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-035",
+    "track": "backend",
+    "language": "rust",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "scales",
+    "prompt": "Which approach handles traffic spikes best?",
+    "code": "// A: Synchronous processing\nfor event in events {\n    process_event(event).await?;\n}\n\n// B: Bounded channel with backpressure\nlet (tx, rx) = mpsc::channel(1000);\ntx.send(event).await?;\n// workers consume from rx\n\n// C: Unbounded channel\nlet (tx, rx) = mpsc::unbounded_channel();\ntx.send(event)?;",
+    "options": [
+      "C — unbounded channel never blocks the sender",
+      "A — sequential processing is simplest and most predictable",
+      "B — bounded channel provides backpressure and prevents OOM"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-036",
+    "track": "backend",
+    "language": "rust",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What does this logging change improve?",
+    "code": "// Before\nasync fn handle_request(req: Request) -> Response {\n    let result = process(req).await;\n    match result {\n        Ok(data) => Response::ok(data),\n        Err(e) => Response::error(500),\n    }\n}\n\n// After\nasync fn handle_request(req: Request) -> Response {\n    let result = process(req).await;\n    match result {\n        Ok(data) => Response::ok(data),\n        Err(e) => {\n            tracing::error!(error = %e, \"request processing failed\");\n            Response::error(500)\n        }\n    }\n}",
+    "options": [
+      "Changes error response format for the client",
+      "Adds structured logging so errors are observable in production",
+      "Adds error retry logic before returning 500"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-037",
+    "track": "backend",
+    "language": "rust",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the serialization bottleneck?",
+    "code": "#[get(\"/export\")]\nasync fn export(pool: web::Data<PgPool>) -> impl Responder {\n    let rows = sqlx::query_as!(Record, \"SELECT * FROM records\")\n        .fetch_all(pool.get_ref()).await.unwrap();\n    let json = serde_json::to_string(&rows).unwrap();\n    HttpResponse::Ok()\n        .content_type(\"application/json\")\n        .body(json)\n}",
+    "options": [
+      "serde_json::to_string is slower than to_vec for large payloads",
+      "Fetches and serializes entire table into memory before responding",
+      "content_type header forces re-encoding of the JSON string"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-038",
+    "track": "backend",
+    "language": "rust",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the race condition.",
+    "code": "async fn claim_coupon(pool: &PgPool, code: &str, user_id: i32) -> Result<()> {\n    let coupon = sqlx::query_as!(Coupon,\n        \"SELECT * FROM coupons WHERE code = $1 AND used = false\", code\n    ).fetch_optional(pool).await?;\n    if let Some(c) = coupon {\n        sqlx::query!(\"UPDATE coupons SET used = true, user_id = $1 WHERE id = $2\",\n            user_id, c.id\n        ).execute(pool).await?;\n    }\n    Ok(())\n}",
+    "options": [
+      "fetch_optional doesn't lock the row — two users can claim the same coupon",
+      "Missing transaction means the UPDATE can fail after the SELECT succeeds",
+      "query_as! can't map boolean columns to Rust bool"
+    ],
+    "correct": 0,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-039",
+    "track": "backend",
+    "language": "rust",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which connection strategy scales best?",
+    "code": "// A: New connection per request\nlet conn = PgConnection::connect(&db_url).await?;\nlet result = sqlx::query(\"...\").fetch_one(&conn).await?;\n\n// B: Single shared connection\nstatic CONN: OnceCell<PgConnection> = OnceCell::new();\nlet result = sqlx::query(\"...\").fetch_one(CONN.get().unwrap()).await?;\n\n// C: Connection pool\nlet pool = PgPoolOptions::new()\n    .max_connections(20)\n    .connect(&db_url).await?;",
+    "options": [
+      "B — single connection avoids pool overhead and connection storms",
+      "A — new connections ensure clean state for each request",
+      "C — pool reuses connections and limits concurrency to the database"
+    ],
+    "correct": 2,
+    "timeLimitMs": 12000
+  },
+  {
+    "id": "rs-be-040",
+    "track": "backend",
+    "language": "rust",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this route.",
+    "code": "#[derive(Deserialize)]\nstruct LoginRequest {\n    username: String,\n    password: String,\n}\n\n#[post(\"/login\")]\nasync fn login(body: web::Json<LoginRequest>) -> impl Responder {\n    if body.username == \"admin\" && body.password == \"secret\" {\n        HttpResponse::Ok().json(json!({ \"token\": generate_token() }))\n    }\n    HttpResponse::Unauthorized().finish()\n}",
+    "options": [
+      "Hardcoded credentials are a security vulnerability",
+      "Missing else — always returns Unauthorized, ignoring the match",
+      "generate_token() is called without await on an async function"
+    ],
+    "correct": 1,
+    "timeLimitMs": 12000
+  }
+]
