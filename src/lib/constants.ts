@@ -84,7 +84,7 @@ export const TRACK_CATEGORIES: Record<Track, { category: SkillCategory; label: s
 
 export const DAILY_ROUND_COUNT = 5;
 export const FULL_ROUND_COUNT = 20;
-export const DEFAULT_TIME_LIMIT_MS = 12000;
+export const DEFAULT_TIME_LIMIT_MS = 20000;
 
 export const LOCATIONS = [
   { value: "san-francisco", label: "San Francisco", currency: "$" },
