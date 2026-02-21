@@ -58,6 +58,7 @@ export interface Answer {
 export interface Identity {
   track: Track;
   language: Language;
+  secondaryLanguage?: Language;
   experience: Experience;
 }
 

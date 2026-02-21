@@ -16,6 +16,8 @@ import swiftMobile from "@/data/questions/mobile/swift.json";
 import kotlinMobile from "@/data/questions/mobile/kotlin.json";
 import pythonData from "@/data/questions/data/python.json";
 import typescriptDevops from "@/data/questions/devops/typescript.json";
+import csharpBackend from "@/data/questions/backend/csharp.json";
+import csharpFullstack from "@/data/questions/fullstack/csharp.json";
 
 type QuestionPool = Record<string, Question[]>;
 
@@ -27,6 +29,7 @@ const pools: QuestionPool = {
   "backend:go": goBackend as Question[],
   "backend:rust": rustBackend as Question[],
   "backend:java": javaBackend as Question[],
+  "backend:csharp": csharpBackend as Question[],
 
   // Frontend
   "frontend:typescript": typescriptFrontend as Question[],
@@ -35,6 +38,7 @@ const pools: QuestionPool = {
   // Fullstack
   "fullstack:typescript": typescriptFullstack as Question[],
   "fullstack:javascript": [...(javascriptBackend as Question[]), ...(javascriptFrontend as Question[])],
+  "fullstack:csharp": csharpFullstack as Question[],
 
   // Mobile
   "mobile:swift": swiftMobile as Question[],
@@ -50,7 +54,6 @@ const pools: QuestionPool = {
 // For languages/tracks without dedicated questions, fall back to the closest match
 const FALLBACK_MAP: Record<string, string> = {
   // Backend languages → fall back to typescript backend
-  "backend:csharp": "backend:typescript",
   "backend:swift": "backend:typescript",
   "backend:kotlin": "backend:typescript",
   "backend:php": "backend:typescript",
@@ -72,7 +75,6 @@ const FALLBACK_MAP: Record<string, string> = {
   "fullstack:rust": "fullstack:typescript",
   "fullstack:go": "fullstack:typescript",
   "fullstack:java": "fullstack:typescript",
-  "fullstack:csharp": "fullstack:typescript",
   "fullstack:swift": "fullstack:typescript",
   "fullstack:kotlin": "fullstack:typescript",
   "fullstack:php": "fullstack:typescript",
@@ -142,16 +144,27 @@ function getPool(track: Track, language: Language): Question[] {
   return firstAvailable ?? [];
 }
 
+/** Build a blended pool from primary + optional secondary language (50/50 split) */
+function getBlendedPool(track: Track, language: Language, secondaryLanguage?: Language): Question[] {
+  if (!secondaryLanguage) return getPool(track, language);
+
+  const primary = getPool(track, language);
+  const secondary = getPool(track, secondaryLanguage);
+
+  // Interleave: shuffle each half independently, take half from each
+  return [...shuffleArray(primary), ...shuffleArray(secondary)];
+}
+
 /** Get randomized questions for the full assessment */
-export function getQuestions(track: Track, language: Language, count: number = FULL_ROUND_COUNT): Question[] {
-  const pool = getPool(track, language);
+export function getQuestions(track: Track, language: Language, count: number = FULL_ROUND_COUNT, secondaryLanguage?: Language): Question[] {
+  const pool = getBlendedPool(track, language, secondaryLanguage);
   const shuffled = shuffleArray(pool);
   return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
 /** Get today's daily questions — same for everyone with the same track/language */
-export function getDailyQuestions(track: Track, language: Language): Question[] {
-  const pool = getPool(track, language);
+export function getDailyQuestions(track: Track, language: Language, secondaryLanguage?: Language): Question[] {
+  const pool = getBlendedPool(track, language, secondaryLanguage);
   const seed = dailySeed();
   const shuffled = seededShuffle(pool, seed);
   return shuffled.slice(0, Math.min(DAILY_ROUND_COUNT, shuffled.length));

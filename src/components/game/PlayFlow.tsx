@@ -31,8 +31,8 @@ export function PlayFlow() {
     (id: Identity) => {
       setIdentity(id);
       const qs = mode === "daily"
-        ? getDailyQuestions(id.track, id.language)
-        : getQuestions(id.track, id.language);
+        ? getDailyQuestions(id.track, id.language, id.secondaryLanguage)
+        : getQuestions(id.track, id.language, undefined, id.secondaryLanguage);
       setQuestions(qs);
       setPhase("playing");
     },

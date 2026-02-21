@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Selector } from "@/components/identity/Selector";
-import { LOCATIONS } from "@/lib/constants";
+import { LOCATIONS, LANGUAGES } from "@/lib/constants";
 import { computeSalaryRange, formatSalary } from "@/lib/salary";
 import type { Identity, SkillFingerprint, SalaryRange } from "@/lib/types";
 
@@ -61,7 +61,8 @@ export function SalaryReveal({
             <p className="text-xs tracking-widest text-fg-dim">
               {LOCATIONS.find((l) => l.value === salary.location)?.label ?? salary.location}
               {"  ·  "}
-              {identity.language.charAt(0).toUpperCase() + identity.language.slice(1)}
+              {LANGUAGES.find((l) => l.value === identity.language)?.label ?? identity.language}
+              {identity.secondaryLanguage && ` + ${LANGUAGES.find((l) => l.value === identity.secondaryLanguage)?.label}`}
               {"  ·  "}
               {identity.track.charAt(0).toUpperCase() + identity.track.slice(1)}
               {"  ·  "}

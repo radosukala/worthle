@@ -82,6 +82,9 @@ export function Results({ identity, fingerprint, answers, mode }: ResultsProps) 
 
   const trackLabel = TRACKS.find((t) => t.value === identity.track)?.label ?? identity.track;
   const langLabel = LANGUAGES.find((l) => l.value === identity.language)?.label ?? identity.language;
+  const secondaryLangLabel = identity.secondaryLanguage
+    ? LANGUAGES.find((l) => l.value === identity.secondaryLanguage)?.label
+    : null;
 
   // Flow is done when: daily mode + result ready, OR full mode + consent done
   const flowComplete = mode === "daily" ? !!result : consentDone;
@@ -109,7 +112,7 @@ export function Results({ identity, fingerprint, answers, mode }: ResultsProps) 
                 <span className="text-fg-bright font-bold">
                   {fingerprint.percentile}th percentile
                 </span>{" "}
-                of {langLabel} {trackLabel.toLowerCase()} developers.
+                of {langLabel}{secondaryLangLabel ? ` + ${secondaryLangLabel}` : ""} {trackLabel.toLowerCase()} developers.
               </p>
             </motion.div>
 

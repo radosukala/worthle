@@ -82,6 +82,16 @@ export const TRACK_CATEGORIES: Record<Track, { category: SkillCategory; label: s
   ],
 };
 
+/** Languages shown per track in the identity selector */
+export const TRACK_LANGUAGES: Record<Track, Language[]> = {
+  backend: ["typescript", "javascript", "python", "go", "rust", "java", "csharp"],
+  frontend: ["typescript", "javascript"],
+  fullstack: ["typescript", "javascript", "python", "csharp", "java", "go"],
+  mobile: ["swift", "kotlin"],
+  data: ["python"],
+  devops: ["typescript"],
+};
+
 export const DAILY_ROUND_COUNT = 5;
 export const FULL_ROUND_COUNT = 20;
 export const DEFAULT_TIME_LIMIT_MS = 20000;

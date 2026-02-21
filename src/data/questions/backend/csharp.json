@@ -1,0 +1,682 @@
+[
+  {
+    "id": "cs-be-001",
+    "track": "backend",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this controller action.",
+    "code": "public async Task<IActionResult> GetUser(int id) {\n\tvar user = await _db.Users.FindAsync(id);\n\treturn Ok(user);\n}",
+    "options": [
+      "No null check -- returns 200 with null body if not found",
+      "FindAsync should be awaited with ConfigureAwait(false)",
+      "Should use FirstOrDefaultAsync instead of FindAsync"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-002",
+    "track": "backend",
+    "language": "csharp",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "var list = new List<int>();\nvar tasks = Enumerable.Range(1, 1000)\n\t.Select(async i => {\n\t\tawait Task.Yield();\n\t\tlist.Add(i);\n\t});\nawait Task.WhenAll(tasks);\nConsole.WriteLine(list.Count);",
+    "options": [
+      "1000",
+      "Less than 1000 due to race condition on List<T>",
+      "Throws InvalidOperationException"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-003",
+    "track": "backend",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the performance issue?",
+    "code": "public async Task<List<OrderDto>> GetOrders() {\n\tvar users = await _db.Users.ToListAsync();\n\tvar result = new List<OrderDto>();\n\tforeach (var u in users) {\n\t\tvar orders = await _db.Orders\n\t\t\t.Where(o => o.UserId == u.Id).ToListAsync();\n\t\tresult.AddRange(orders.Select(o => new OrderDto(o)));\n\t}\n\treturn result;\n}",
+    "options": [
+      "OrderDto constructor could throw on null fields",
+      "N+1 query -- should use Include() or a join",
+      "ToListAsync forces synchronous materialization"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-004",
+    "track": "backend",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which approach scales for distributed caching?",
+    "code": "// Option A: MemoryCache\n_cache.Set(key, value, TimeSpan.FromMinutes(5));\n\n// Option B: IDistributedCache (Redis)\nawait _cache.SetStringAsync(key, json,\n\tnew DistributedCacheEntryOptions {\n\t\tSlidingExpiration = TimeSpan.FromMinutes(5)\n\t});\n\n// Option C: Static Dictionary\nstatic Dictionary<string, object> _cache = new();",
+    "options": [
+      "A -- MemoryCache is fastest with zero network latency",
+      "C -- Static dictionary persists across requests",
+      "B -- IDistributedCache is shared across all instances"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-005",
+    "track": "backend",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this POST endpoint.",
+    "code": "[HttpPost]\npublic async Task<IActionResult> Create([FromBody] CreateUserDto dto) {\n\tvar user = new User { Name = dto.Name, Email = dto.Email };\n\t_db.Users.Add(user);\n\tawait _db.SaveChangesAsync();\n\treturn Ok(user);\n}",
+    "options": [
+      "Add() should be AddAsync() for async consistency",
+      "Should return CreatedAtAction with 201, not Ok with 200",
+      "Missing try-catch for DbUpdateException"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-006",
+    "track": "backend",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the performance problem?",
+    "code": "public async Task<List<Product>> Search(string term) {\n\tvar products = await _db.Products.ToListAsync();\n\treturn products\n\t\t.Where(p => p.Name.Contains(term,\n\t\t\tStringComparison.OrdinalIgnoreCase))\n\t\t.ToList();\n}",
+    "options": [
+      "Filtering in memory after loading entire table from DB",
+      "Contains with OrdinalIgnoreCase is slower than ToLower()",
+      "Should use AsNoTracking() for read-only queries"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-007",
+    "track": "backend",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the bug in this middleware.",
+    "code": "app.Use(async (context, next) => {\n\tvar sw = Stopwatch.StartNew();\n\tawait next();\n\tsw.Stop();\n\tcontext.Response.Headers.Add(\n\t\t\"X-Elapsed-Ms\", sw.ElapsedMilliseconds.ToString());\n});",
+    "options": [
+      "Stopwatch needs to be reset before calling StartNew",
+      "Cannot modify response headers after next() -- response already started",
+      "ElapsedMilliseconds returns long, not string"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-008",
+    "track": "backend",
+    "language": "csharp",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the concurrency bug.",
+    "code": "private readonly SemaphoreSlim _sem = new(1, 1);\n\npublic async Task<int> IncrementAsync() {\n\tawait _sem.WaitAsync();\n\t_counter++;\n\t_sem.Release();\n\treturn _counter;\n}",
+    "options": [
+      "SemaphoreSlim(1,1) should be SemaphoreSlim(0,1)",
+      "Missing try/finally -- exception before Release causes deadlock",
+      "Should use Interlocked.Increment instead of _counter++"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-009",
+    "track": "backend",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What happens when this runs?",
+    "code": "var user = await _db.Users.FindAsync(1);\nuser.Name = \"Updated\";\n\nvar same = await _db.Users.FindAsync(1);\nConsole.WriteLine(same.Name);",
+    "options": [
+      "Throws because entity is already being tracked",
+      "Prints the original name from the database",
+      "Prints \"Updated\" because FindAsync returns tracked entity"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-010",
+    "track": "backend",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What's the key difference between these registrations?",
+    "code": "// Registration A\nbuilder.Services.AddScoped<IUserService, UserService>();\n\n// Registration B\nbuilder.Services.AddTransient<IUserService, UserService>();\n\n// Registration C\nbuilder.Services.AddSingleton<IUserService, UserService>();",
+    "options": [
+      "A creates one per request, B creates new each injection, C one for app lifetime",
+      "A and B are identical, C caches across requests",
+      "A creates per controller, B per middleware, C per request"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-011",
+    "track": "backend",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "What's the performance issue?",
+    "code": "public async Task<string> GetDataAsync() {\n\tvar client = new HttpClient();\n\tvar response = await client.GetAsync(\"https://api.example.com/data\");\n\treturn await response.Content.ReadAsStringAsync();\n}",
+    "options": [
+      "GetAsync doesn't set a timeout by default",
+      "ReadAsStringAsync loads response into LOH for large payloads",
+      "Creating new HttpClient per call causes socket exhaustion"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-012",
+    "track": "backend",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "// Approach A\n[HttpGet(\"{id}\")]\npublic async Task<ActionResult<User>> Get(int id) {\n\tvar user = await _db.Users.FindAsync(id);\n\tif (user is null) return NotFound();\n\treturn user;\n}\n\n// Approach B\n[HttpGet(\"{id}\")]\npublic async Task<User> Get(int id) {\n\tvar user = await _db.Users.FindAsync(id);\n\treturn user ?? throw new KeyNotFoundException();\n}",
+    "options": [
+      "A returns proper HTTP status codes, B throws unhandled exception as 500",
+      "B is faster because it avoids ActionResult wrapping",
+      "A leaks entity details, B hides them in the exception"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-013",
+    "track": "backend",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this disposal pattern.",
+    "code": "public class FileProcessor {\n\tpublic string Read(string path) {\n\t\tvar stream = new FileStream(path, FileMode.Open);\n\t\tvar reader = new StreamReader(stream);\n\t\tvar content = reader.ReadToEnd();\n\t\treader.Dispose();\n\t\treturn content;\n\t}\n}",
+    "options": [
+      "Should use File.ReadAllText instead of FileStream",
+      "If ReadToEnd throws, stream and reader are never disposed",
+      "StreamReader.Dispose doesn't close the underlying FileStream"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-014",
+    "track": "backend",
+    "language": "csharp",
+    "category": "concurrency",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the deadlock risk.",
+    "code": "public class DataService {\n\tprivate readonly object _lockA = new();\n\tprivate readonly object _lockB = new();\n\n\tpublic void TransferAtoB() {\n\t\tlock (_lockA) { lock (_lockB) { /* transfer */ } }\n\t}\n\tpublic void TransferBtoA() {\n\t\tlock (_lockB) { lock (_lockA) { /* transfer */ } }\n\t}\n}",
+    "options": [
+      "object locks are slower than Monitor.Enter",
+      "Lock ordering is inconsistent -- causes deadlock between the two methods",
+      "Should use ReaderWriterLockSlim for read-heavy workloads"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-015",
+    "track": "backend",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the EF Core bug.",
+    "code": "public async Task UpdatePrice(int productId, decimal price) {\n\tvar product = new Product { Id = productId };\n\t_db.Products.Attach(product);\n\tproduct.Price = price;\n\tawait _db.SaveChangesAsync();\n}",
+    "options": [
+      "Attach marks all properties as modified, overwriting other fields with defaults",
+      "Should use Update() instead of Attach() for modifications",
+      "Need to call _db.Entry(product).Property(p => p.Price).IsModified = true"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-016",
+    "track": "backend",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "// Approach A\nbuilder.Services.Configure<SmtpSettings>(\n\tbuilder.Configuration.GetSection(\"Smtp\"));\n\n// Approach B\nvar smtp = builder.Configuration\n\t.GetSection(\"Smtp\").Get<SmtpSettings>();\nbuilder.Services.AddSingleton(smtp);",
+    "options": [
+      "A uses IOptions and supports config reload, B binds once at startup",
+      "A is slower because it reads config on every access",
+      "B is preferred because it avoids the IOptions wrapper"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-017",
+    "track": "backend",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What's the performance issue?",
+    "code": "public string BuildReport(List<Transaction> txns) {\n\tvar result = \"\";\n\tforeach (var t in txns) {\n\t\tresult += $\"{t.Date}: {t.Amount}\\n\";\n\t}\n\treturn result;\n}",
+    "options": [
+      "String interpolation is slower than String.Format",
+      "Should use StringWriter for building multiline strings",
+      "String concatenation in loop creates O(n^2) allocations -- use StringBuilder"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-018",
+    "track": "backend",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "Which validation approach is best?",
+    "code": "// Approach A: Manual in controller\nif (string.IsNullOrEmpty(dto.Email))\n\treturn BadRequest(\"Email required\");\n\n// Approach B: Data annotations\npublic class CreateUserDto {\n\t[Required] [EmailAddress]\n\tpublic string Email { get; set; }\n}\n\n// Approach C: FluentValidation\nRuleFor(x => x.Email).NotEmpty().EmailAddress();",
+    "options": [
+      "A -- manual checks are most explicit and testable",
+      "B -- data annotations integrate with ModelState automatically",
+      "C -- FluentValidation supports complex rules and is unit testable"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-019",
+    "track": "backend",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "int? x = null;\nint y = x ?? 5;\nint z = x.HasValue ? x.Value : 10;\nConsole.WriteLine($\"{y} {z}\");",
+    "options": [
+      "5 10",
+      "0 10",
+      "5 5"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-020",
+    "track": "backend",
+    "language": "csharp",
+    "category": "concurrency",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the async bug.",
+    "code": "public async Task ProcessAsync(CancellationToken ct) {\n\twhile (true) {\n\t\tvar item = await _queue.ReadAsync(ct);\n\t\tawait ProcessItem(item);\n\t}\n}",
+    "options": [
+      "ReadAsync should use ConfigureAwait(false) in library code",
+      "while(true) without ct.ThrowIfCancellationRequested after processing ignores cancellation between iterations",
+      "CancellationToken is already checked by ReadAsync, no bug here"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-021",
+    "track": "backend",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the EF Core tracking issue.",
+    "code": "public async Task<List<UserDto>> GetUsers() {\n\tvar users = await _db.Users\n\t\t.Include(u => u.Orders)\n\t\t.ToListAsync();\n\t_db.ChangeTracker.Clear();\n\treturn users.Select(u => new UserDto {\n\t\tName = u.Name,\n\t\tOrderCount = u.Orders.Count\n\t}).ToList();\n}",
+    "options": [
+      "Clear() detaches entities, so u.Orders may not be accessible after",
+      "Include causes cartesian explosion with many orders",
+      "No issue -- entities are already materialized in memory before Clear()"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-022",
+    "track": "backend",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which background task approach scales best?",
+    "code": "// A: Timer in controller\npublic class HomeController : Controller {\n\tstatic Timer _t = new(_ => DoWork(), null, 0, 60000);\n}\n\n// B: IHostedService\npublic class Worker : BackgroundService {\n\tprotected override async Task ExecuteAsync(\n\t\tCancellationToken ct) {\n\t\twhile (!ct.IsCancellationRequested) {\n\t\t\tawait DoWorkAsync(ct);\n\t\t\tawait Task.Delay(60000, ct);\n\t\t}\n\t}\n}",
+    "options": [
+      "Both are equivalent; use whichever is simpler",
+      "B -- BackgroundService has proper lifecycle and cancellation support",
+      "A -- static timer is simpler and avoids DI complexity"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-023",
+    "track": "backend",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "Which is more memory efficient?",
+    "code": "// Approach A\npublic async Task<List<LogEntry>> GetLogs() {\n\treturn await _db.Logs.ToListAsync();\n}\n\n// Approach B\npublic async IAsyncEnumerable<LogEntry> GetLogs(\n\t[EnumeratorCancellation] CancellationToken ct) {\n\tawait foreach (var log in _db.Logs.AsAsyncEnumerable()\n\t\t.WithCancellation(ct)) {\n\t\tyield return log;\n\t}\n}",
+    "options": [
+      "A -- ToListAsync uses optimized batch allocation",
+      "B -- streams one entity at a time, avoids loading all into memory",
+      "They use the same memory; EF Core buffers both internally"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-024",
+    "track": "backend",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the routing bug.",
+    "code": "[ApiController]\n[Route(\"api/[controller]\")]\npublic class ProductsController : ControllerBase {\n\t[HttpGet]\n\tpublic IActionResult GetAll() => Ok(_products);\n\n\t[HttpGet]\n\tpublic IActionResult GetById(int id) => Ok(_products[id]);\n}",
+    "options": [
+      "GetById needs [HttpGet(\"{id}\")] to disambiguate the routes",
+      "Both methods return IActionResult instead of ActionResult<T>",
+      "Should use [FromRoute] attribute on the id parameter"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-025",
+    "track": "backend",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "record Point(int X, int Y);\n\nvar a = new Point(1, 2);\nvar b = new Point(1, 2);\nvar c = a with { X = 3 };\n\nConsole.WriteLine($\"{a == b} {a == c} {ReferenceEquals(a, b)}\");",
+    "options": [
+      "True False False",
+      "True True False",
+      "False False False"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-026",
+    "track": "backend",
+    "language": "csharp",
+    "category": "concurrency",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the async deadlock.",
+    "code": "public class LegacyService {\n\tpublic string GetData() {\n\t\t// Called from sync code\n\t\treturn GetDataAsync().Result;\n\t}\n\tprivate async Task<string> GetDataAsync() {\n\t\tvar data = await _httpClient.GetStringAsync(\"https://api.example.com\");\n\t\treturn data;\n\t}\n}",
+    "options": [
+      "GetStringAsync needs a CancellationToken parameter",
+      ".Result blocks the thread; await tries to resume on it -- deadlock in ASP.NET",
+      "Should use Task.Run to offload the async call"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-027",
+    "track": "backend",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "// Query A\nvar users = _db.Users.Where(u => u.IsActive).ToList();\n\n// Query B\nvar users = _db.Users.AsNoTracking()\n\t.Where(u => u.IsActive).ToList();",
+    "options": [
+      "A tracks entities for change detection, B does not",
+      "A filters in memory, B filters in the database",
+      "B returns read-only objects that throw on property set"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-028",
+    "track": "backend",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which is best for health checks at scale?",
+    "code": "// A: Inline in controller\n[HttpGet(\"/health\")]\npublic async Task<IActionResult> Health() {\n\tawait _db.Database.CanConnectAsync();\n\treturn Ok(\"healthy\");\n}\n\n// B: Built-in health checks\nbuilder.Services.AddHealthChecks()\n\t.AddDbContextCheck<AppDbContext>()\n\t.AddRedis(connStr);",
+    "options": [
+      "A -- simpler and avoids framework overhead",
+      "Both are identical in functionality",
+      "B -- integrates with orchestrators and checks multiple dependencies"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-029",
+    "track": "backend",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this LINQ query return?",
+    "code": "var numbers = new[] { 5, 3, 8, 1, 9, 2 };\nvar result = numbers\n\t.Where(n => n > 3)\n\t.OrderBy(n => n)\n\t.Take(2)\n\t.Sum();\nConsole.WriteLine(result);",
+    "options": [
+      "10",
+      "13",
+      "8"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-030",
+    "track": "backend",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the serialization bug.",
+    "code": "public class UserDto {\n\tpublic string Name { get; set; }\n\tpublic string Password { get; set; }\n}\n\n[HttpGet(\"{id}\")]\npublic async Task<ActionResult<UserDto>> Get(int id) {\n\tvar user = await _db.Users.FindAsync(id);\n\treturn new UserDto {\n\t\tName = user.Name, Password = user.PasswordHash\n\t};\n}",
+    "options": [
+      "Password hash is exposed in the API response DTO",
+      "FindAsync could return null causing NullReferenceException",
+      "UserDto properties need [JsonPropertyName] attributes"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-031",
+    "track": "backend",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the DI bug.",
+    "code": "builder.Services.AddSingleton<OrderService>();\nbuilder.Services.AddScoped<AppDbContext>();\n\npublic class OrderService {\n\tprivate readonly AppDbContext _db;\n\tpublic OrderService(AppDbContext db) {\n\t\t_db = db;\n\t}\n}",
+    "options": [
+      "Singleton depends on scoped service -- captive dependency, stale DbContext",
+      "AppDbContext should be registered with AddDbContext, not AddScoped",
+      "OrderService constructor should use IServiceProvider instead"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-032",
+    "track": "backend",
+    "language": "csharp",
+    "category": "concurrency",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "// Approach A\nprivate readonly ConcurrentDictionary<string, int> _counts = new();\n_counts.AddOrUpdate(key, 1, (k, old) => old + 1);\n\n// Approach B\nprivate readonly Dictionary<string, int> _counts = new();\nlock (_lock) {\n\t_counts[key] = _counts.GetValueOrDefault(key) + 1;\n}",
+    "options": [
+      "A is lock-free and allows concurrent reads; B blocks all access",
+      "Both are equivalent -- ConcurrentDictionary uses locks internally",
+      "B is safer because lock prevents the ABA problem"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-033",
+    "track": "backend",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "How many SQL queries does this execute?",
+    "code": "var query = _db.Users.Where(u => u.IsActive);\nvar count = await query.CountAsync();\nvar list = await query.Take(10).ToListAsync();\nvar first = await query.FirstOrDefaultAsync();",
+    "options": [
+      "1 -- EF Core caches the query result",
+      "2 -- count and list share one query",
+      "3 -- each await materializes a separate SQL query"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-034",
+    "track": "backend",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which message processing pattern scales best?",
+    "code": "// A: Polling loop\nwhile (true) {\n\tvar msgs = await sqs.ReceiveMessageAsync(req);\n\tforeach (var m in msgs.Messages)\n\t\tawait ProcessAsync(m);\n}\n// B: Channel with bounded capacity\nvar ch = Channel.CreateBounded<Message>(1000);\n// Producer and consumers run in parallel\n// C: BlockingCollection\nvar bc = new BlockingCollection<Message>(1000);",
+    "options": [
+      "C -- BlockingCollection is most battle-tested",
+      "B -- bounded Channel supports async producers/consumers with backpressure",
+      "A -- direct polling gives most control over throughput"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-035",
+    "track": "backend",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "What's the allocation issue?",
+    "code": "public bool ContainsHeader(HttpRequest req, string name) {\n\tforeach (var header in req.Headers) {\n\t\tif (header.Key.Equals(name, StringComparison.OrdinalIgnoreCase))\n\t\t\treturn true;\n\t}\n\treturn false;\n}",
+    "options": [
+      "String comparison on every iteration is O(n*m)",
+      "Enumerating Headers allocates KeyValuePair structs on the heap",
+      "Should use req.Headers.ContainsKey() which uses optimized lookup"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-036",
+    "track": "backend",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "Which error handling approach is best?",
+    "code": "// A: Try-catch in every action\n[HttpGet(\"{id}\")]\npublic async Task<IActionResult> Get(int id) {\n\ttry { return Ok(await _svc.GetAsync(id)); }\n\tcatch (Exception ex) { return StatusCode(500); }\n}\n\n// B: Global exception handler middleware\napp.UseExceptionHandler(\"/error\");\n\n// C: IExceptionFilter\npublic class ApiExceptionFilter : IExceptionFilter { }",
+    "options": [
+      "A -- explicit try-catch gives per-action control",
+      "B -- middleware catches all unhandled exceptions consistently",
+      "C -- filters run in MVC pipeline and can access ActionContext"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-037",
+    "track": "backend",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this print?",
+    "code": "var list = new List<int> { 1, 2, 3, 4, 5 };\nvar query = list.Where(x => x > 2);\nlist.Add(6);\nConsole.WriteLine(string.Join(\", \", query));",
+    "options": [
+      "3, 4, 5",
+      "Throws InvalidOperationException",
+      "3, 4, 5, 6"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-038",
+    "track": "backend",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the concurrency bug.",
+    "code": "public async Task UpdateStock(int productId, int qty) {\n\tvar product = await _db.Products.FindAsync(productId);\n\tif (product.Stock >= qty) {\n\t\tproduct.Stock -= qty;\n\t\tawait _db.SaveChangesAsync();\n\t}\n}",
+    "options": [
+      "FindAsync should include a CancellationToken parameter",
+      "Should use ExecuteUpdateAsync for atomic update",
+      "Missing concurrency token -- two requests can oversell stock"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-039",
+    "track": "backend",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "Which is more efficient?",
+    "code": "// Approach A\npublic async Task<IActionResult> Get() {\n\tvar data = await _svc.GetDataAsync();\n\tvar json = JsonSerializer.Serialize(data);\n\treturn Content(json, \"application/json\");\n}\n\n// Approach B\npublic async Task<IActionResult> Get() {\n\tvar data = await _svc.GetDataAsync();\n\treturn Ok(data);\n}",
+    "options": [
+      "A -- manual serialization avoids middleware overhead",
+      "B -- Ok() uses output formatters with optimized Utf8JsonWriter",
+      "Both are identical; ASP.NET serializes the same way"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-be-040",
+    "track": "backend",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 1,
+    "type": "diff",
+    "prompt": "What's the key difference?",
+    "code": "// Approach A\napp.MapGet(\"/hello\", () => \"Hello World\");\n\n// Approach B\n[ApiController]\n[Route(\"[controller]\")]\npublic class HelloController : ControllerBase {\n\t[HttpGet]\n\tpublic string Get() => \"Hello World\";\n}",
+    "options": [
+      "A uses minimal APIs with less overhead, B uses full MVC controller",
+      "A cannot use dependency injection, B can",
+      "B is required for production apps; A is only for prototyping"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  }
+]

@@ -1,0 +1,682 @@
+[
+  {
+    "id": "cs-fs-001",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "ui_components",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this Blazor component render?",
+    "code": "@page \"/counter\"\n\n<h1>Count: @count</h1>\n<button @onclick=\"Increment\">+1</button>\n\n@code {\n\tprivate int count = 0;\n\tprivate void Increment() {\n\t\tcount++;\n\t}\n}",
+    "options": [
+      "A working counter that increments on each button click",
+      "@onclick should be onclick without the @ prefix",
+      "count must be a property with [Parameter] attribute to render"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-002",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this minimal API return?",
+    "code": "var builder = WebApplication.CreateBuilder(args);\nvar app = builder.Build();\n\napp.MapGet(\"/items/{id:int}\", (int id) => {\n\tif (id <= 0)\n\t\treturn Results.BadRequest(\"Invalid ID\");\n\treturn Results.Ok(new { Id = id, Name = \"Widget\" });\n});\n\napp.Run();",
+    "options": [
+      "GET /items/5 returns JSON { \"id\": 5, \"name\": \"Widget\" }",
+      "GET /items/5 returns JSON { \"Id\": 5, \"Name\": \"Widget\" }",
+      "Compilation error — Results.Ok and Results.BadRequest have different return types"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-003",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "Why is this EF Core query slow?",
+    "code": "public async Task<List<OrderDto>> GetOrders(AppDbContext db) {\n\tvar orders = await db.Orders.ToListAsync();\n\tvar result = new List<OrderDto>();\n\tforeach (var order in orders) {\n\t\tvar items = await db.OrderItems\n\t\t\t.Where(i => i.OrderId == order.Id)\n\t\t\t.ToListAsync();\n\t\tresult.Add(new OrderDto(order, items));\n\t}\n\treturn result;\n}",
+    "options": [
+      "ToListAsync materializes entities instead of projecting to DTOs",
+      "N+1 query problem — items are fetched per order in a loop",
+      "Missing AsNoTracking causes change tracker overhead"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-004",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the DI scoping bug in Blazor Server.",
+    "code": "// Program.cs\nbuilder.Services.AddSingleton<ChatService>();\nbuilder.Services.AddScoped<AppDbContext>();\n\n// ChatService.cs\npublic class ChatService {\n\tprivate readonly AppDbContext _db;\n\tpublic ChatService(AppDbContext db) {\n\t\t_db = db;\n\t}\n\tpublic async Task SaveMessage(string msg) {\n\t\t_db.Messages.Add(new Message { Text = msg });\n\t\tawait _db.SaveChangesAsync();\n\t}\n}",
+    "options": [
+      "Singleton ChatService captures scoped AppDbContext, causing reuse across connections",
+      "AppDbContext should be registered as Singleton to match ChatService lifetime",
+      "SaveChangesAsync will deadlock because ChatService is a singleton"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-005",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What did this refactor improve?",
+    "code": "// BEFORE:\napp.MapGet(\"/products\", async (AppDbContext db) =>\n\tawait db.Products.Include(p => p.Reviews).ToListAsync());\n\n// AFTER:\napp.MapGet(\"/products\", async (AppDbContext db) =>\n\tawait db.Products\n\t\t.Select(p => new { p.Id, p.Name, ReviewCount = p.Reviews.Count })\n\t\t.ToListAsync());",
+    "options": [
+      "Eliminates lazy loading exceptions by avoiding navigation property access",
+      "Prevents tracking overhead by implicitly using AsNoTracking with projections",
+      "Projects only needed fields, reducing data transfer and avoiding loading full Review entities"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-006",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "When does this Blazor input update the paragraph?",
+    "code": "@page \"/profile\"\n\n<input value=\"@name\" @onchange=\"HandleChange\" />\n<p>Hello, @name!</p>\n\n@code {\n\tprivate string name = \"\";\n\tprivate void HandleChange(ChangeEventArgs e) {\n\t\tname = e.Value?.ToString() ?? \"\";\n\t}\n}",
+    "options": [
+      "It updates when the input loses focus (on blur)",
+      "It updates in real-time as the user types each character",
+      "ChangeEventArgs.Value is always null for input elements"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-007",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What status code does this return?",
+    "code": "[ApiController]\n[Route(\"api/[controller]\")]\npublic class UsersController : ControllerBase {\n\t[HttpPost]\n\tpublic IActionResult Create([FromBody] CreateUserDto dto) {\n\t\tif (!ModelState.IsValid)\n\t\t\treturn BadRequest(ModelState);\n\t\tvar user = new User { Name = dto.Name };\n\t\treturn CreatedAtAction(nameof(GetById),\n\t\t\tnew { id = user.Id }, user);\n\t}\n}",
+    "options": [
+      "400 — ModelState is always invalid without explicit validation",
+      "201 with a Location header pointing to GetById",
+      "500 — CreatedAtAction throws when GetById action doesn't exist"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-008",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "What breaks at scale with this SignalR hub?",
+    "code": "public class ChatHub : Hub {\n\tprivate static readonly List<string> _messages = new();\n\n\tpublic async Task SendMessage(string user, string msg) {\n\t\t_messages.Add($\"{user}: {msg}\");\n\t\tawait Clients.All.SendAsync(\"ReceiveMessage\", user, msg);\n\t}\n\tpublic Task<List<string>> GetHistory() {\n\t\treturn Task.FromResult(_messages);\n\t}\n}",
+    "options": [
+      "SendAsync blocks the hub pipeline causing message queuing delays",
+      "Static list is not thread-safe and lost when server restarts or scales out",
+      "Clients.All includes the sender, creating duplicate messages"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-009",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the concurrency bug.",
+    "code": "public async Task<bool> TransferFunds(\n\tAppDbContext db, int fromId, int toId, decimal amount) {\n\tvar from = await db.Accounts.FindAsync(fromId);\n\tvar to = await db.Accounts.FindAsync(toId);\n\tif (from!.Balance < amount) return false;\n\tfrom.Balance -= amount;\n\tto!.Balance += amount;\n\tawait db.SaveChangesAsync();\n\treturn true;\n}",
+    "options": [
+      "FindAsync returns cached entities so balances may be stale",
+      "Decimal arithmetic causes rounding errors in financial calculations",
+      "No transaction — concurrent transfers can overdraw the account"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-010",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "ui_components",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What renders in the child component?",
+    "code": "// Parent.razor\n<Child Items=\"@items\" />\n@code {\n\tprivate List<string> items = new() { \"A\", \"B\" };\n}\n\n// Child.razor\n<ul>\n@foreach (var item in Items) {\n\t<li>@item</li>\n}\n</ul>\n@code {\n\t[Parameter] public List<string> Items { get; set; } = new();\n}",
+    "options": [
+      "An empty list — default initializer overwrites the parameter",
+      "A list with items A and B",
+      "Runtime error — List<string> cannot be a component parameter"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-011",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "Why is this Blazor page slow to render?",
+    "code": "@page \"/dashboard\"\n\n@foreach (var widget in Widgets) {\n\t<ExpensiveWidget Data=\"@widget\" />\n}\n\n@code {\n\tprivate List<WidgetData> Widgets = new();\n\tprotected override async Task OnInitializedAsync() {\n\t\tWidgets = await Http.GetFromJsonAsync<List<WidgetData>>(\"/api/widgets\");\n\t}\n}",
+    "options": [
+      "All ExpensiveWidget components re-render on any state change — use @key and virtualization",
+      "OnInitializedAsync blocks rendering until all data loads — use OnAfterRenderAsync",
+      "GetFromJsonAsync deserializes on the UI thread causing frame drops"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-012",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does authentication fail here?",
+    "code": "var builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)\n\t.AddJwtBearer(opts => {\n\t\topts.TokenValidationParameters = new() {\n\t\t\tValidateIssuer = true,\n\t\t\tValidIssuer = \"myapp\",\n\t\t\tValidateAudience = false,\n\t\t\tIssuerSigningKey = new SymmetricSecurityKey(\n\t\t\t\tEncoding.UTF8.GetBytes(\"super-secret-key-1234567890123456\"))\n\t\t};\n\t});\nvar app = builder.Build();\napp.UseAuthorization();\napp.UseAuthentication();",
+    "options": [
+      "UseAuthentication must come before UseAuthorization in the pipeline",
+      "ValidateAudience = false makes all tokens invalid by default",
+      "The signing key is too short for SymmetricSecurityKey"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-013",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this endpoint return for /hello/World?",
+    "code": "var app = WebApplication.CreateBuilder(args).Build();\n\napp.MapGet(\"/hello/{name}\", (string name) =>\n\t$\"Hello, {name}!\"\n);\n\napp.Run();",
+    "options": [
+      "JSON string \"Hello, World!\" with content-type application/json",
+      "The string \"Hello, World!\" with content-type text/plain",
+      "404 because the route parameter is not typed"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-014",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "What scaling issue does this middleware have?",
+    "code": "public class RateLimitMiddleware {\n\tprivate static readonly Dictionary<string, int> _counts = new();\n\tprivate readonly RequestDelegate _next;\n\tpublic RateLimitMiddleware(RequestDelegate next) => _next = next;\n\tpublic async Task InvokeAsync(HttpContext ctx) {\n\t\tvar ip = ctx.Connection.RemoteIpAddress!.ToString();\n\t\t_counts.TryGetValue(ip, out var count);\n\t\tif (count > 100) { ctx.Response.StatusCode = 429; return; }\n\t\t_counts[ip] = count + 1;\n\t\tawait _next(ctx);\n\t}\n}",
+    "options": [
+      "RemoteIpAddress is null behind a load balancer, causing NullReferenceException",
+      "StatusCode 429 is not a recognized HTTP status in ASP.NET Core",
+      "Dictionary is not thread-safe and state is lost across multiple server instances"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-015",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the EF Core model bug.",
+    "code": "public class AppDbContext : DbContext {\n\tpublic DbSet<Product> Products => Set<Product>();\n\tprotected override void OnModelCreating(ModelBuilder mb) {\n\t\tmb.Entity<Product>(e => {\n\t\t\te.Property(p => p.Price).HasColumnType(\"decimal(18,2)\");\n\t\t\te.HasIndex(p => p.Sku).IsUnique();\n\t\t});\n\t}\n}\npublic class Product {\n\tpublic int Id { get; set; }\n\tpublic string Sku { get; set; }\n\tpublic decimal Price { get; set; }\n}",
+    "options": [
+      "HasColumnType decimal(18,2) is SQL Server syntax and fails on other databases",
+      "Sku is non-nullable string without [Required], EF may generate nullable column",
+      "DbSet should use auto-property syntax, not expression-bodied member"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-016",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why doesn't this Blazor timer update the UI?",
+    "code": "@page \"/timer\"\n<h1>Elapsed: @seconds seconds</h1>\n\n@code {\n\tprivate int seconds = 0;\n\tprotected override void OnInitialized() {\n\t\tvar timer = new System.Timers.Timer(1000);\n\t\ttimer.Elapsed += (s, e) => {\n\t\t\tseconds++;\n\t\t};\n\t\ttimer.Start();\n\t}\n}",
+    "options": [
+      "Timer.Elapsed fires on a thread pool thread — must call InvokeAsync(StateHasChanged)",
+      "System.Timers.Timer is not supported in Blazor — use PeriodicTimer instead",
+      "The timer is garbage collected because it's a local variable"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-017",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "diff",
+    "prompt": "What did this caching refactor improve?",
+    "code": "// BEFORE:\napp.MapGet(\"/products\", async (AppDbContext db) =>\n\tawait db.Products.AsNoTracking().ToListAsync());\n\n// AFTER:\napp.MapGet(\"/products\", async (IMemoryCache cache, AppDbContext db) =>\n\tawait cache.GetOrCreateAsync(\"products\", async entry => {\n\t\tentry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);\n\t\treturn await db.Products.AsNoTracking().ToListAsync();\n\t}));",
+    "options": [
+      "Prevents repeated database queries by caching results for 5 minutes",
+      "AsNoTracking combined with cache eliminates all EF Core overhead",
+      "IMemoryCache automatically invalidates when Products table changes"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-018",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the async deadlock bug.",
+    "code": "public class UserService {\n\tprivate readonly HttpClient _client;\n\tpublic UserService(HttpClient client) => _client = client;\n\n\tpublic UserDto GetUser(int id) {\n\t\tvar response = _client.GetAsync($\"/api/users/{id}\").Result;\n\t\tvar json = response.Content.ReadAsStringAsync().Result;\n\t\treturn JsonSerializer.Deserialize<UserDto>(json)!;\n\t}\n}",
+    "options": [
+      "HttpClient must be disposed after each request to avoid socket exhaustion",
+      ".Result blocks the synchronization context, risking deadlock — use await instead",
+      "GetAsync throws on non-2xx status codes without EnsureSuccessStatusCode"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-019",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What SignalR method is called on the client?",
+    "code": "public class NotificationHub : Hub {\n\tpublic async Task JoinGroup(string group) {\n\t\tawait Groups.AddToGroupAsync(Context.ConnectionId, group);\n\t\tawait Clients.Group(group)\n\t\t\t.SendAsync(\"UserJoined\", Context.ConnectionId);\n\t}\n}",
+    "options": [
+      "\"JoinGroup\" is invoked on all clients in the group",
+      "\"UserJoined\" is invoked on all clients in the group except the caller",
+      "\"UserJoined\" is invoked on all clients in the group including the caller"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-020",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the SaveChanges bug.",
+    "code": "public class OrderService {\n\tprivate readonly AppDbContext _db;\n\tpublic OrderService(AppDbContext db) => _db = db;\n\n\tpublic async Task PlaceOrder(Order order) {\n\t\t_db.Orders.Add(order);\n\t\tforeach (var item in order.Items) {\n\t\t\tvar product = await _db.Products.FindAsync(item.ProductId);\n\t\t\tproduct!.Stock -= item.Quantity;\n\t\t}\n\t}\n}",
+    "options": [
+      "FindAsync may return a cached entity with stale Stock values",
+      "Adding order before modifying products causes foreign key constraint error",
+      "SaveChangesAsync is never called — changes are never persisted"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-021",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "How does [ApiController] bind the dto parameter?",
+    "code": "[ApiController]\n[Route(\"api/orders\")]\npublic class OrdersController : ControllerBase {\n\t[HttpPut(\"{id}\")]\n\tpublic IActionResult Update(int id, UpdateOrderDto dto) {\n\t\tif (id != dto.Id)\n\t\t\treturn BadRequest(\"ID mismatch\");\n\t\t// update logic...\n\t\treturn NoContent();\n\t}\n}",
+    "options": [
+      "From the query string because no [FromBody] is specified",
+      "From the request body as JSON — [ApiController] infers [FromBody] for complex types",
+      "From the route because {id} matches the dto.Id property"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-022",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "ui_components",
+    "difficulty": 4,
+    "type": "output",
+    "prompt": "Does EventCallback auto-trigger StateHasChanged?",
+    "code": "// Parent.razor\n<ChildComponent OnSave=\"HandleSave\" />\n<p>@message</p>\n@code {\n\tprivate string message = \"\";\n\tprivate void HandleSave(string name) {\n\t\tmessage = $\"Saved {name}\";\n\t}\n}\n// ChildComponent.razor\n<button @onclick=\"Save\">Save</button>\n@code {\n\t[Parameter] public EventCallback<string> OnSave { get; set; }\n\tprivate async Task Save() => await OnSave.InvokeAsync(\"test\");\n}",
+    "options": [
+      "Parent displays \"Saved test\" — EventCallback re-renders the parent automatically",
+      "Parent shows empty — HandleSave must call StateHasChanged manually",
+      "Runtime error — HandleSave must return Task for EventCallback<string>"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-023",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "slow",
+    "prompt": "Why is this API endpoint slow under load?",
+    "code": "[HttpGet(\"report\")]\npublic async Task<IActionResult> GetReport([FromServices] AppDbContext db) {\n\tvar users = await db.Users.ToListAsync();\n\tvar orders = await db.Orders.ToListAsync();\n\tvar report = users.Select(u => new {\n\t\tu.Name,\n\t\tTotal = orders.Where(o => o.UserId == u.Id).Sum(o => o.Amount)\n\t});\n\treturn Ok(report);\n}",
+    "options": [
+      "ToListAsync loads all data, then LINQ evaluates lazily causing repeated enumeration",
+      "FromServices creates a new DbContext per request, exhausting the connection pool",
+      "Joining in-memory instead of in SQL — should use GroupJoin or a single query"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-024",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this middleware do?",
+    "code": "app.Use(async (context, next) => {\n\tcontext.Response.Headers.Append(\"X-Request-Id\",\n\t\tGuid.NewGuid().ToString());\n\tawait next(context);\n});\n\napp.MapGet(\"/\", () => \"Hello World\");",
+    "options": [
+      "Appending headers after the response starts throws InvalidOperationException",
+      "Adds a unique X-Request-Id header to every response then passes to next middleware",
+      "next(context) is wrong syntax — should be next.Invoke()"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-025",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "What breaks when scaling this to multiple servers?",
+    "code": "builder.Services.AddSignalR();\n\n// Hub\npublic class GameHub : Hub {\n\tpublic async Task Move(string gameId, string move) {\n\t\tawait Clients.Group(gameId).SendAsync(\"MoveMade\", move);\n\t}\n\tpublic async Task JoinGame(string gameId) {\n\t\tawait Groups.AddToGroupAsync(Context.ConnectionId, gameId);\n\t}\n}",
+    "options": [
+      "Groups are server-local — need AddStackExchangeRedis backplane for multi-server",
+      "ConnectionId changes on reconnect so players lose their group membership",
+      "SendAsync to a group blocks until all clients acknowledge the message"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-026",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 5,
+    "type": "diff",
+    "prompt": "What problem does this refactor solve?",
+    "code": "// BEFORE:\npublic class Blog {\n\tpublic int Id { get; set; }\n\tpublic List<Post> Posts { get; set; } = new();\n}\n\n// AFTER:\npublic class Blog {\n\tpublic int Id { get; set; }\n\tprivate readonly List<Post> _posts = new();\n\tpublic IReadOnlyCollection<Post> Posts => _posts.AsReadOnly();\n\tpublic void AddPost(Post p) => _posts.Add(p);\n}",
+    "options": [
+      "Prevents EF Core from lazy loading posts by making the collection read-only",
+      "Encapsulates the collection to enforce domain rules when adding posts",
+      "Fixes a serialization bug where List<Post> causes circular reference exceptions"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-027",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this filter do?",
+    "code": "app.MapGet(\"/secret\", [Authorize(Roles = \"Admin\")] () =>\n\t\"Top secret data\"\n);\n\napp.MapGet(\"/public\", [AllowAnonymous] () =>\n\t\"Public info\"\n);",
+    "options": [
+      "Both endpoints require authentication because Authorize is applied globally",
+      "Attributes on lambda expressions are not supported and cause compile errors",
+      "/secret requires Admin role, /public allows unauthenticated access"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-028",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "ui_components",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this component render stale data?",
+    "code": "@page \"/user/{Id:int}\"\n@inject HttpClient Http\n\n<h1>@user?.Name</h1>\n\n@code {\n\t[Parameter] public int Id { get; set; }\n\tprivate UserDto? user;\n\tprotected override async Task OnInitializedAsync() {\n\t\tuser = await Http.GetFromJsonAsync<UserDto>($\"/api/users/{Id}\");\n\t}\n}",
+    "options": [
+      "GetFromJsonAsync caches responses by default in Blazor WASM",
+      "OnInitializedAsync doesn't re-run when route parameter changes — use OnParametersSetAsync",
+      "The [Parameter] attribute does not support route constraints like :int"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-029",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "slow",
+    "prompt": "Why is this gRPC call slow from Blazor WASM?",
+    "code": "// Blazor WASM client\n@inject GrpcChannel Channel\n\n@code {\n\tprivate async Task LoadData() {\n\t\tvar client = new DataService.DataServiceClient(Channel);\n\t\tvar response = await client.GetLargeDatasetAsync(\n\t\t\tnew DataRequest { PageSize = 10000 });\n\t\titems = response.Items.ToList();\n\t}\n}",
+    "options": [
+      "GrpcChannel should be injected as a singleton to reuse HTTP/2 connections",
+      "gRPC-Web in WASM uses HTTP/1.1 unary calls — stream with server streaming for large datasets",
+      "ToList materializes the protobuf repeated field twice, doubling memory usage"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-030",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does CORS block this request?",
+    "code": "var builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddCors(opts =>\n\topts.AddPolicy(\"AllowFrontend\", p =>\n\t\tp.WithOrigins(\"http://localhost:3000\")\n\t\t\t.AllowAnyMethod()\n\t\t\t.AllowAnyHeader()));\nvar app = builder.Build();\napp.MapControllers();\napp.UseCors(\"AllowFrontend\");",
+    "options": [
+      "AllowAnyMethod doesn't include OPTIONS — must add AllowCredentials",
+      "WithOrigins requires https, not http for localhost",
+      "UseCors must be called before MapControllers in the middleware pipeline"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-031",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What is the service lifetime here?",
+    "code": "builder.Services.AddScoped<IOrderRepository, OrderRepository>();\nbuilder.Services.AddTransient<IEmailService, EmailService>();\nbuilder.Services.AddSingleton<ICacheService, CacheService>();",
+    "options": [
+      "OrderRepository: per-request, EmailService: new each injection, CacheService: app-wide",
+      "OrderRepository: per-request, EmailService: per-request, CacheService: per-request",
+      "OrderRepository: new each injection, EmailService: per-request, CacheService: app-wide"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-032",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What SQL does EF Core generate?",
+    "code": "var result = await db.Products\n\t.Where(p => p.Price > 100)\n\t.OrderBy(p => p.Name)\n\t.Take(10)\n\t.ToListAsync();",
+    "options": [
+      "SELECT * FROM Products WHERE Price > 100 then sorts and takes 10 in memory",
+      "SELECT * FROM Products ORDER BY Name OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY WHERE Price > 100",
+      "SELECT TOP(10) * FROM Products WHERE Price > 100 ORDER BY Name"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-033",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What pattern does this refactor introduce?",
+    "code": "// BEFORE:\napp.MapGet(\"/api/products\", async (AppDbContext db) =>\n\tawait db.Products.ToListAsync());\n\n// AFTER:\napp.MapGet(\"/api/products\", async (AppDbContext db) => {\n\tvar products = await db.Products.ToListAsync();\n\treturn TypedResults.Ok(products);\n}).WithName(\"GetProducts\")\n  .Produces<List<Product>>(200)\n  .ProducesProblem(500);",
+    "options": [
+      "Adds OpenAPI metadata for automatic API documentation generation",
+      "TypedResults.Ok enables response compression that Results.Ok doesn't",
+      "WithName enables endpoint routing for reverse URL generation only"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-034",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "ui_components",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the memory leak in this Blazor component.",
+    "code": "@implements IDisposable\n@inject NavigationManager Nav\n\n<p>Current: @currentUrl</p>\n\n@code {\n\tprivate string currentUrl = \"\";\n\tprotected override void OnInitialized() {\n\t\tNav.LocationChanged += OnLocationChanged;\n\t\tcurrentUrl = Nav.Uri;\n\t}\n\tprivate void OnLocationChanged(object? s, LocationChangedEventArgs e) {\n\t\tcurrentUrl = e.Location;\n\t\tInvokeAsync(StateHasChanged);\n\t}\n\tpublic void Dispose() { }\n}",
+    "options": [
+      "InvokeAsync(StateHasChanged) captures the component in a closure preventing GC",
+      "LocationChanged event fires before the component is fully initialized",
+      "Dispose is empty — must unsubscribe Nav.LocationChanged to prevent memory leak"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-035",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What did this streaming refactor improve?",
+    "code": "// BEFORE:\n[HttpGet(\"logs\")]\npublic async Task<IActionResult> GetLogs(AppDbContext db) {\n\tvar logs = await db.Logs.ToListAsync();\n\treturn Ok(logs);\n}\n\n// AFTER:\n[HttpGet(\"logs\")]\npublic IAsyncEnumerable<Log> GetLogs(AppDbContext db) {\n\treturn db.Logs.AsAsyncEnumerable();\n}",
+    "options": [
+      "Returns logs as a JSON array only after all results are enumerated",
+      "AsAsyncEnumerable enables parallel query execution across database shards",
+      "Streams results one at a time, reducing memory usage for large result sets"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-036",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the thread safety bug.",
+    "code": "public class ConnectionTracker {\n\tprivate readonly HashSet<string> _connections = new();\n\tpublic void Add(string id) => _connections.Add(id);\n\tpublic void Remove(string id) => _connections.Remove(id);\n\tpublic int Count => _connections.Count;\n}\n// Registered as:\nbuilder.Services.AddSingleton<ConnectionTracker>();\n// Used in SignalR Hub:\npublic override async Task OnConnectedAsync() {\n\t_tracker.Add(Context.ConnectionId);\n}",
+    "options": [
+      "Singleton in SignalR causes connection ID collisions across hub instances",
+      "OnConnectedAsync must call base.OnConnectedAsync() or the connection is never tracked",
+      "HashSet is not thread-safe — concurrent hub calls corrupt state; use ConcurrentDictionary"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-037",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this Blazor render mode produce?",
+    "code": "// App.razor (.NET 8)\n<Routes @rendermode=\"InteractiveServer\" />\n\n// Counter.razor\n@page \"/counter\"\n@rendermode InteractiveServer\n\n<h1>Count: @count</h1>\n<button @onclick=\"() => count++\">+1</button>\n\n@code {\n\tprivate int count = 0;\n}",
+    "options": [
+      "Static HTML with no interactivity until WASM loads",
+      "Server-rendered HTML with a SignalR connection for interactivity",
+      "Client-side rendered component with no server connection"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-038",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "databases",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the query filter bug.",
+    "code": "// DbContext\nprotected override void OnModelCreating(ModelBuilder mb) {\n\tmb.Entity<Tenant>().HasQueryFilter(t => t.IsActive);\n\tmb.Entity<Order>().HasQueryFilter(o => o.TenantId == _tenantId);\n}\n\n// Query\nvar allOrders = await db.Orders\n\t.IgnoreQueryFilters()\n\t.Where(o => o.Status == \"pending\")\n\t.ToListAsync();",
+    "options": [
+      "IgnoreQueryFilters only works with [QueryFilter] attributes, not fluent API",
+      "The _tenantId field in DbContext is always 0 because it's captured at model build time",
+      "IgnoreQueryFilters removes ALL global filters including the Tenant filter"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-039",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "api_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "What fails when this API gets heavy traffic?",
+    "code": "[HttpPost(\"upload\")]\npublic async Task<IActionResult> Upload(IFormFile file) {\n\tusing var ms = new MemoryStream();\n\tawait file.CopyToAsync(ms);\n\tvar bytes = ms.ToArray();\n\tawait _blobStorage.UploadAsync(file.FileName, bytes);\n\treturn Ok(new { file.FileName, file.Length });\n}",
+    "options": [
+      "IFormFile is limited to 4MB by default causing 413 errors on large files",
+      "MemoryStream.ToArray copies the buffer — use GetBuffer to avoid duplication",
+      "Large files are fully buffered in memory — use Stream directly to blob storage"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "cs-fs-040",
+    "track": "fullstack",
+    "language": "csharp",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this endpoint return on each request?",
+    "code": "builder.Services.AddScoped<Counter>();\nvar app = builder.Build();\n\napp.MapGet(\"/count\", (Counter c) => {\n\tc.Increment();\n\treturn c.Value;\n});\n\npublic class Counter {\n\tpublic int Value { get; private set; }\n\tpublic void Increment() => Value++;\n}",
+    "options": [
+      "Always returns 1 — Scoped creates a new Counter per request",
+      "Returns an incrementing number — 1, 2, 3, etc.",
+      "Throws because Counter has no interface registration"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  }
+]
