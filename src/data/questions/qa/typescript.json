@@ -1,0 +1,682 @@
+[
+  {
+    "id": "ts-qa-001",
+    "track": "qa",
+    "language": "typescript",
+    "category": "testing",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this Jest test.",
+    "code": "import { render, screen } from '@testing-library/react';\nimport { UserBadge } from './UserBadge';\n\ntest('shows admin badge', () => {\n  render(<UserBadge role=\"admin\" />);\n  const badge = screen.getByRole('status');\n  expect(badge).toHaveTextContent('admin');\n  expect(badge).toBeVisible();\n});",
+    "options": [
+      "getByRole('status') will throw if no element has role=\"status\"",
+      "toHaveTextContent needs an exact match regex, not a plain string",
+      "No assertion verifies the badge has the correct aria role attribute"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-002",
+    "track": "qa",
+    "language": "typescript",
+    "category": "testing",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this Vitest matcher return?",
+    "code": "import { describe, it, expect } from 'vitest';\n\ndescribe('array utils', () => {\n  it('checks inclusion', () => {\n    const fruits = ['apple', 'banana', 'cherry'];\n    expect(fruits).toContain('banana');\n    expect(fruits).toHaveLength(3);\n    expect(fruits).not.toContain('grape');\n  });\n});",
+    "options": [
+      "toContain fails because it uses strict reference equality",
+      "All three assertions pass",
+      "not.toContain('grape') throws since grape was never added"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-003",
+    "track": "qa",
+    "language": "typescript",
+    "category": "testing",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this mock not reset between tests?",
+    "code": "import { vi, describe, it, expect } from 'vitest';\n\nconst mockFetch = vi.fn();\n\ndescribe('api', () => {\n  it('calls fetch once', async () => {\n    mockFetch.mockResolvedValue({ ok: true });\n    await mockFetch('/api/data');\n    expect(mockFetch).toHaveBeenCalledTimes(1);\n  });\n  it('calls fetch once again', async () => {\n    await mockFetch('/api/other');\n    expect(mockFetch).toHaveBeenCalledTimes(1);\n  });\n});",
+    "options": [
+      "vi.fn() call count accumulates without vi.clearAllMocks() or mockFetch.mockClear()",
+      "The second test fails because mockFetch has no return value set",
+      "mockResolvedValue persists across tests and must be cleared"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-004",
+    "track": "qa",
+    "language": "typescript",
+    "category": "testing",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "Which Testing Library query is most accessible?",
+    "code": "// Option A\nscreen.getByTestId('submit-btn');\n\n// Option B\nscreen.getByRole('button', { name: /submit/i });\n\n// Option C\nscreen.getByText('Submit');",
+    "options": [
+      "getByTestId because it is the most stable selector",
+      "getByRole because it queries the accessibility tree directly",
+      "getByText because it matches what the user actually sees"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-005",
+    "track": "qa",
+    "language": "typescript",
+    "category": "testing",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the bug in this snapshot test.",
+    "code": "import { render } from '@testing-library/react';\n\ntest('matches snapshot', () => {\n  const { container } = render(\n    <UserCard name=\"Alice\" joinedAt={new Date()} />\n  );\n  expect(container).toMatchSnapshot();\n});",
+    "options": [
+      "new Date() produces a different value each run, breaking the snapshot",
+      "toMatchSnapshot requires toJSON to be defined on the component",
+      "container is a DOM node and cannot be serialized to a snapshot"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-006",
+    "track": "qa",
+    "language": "typescript",
+    "category": "testing",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does toHaveBeenCalledWith check here?",
+    "code": "import { vi, it, expect } from 'vitest';\n\nconst logger = vi.fn();\n\nit('logs correctly', () => {\n  logger('info', 'User logged in', { userId: 42 });\n  logger('error', 'Failed to save');\n  expect(logger).toHaveBeenCalledWith(\n    'info', 'User logged in', { userId: 42 }\n  );\n});",
+    "options": [
+      "Passes because logger was called with those exact arguments in the first call",
+      "Fails because logger was called twice and the matcher checks the last call",
+      "Fails because object arguments require expect.objectContaining()"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-007",
+    "track": "qa",
+    "language": "typescript",
+    "category": "testing",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this timer test hang?",
+    "code": "import { vi, it, expect } from 'vitest';\n\nit('debounces search', async () => {\n  vi.useFakeTimers();\n  const search = vi.fn();\n  const debounced = debounce(search, 300);\n  debounced('hello');\n  await vi.advanceTimersByTimeAsync(300);\n  expect(search).toHaveBeenCalledWith('hello');\n  vi.useRealTimers();\n});",
+    "options": [
+      "debounce uses a Promise that never resolves under fake timers",
+      "advanceTimersByTimeAsync needs to be called before the debounced call",
+      "No bug -- this test is correctly written for fake timers"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-008",
+    "track": "qa",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why does this Playwright test fail intermittently?",
+    "code": "import { test, expect } from '@playwright/test';\n\ntest('loads dashboard', async ({ page }) => {\n  await page.goto('/dashboard');\n  const title = page.locator('h1');\n  const text = await title.textContent();\n  expect(text).toBe('Dashboard');\n});",
+    "options": [
+      "textContent() returns null if the element has child nodes",
+      "page.locator does not wait for the element to appear before textContent()",
+      "toBe should be toContain for text assertions in Playwright"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-009",
+    "track": "qa",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this Cypress test always pass unexpectedly?",
+    "code": "describe('form validation', () => {\n  it('shows error on empty submit', () => {\n    cy.visit('/register');\n    cy.get('[data-testid=\"submit\"]').click();\n    cy.get('.error-message').should('be.visible');\n    try {\n      expect(true).to.be.false;\n    } catch (e) {\n      // swallowed\n    }\n  });\n});",
+    "options": [
+      "The .should('be.visible') auto-retries and masks the expect failure",
+      "cy.get('.error-message') returns a jQuery object that is always truthy",
+      "Cypress commands are async but the try/catch runs synchronously and does nothing"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-010",
+    "track": "qa",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the async bug in this test.",
+    "code": "import { test, expect } from 'vitest';\n\ntest('fetches user', () => {\n  const user = fetch('/api/user/1')\n    .then(res => res.json());\n  expect(user).resolves.toEqual({\n    id: 1,\n    name: 'Alice'\n  });\n});",
+    "options": [
+      "fetch returns a Response, not JSON, so res.json() will fail",
+      "The test is not async and does not await or return the expect chain",
+      "resolves.toEqual performs a shallow comparison only"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-011",
+    "track": "qa",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why is this Playwright locator unreliable?",
+    "code": "import { test, expect } from '@playwright/test';\n\ntest('adds item to cart', async ({ page }) => {\n  await page.goto('/shop');\n  await page.click('text=Add to Cart');\n  await page.waitForTimeout(2000);\n  const count = await page.$eval(\n    '.cart-count', el => el.textContent\n  );\n  expect(count).toBe('1');\n});",
+    "options": [
+      "page.click('text=...') is deprecated in favor of locator-based actions",
+      "$eval returns innerHTML by default, not textContent",
+      "waitForTimeout is a hard wait that causes flakiness; use expect with auto-retry"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-012",
+    "track": "qa",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What error does this produce?",
+    "code": "import { render, screen } from '@testing-library/react';\nimport userEvent from '@testing-library/user-event';\n\ntest('types into input', async () => {\n  render(<input placeholder=\"Name\" />);\n  const input = screen.getByPlaceholderText('name');\n  await userEvent.type(input, 'Alice');\n  expect(input).toHaveValue('Alice');\n});",
+    "options": [
+      "userEvent.type needs a setup call: const user = userEvent.setup()",
+      "toHaveValue does not work on uncontrolled inputs",
+      "getByPlaceholderText is case-sensitive; 'name' won't match 'Name'"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-013",
+    "track": "qa",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Why does this Cypress intercept miss the request?",
+    "code": "it('loads products', () => {\n  cy.visit('/shop');\n  cy.intercept('GET', '/api/products', {\n    fixture: 'products.json'\n  }).as('getProducts');\n  cy.wait('@getProducts');\n  cy.get('.product-card').should('have.length', 5);\n});",
+    "options": [
+      "cy.wait only waits for the response, not for the DOM to update",
+      "cy.intercept must be called before cy.visit so the route is registered in time",
+      "fixture path should include the fixtures/ directory prefix"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-014",
+    "track": "qa",
+    "language": "typescript",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this cleanup fail in Testing Library?",
+    "code": "import { render, screen, cleanup } from '@testing-library/react';\n\nlet container: HTMLElement;\n\nbeforeEach(() => {\n  const result = render(<App />);\n  container = result.container;\n});\n\nafterEach(() => cleanup());\n\ntest('test A', () => {\n  expect(screen.getByText('Hello')).toBeInTheDocument();\n});\ntest('test B', () => {\n  expect(container.querySelector('.app')).toBeTruthy();\n});",
+    "options": [
+      "cleanup unmounts the component, so container in test B references a detached DOM node",
+      "screen queries only work inside the test function, not with beforeEach renders",
+      "cleanup is called automatically in modern Testing Library; calling it manually causes double cleanup"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-015",
+    "track": "qa",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this Lighthouse assertion check?",
+    "code": "// lighthouserc.js\nmodule.exports = {\n  ci: {\n    assert: {\n      assertions: {\n        'first-contentful-paint': ['warn', { maxNumericValue: 2000 }],\n        'interactive': ['error', { maxNumericValue: 5000 }],\n        'categories:performance': ['error', { minScore: 0.9 }],\n      },\n    },\n  },\n};",
+    "options": [
+      "Errors if FCP > 2s, warns if TTI > 5s, errors if perf score < 90",
+      "Warns if FCP > 2s, errors if TTI > 5s, warns if perf score < 90",
+      "Warns if FCP > 2s, errors if TTI > 5s, errors if perf score < 90"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-016",
+    "track": "qa",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What metric does this Web Vitals code measure?",
+    "code": "import { onCLS, onLCP, onINP } from 'web-vitals';\n\nonCLS((metric) => {\n  console.log('CLS:', metric.value);\n  if (metric.value > 0.1) {\n    reportToAnalytics('poor-cls', metric);\n  }\n});\n\nonLCP((metric) => {\n  console.log('LCP:', metric.value);\n});",
+    "options": [
+      "CLS measures Cumulative Layout Shift; reports if visual instability exceeds 0.1",
+      "CLS measures Content Load Speed; reports if loading takes over 0.1 seconds",
+      "CLS measures Cascading Layout Score; reports if CSS recalculations exceed 0.1"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-017",
+    "track": "qa",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which k6 scenario scales load correctly?",
+    "code": "// Option A\nexport const options = {\n  scenarios: {\n    ramp: {\n      executor: 'ramping-vus',\n      startVUs: 0,\n      stages: [\n        { duration: '30s', target: 100 },\n        { duration: '1m', target: 100 },\n        { duration: '30s', target: 0 },\n      ],\n    },\n  },\n};",
+    "options": [
+      "This will spike to 100 immediately because startVUs overrides stages",
+      "Ramps up to 100 VUs over 30s, holds 1m, then ramps down -- correct load profile",
+      "ramping-vus does not support a target of 0; use constant-vus for rampdown"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-018",
+    "track": "qa",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "slow",
+    "prompt": "What makes this Playwright test suite slow?",
+    "code": "import { test, expect } from '@playwright/test';\n\ntest.describe('products', () => {\n  test('test 1', async ({ page }) => {\n    await page.goto('/login');\n    await page.fill('#email', 'user@test.com');\n    await page.fill('#pass', 'secret');\n    await page.click('button[type=submit]');\n    await page.goto('/products');\n    expect(await page.title()).toBe('Products');\n  });\n  test('test 2', async ({ page }) => {\n    await page.goto('/login');\n    await page.fill('#email', 'user@test.com');\n    await page.fill('#pass', 'secret');\n    await page.click('button[type=submit]');\n    await page.goto('/products/1');\n    expect(await page.locator('h1').textContent()).toBe('Widget');\n  });\n});",
+    "options": [
+      "Each test repeats the full login flow instead of using storageState for auth",
+      "page.fill is slower than page.locator().fill() in Playwright",
+      "Two tests in a describe block cannot run in parallel"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-019",
+    "track": "qa",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "Which approach best measures API response times?",
+    "code": "// Option A: k6 HTTP check\nimport http from 'k6/http';\nexport default function () {\n  const res = http.get('https://api.example.com/data');\n  check(res, {\n    'status 200': (r) => r.status === 200,\n    'duration < 500ms': (r) => r.timings.duration < 500,\n  });\n}",
+    "options": [
+      "k6 checks only pass/fail; use Trend metrics for duration measurement",
+      "r.timings.duration excludes DNS lookup and TLS handshake times",
+      "k6 check with r.timings.duration measures full HTTP round-trip accurately"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-020",
+    "track": "qa",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the bug in this performance budget config.",
+    "code": "// webpack.config.ts\nmodule.exports = {\n  performance: {\n    maxAssetSize: 250000,\n    maxEntrypointSize: 250000,\n    hints: 'warning',\n  },\n  optimization: {\n    splitChunks: {\n      chunks: 'all',\n      maxSize: 500000,\n    },\n  },\n};",
+    "options": [
+      "hints should be 'error' not 'warning' for budgets to be enforced in CI",
+      "splitChunks maxSize (500KB) exceeds maxAssetSize (250KB), so split chunks still trigger warnings",
+      "splitChunks.chunks must be 'async' when using performance budgets"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-021",
+    "track": "qa",
+    "language": "typescript",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this k6 threshold enforce?",
+    "code": "import http from 'k6/http';\n\nexport const options = {\n  thresholds: {\n    http_req_duration: ['p(95)<500', 'p(99)<1000'],\n    http_req_failed: ['rate<0.01'],\n  },\n  vus: 50,\n  duration: '30s',\n};",
+    "options": [
+      "Average duration under 500ms, max under 1000ms, error rate under 1%",
+      "95% of requests under 500ms, 99% under 1000ms, 1% failure tolerance",
+      "95th percentile under 500ms, 99th under 1000ms, error rate under 1%"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-022",
+    "track": "qa",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this supertest assertion.",
+    "code": "import request from 'supertest';\nimport app from '../app';\n\ndescribe('GET /api/users', () => {\n  it('returns users', async () => {\n    const res = request(app)\n      .get('/api/users')\n      .expect(200)\n      .expect('Content-Type', /json/);\n    expect(res.body.users).toHaveLength(3);\n  });\n});",
+    "options": [
+      "supertest request is not awaited, so res.body is undefined when checked",
+      "expect(200) is a supertest method that conflicts with Jest's expect",
+      ".expect('Content-Type', /json/) requires the full MIME type string"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-023",
+    "track": "qa",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this MSW handler not intercept?",
+    "code": "import { http, HttpResponse } from 'msw';\nimport { setupServer } from 'msw/node';\n\nconst handlers = [\n  http.get('https://api.example.com/users', () => {\n    return HttpResponse.json([{ id: 1, name: 'Alice' }]);\n  }),\n];\n\nconst server = setupServer(...handlers);\n\nbeforeAll(() => server.listen());\nafterEach(() => server.resetHandlers());\nafterAll(() => server.close());",
+    "options": [
+      "server.listen() needs { onUnhandledRequest: 'error' } to detect misses",
+      "setupServer must be called inside beforeAll, not at module scope",
+      "No bug -- this MSW setup correctly intercepts GET /users requests"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-024",
+    "track": "qa",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "Which contract testing approach validates schemas best?",
+    "code": "// Option A: Zod schema validation\nimport { z } from 'zod';\nconst UserSchema = z.object({\n  id: z.number(),\n  name: z.string(),\n  email: z.string().email(),\n});\n\ntest('validates API response', async () => {\n  const res = await fetch('/api/user/1');\n  const data = await res.json();\n  expect(() => UserSchema.parse(data)).not.toThrow();\n});",
+    "options": [
+      "Zod only validates types, not field presence or format constraints",
+      "Zod parse validates structure and types at runtime, catching schema drift",
+      "Schema validation should use JSON Schema, not Zod, for contract tests"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-025",
+    "track": "qa",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the bug in this MSW runtime handler override.",
+    "code": "import { http, HttpResponse } from 'msw';\n\nconst server = setupServer(\n  http.get('/api/user', () =>\n    HttpResponse.json({ id: 1, name: 'Alice' })\n  )\n);\n\ntest('handles server error', async () => {\n  server.use(\n    http.get('/api/user', () =>\n      HttpResponse.json({ error: 'fail' }, { status: 500 })\n    )\n  );\n  const res = await fetch('/api/user');\n  expect(res.status).toBe(500);\n});",
+    "options": [
+      "server.use should be called with server.resetHandlers() first",
+      "HttpResponse.json with status 500 still returns ok: true on the response",
+      "No bug -- server.use correctly overrides the handler for this test only"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-026",
+    "track": "qa",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this supertest chain assert?",
+    "code": "import request from 'supertest';\nimport app from '../app';\n\nit('creates a user', async () => {\n  await request(app)\n    .post('/api/users')\n    .send({ name: 'Bob', email: 'bob@test.com' })\n    .expect(201)\n    .expect('Content-Type', /json/)\n    .expect((res) => {\n      if (!res.body.id) throw new Error('missing id');\n    });\n});",
+    "options": [
+      "Status 201, JSON content type, and response body must equal { id: true }",
+      "Status 201, exact Content-Type of 'json', and id must be truthy",
+      "Status 201, JSON content type, and response body must have an id field"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-027",
+    "track": "qa",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the race condition in this API test.",
+    "code": "import { test, expect } from 'vitest';\n\ntest('concurrent updates', async () => {\n  await fetch('/api/counter/reset', { method: 'POST' });\n  await Promise.all([\n    fetch('/api/counter/increment', { method: 'POST' }),\n    fetch('/api/counter/increment', { method: 'POST' }),\n    fetch('/api/counter/increment', { method: 'POST' }),\n  ]);\n  const res = await fetch('/api/counter');\n  const data = await res.json();\n  expect(data.count).toBe(3);\n});",
+    "options": [
+      "The reset call might not complete before Promise.all starts",
+      "Promise.all does not guarantee sequential execution, so increments may race and lose updates",
+      "fetch POST requires a body; missing body causes 400 errors"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-028",
+    "track": "qa",
+    "language": "typescript",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this MSW handler return?",
+    "code": "import { http, HttpResponse, delay } from 'msw';\n\nexport const handlers = [\n  http.get('/api/search', async ({ request }) => {\n    const url = new URL(request.url);\n    const q = url.searchParams.get('q');\n    await delay(100);\n    return HttpResponse.json({\n      results: q ? [{ title: q }] : [],\n    });\n  }),\n];",
+    "options": [
+      "Returns { results: [] } always because request.url does not include query params",
+      "Returns { results: [{ title: q }] } after 100ms delay when q param is present",
+      "Throws because delay() cannot be used inside an MSW handler"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-029",
+    "track": "qa",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the XSS vulnerability in this test setup.",
+    "code": "import { render, screen } from '@testing-library/react';\n\nfunction Comment({ text }: { text: string }) {\n  return <div dangerouslySetInnerHTML={{ __html: text }} />;\n}\n\ntest('renders comment', () => {\n  render(<Comment text=\"Nice post!\" />);\n  expect(screen.getByText('Nice post!')).toBeInTheDocument();\n});",
+    "options": [
+      "dangerouslySetInnerHTML requires a sanitizer function as the second argument",
+      "The test passes but the component is vulnerable to XSS via dangerouslySetInnerHTML",
+      "screen.getByText cannot query content rendered via innerHTML"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-030",
+    "track": "qa",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the CSRF vulnerability in this test.",
+    "code": "import request from 'supertest';\nimport app from '../app';\n\nit('updates profile', async () => {\n  const agent = request.agent(app);\n  await agent.post('/login').send({\n    email: 'user@test.com', password: 'pass123'\n  });\n  await agent\n    .put('/api/profile')\n    .send({ name: 'Hacker' })\n    .expect(200);\n});",
+    "options": [
+      "The PUT request succeeds without a CSRF token, indicating missing CSRF protection",
+      "request.agent shares cookies but not CSRF tokens across requests",
+      "PUT requests are immune to CSRF because browsers only auto-send GET cookies"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-031",
+    "track": "qa",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "Which CSP header test is most thorough?",
+    "code": "// Option A\ntest('has CSP header', async () => {\n  const res = await request(app).get('/');\n  expect(res.headers['content-security-policy']).toBeDefined();\n});\n\n// Option B\ntest('has strict CSP', async () => {\n  const res = await request(app).get('/');\n  const csp = res.headers['content-security-policy'];\n  expect(csp).toContain(\"default-src 'self'\");\n  expect(csp).toContain(\"script-src 'self'\");\n  expect(csp).not.toContain(\"'unsafe-inline'\");\n  expect(csp).not.toContain(\"'unsafe-eval'\");\n});",
+    "options": [
+      "Option A only checks header existence, not policy strictness",
+      "Both are equivalent since any CSP header provides protection",
+      "Option B validates directives and rejects unsafe policies"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-032",
+    "track": "qa",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Spot the SQL injection risk in this test.",
+    "code": "import request from 'supertest';\nimport app from '../app';\n\nit('searches users', async () => {\n  const query = \"'; DROP TABLE users; --\";\n  const res = await request(app)\n    .get(`/api/users?search=${query}`)\n    .expect(200);\n  expect(res.body.users).toEqual([]);\n});",
+    "options": [
+      "Template literal URL encoding will escape the single quote automatically",
+      "GET requests cannot perform SQL injection; only POST requests can",
+      "The test expects 200 for a SQL injection payload; it should expect 400 or sanitized input"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-033",
+    "track": "qa",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the auth testing flaw here.",
+    "code": "import { test, expect } from '@playwright/test';\n\ntest('admin page requires auth', async ({ page }) => {\n  await page.goto('/admin');\n  await expect(page).toHaveURL('/login');\n});\n\ntest('admin can access dashboard', async ({ page }) => {\n  await page.goto('/login');\n  await page.fill('#email', 'admin@test.com');\n  await page.fill('#password', 'admin123');\n  await page.click('button[type=submit]');\n  await page.goto('/admin');\n  await expect(page.locator('h1')).toHaveText('Admin');\n});",
+    "options": [
+      "Hard-coded credentials in tests; should use environment variables or test fixtures",
+      "The tests don't verify that non-admin authenticated users are also rejected",
+      "page.goto('/admin') should use { waitUntil: 'networkidle' }"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-034",
+    "track": "qa",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 5,
+    "type": "diff",
+    "prompt": "Which approach best tests for broken access control?",
+    "code": "// Option A: Test with role-based tokens\nconst adminToken = generateToken({ role: 'admin' });\nconst userToken = generateToken({ role: 'user' });\n\ntest('user cannot access admin route', async () => {\n  const res = await request(app)\n    .get('/api/admin/users')\n    .set('Authorization', `Bearer ${userToken}`);\n  expect(res.status).toBe(403);\n});\n\ntest('user cannot access other user data', async () => {\n  const res = await request(app)\n    .get('/api/users/999/profile')\n    .set('Authorization', `Bearer ${userToken}`);\n  expect(res.status).toBe(403);\n});",
+    "options": [
+      "Tests both vertical (role escalation) and horizontal (IDOR) access control",
+      "Only tests vertical access control; IDOR tests need the actual user's own ID",
+      "Token-based testing is unreliable; use session-based auth for access control tests"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-035",
+    "track": "qa",
+    "language": "typescript",
+    "category": "security",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this rate limit test verify?",
+    "code": "import request from 'supertest';\nimport app from '../app';\n\nit('enforces rate limiting', async () => {\n  const requests = Array.from({ length: 110 }, () =>\n    request(app).get('/api/data')\n  );\n  const responses = await Promise.all(requests);\n  const blocked = responses.filter(r => r.status === 429);\n  expect(blocked.length).toBeGreaterThan(0);\n});",
+    "options": [
+      "Sends 110 concurrent requests and verifies some get HTTP 429 Too Many Requests",
+      "Sends 110 sequential requests and checks all are rate-limited after the first",
+      "Sends 110 requests but Promise.all will abort after the first 429 response"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-036",
+    "track": "qa",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "Which GitHub Actions config enables test parallelization?",
+    "code": "# Option A\njobs:\n  test:\n    strategy:\n      matrix:\n        shard: [1, 2, 3, 4]\n    steps:\n      - uses: actions/checkout@v4\n      - run: npm ci\n      - run: npx playwright test --shard=${{ matrix.shard }}/4",
+    "options": [
+      "Matrix strategy creates 4 parallel jobs, each running 1/4 of the test suite",
+      "All 4 shards run sequentially because they share the same job name",
+      "Playwright sharding requires --workers flag to actually parallelize"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-037",
+    "track": "qa",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this coverage configuration enforce?",
+    "code": "// vitest.config.ts\nexport default defineConfig({\n  test: {\n    coverage: {\n      provider: 'v8',\n      reporter: ['text', 'lcov'],\n      thresholds: {\n        lines: 80,\n        branches: 75,\n        functions: 80,\n        statements: 80,\n      },\n    },\n  },\n});",
+    "options": [
+      "Generates a report showing which lines are below 80% coverage",
+      "Fails CI if coverage drops below 80% lines, 75% branches, 80% functions",
+      "Sets a warning threshold but does not block the test run"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-038",
+    "track": "qa",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the test isolation bug in this setup.",
+    "code": "import { PrismaClient } from '@prisma/client';\n\nconst prisma = new PrismaClient();\n\nbeforeAll(async () => {\n  await prisma.user.createMany({\n    data: [\n      { name: 'Alice', email: 'alice@test.com' },\n      { name: 'Bob', email: 'bob@test.com' },\n    ],\n  });\n});\n\ntest('finds users', async () => {\n  const users = await prisma.user.findMany();\n  expect(users).toHaveLength(2);\n});",
+    "options": [
+      "No afterAll to clean up test data, so subsequent test suites may find stale rows",
+      "PrismaClient should be instantiated inside beforeAll for proper connection pooling",
+      "createMany does not return created records, so the data may not be committed"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-039",
+    "track": "qa",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which test data strategy scales best for E2E tests?",
+    "code": "// Option A: Seed DB in beforeEach\nbeforeEach(async () => {\n  await db.exec('DELETE FROM users');\n  await db.exec(\"INSERT INTO users VALUES (1,'Alice')\");\n});\n\n// Option B: Use DB transactions\nbeforeEach(async () => {\n  await db.exec('BEGIN');\n});\nafterEach(async () => {\n  await db.exec('ROLLBACK');\n});\n\n// Option C: Isolated test databases\nbeforeAll(async () => {\n  testDb = await createTestDatabase();\n  await testDb.migrate();\n  await testDb.seed();\n});",
+    "options": [
+      "Option A is safest but slowest at scale due to repeated DELETEs and INSERTs",
+      "Option B is fastest because ROLLBACK is instant, ensuring perfect isolation",
+      "Option C scales best by giving each worker its own database with full isolation"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "ts-qa-040",
+    "track": "qa",
+    "language": "typescript",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "diff",
+    "prompt": "Which Playwright config best supports CI sharding?",
+    "code": "// playwright.config.ts\nimport { defineConfig } from '@playwright/test';\n\nexport default defineConfig({\n  testDir: './e2e',\n  fullyParallel: true,\n  retries: process.env.CI ? 2 : 0,\n  workers: process.env.CI ? 1 : undefined,\n  reporter: [\n    ['html', { open: 'never' }],\n    ['blob'],\n  ],\n  use: {\n    trace: 'on-first-retry',\n  },\n});",
+    "options": [
+      "workers: 1 in CI is wrong; sharding distributes across jobs but each job still needs multiple workers",
+      "retries: 2 masks flaky tests; CI should use retries: 0 to catch real failures",
+      "blob reporter captures results for merging sharded reports; config correctly uses 1 worker per shard for stability"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  }
+]

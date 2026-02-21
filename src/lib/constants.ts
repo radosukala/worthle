@@ -7,6 +7,7 @@ export const TRACKS: { value: Track; label: string }[] = [
   { value: "mobile", label: "Mobile" },
   { value: "devops", label: "DevOps" },
   { value: "data", label: "Data" },
+  { value: "qa", label: "QA" },
 ];
 
 export const LANGUAGES: { value: Language; label: string }[] = [
@@ -80,6 +81,14 @@ export const TRACK_CATEGORIES: Record<Track, { category: SkillCategory; label: s
     { category: "systems_design", label: "Pipelines" },
     { category: "debugging", label: "Debugging" },
   ],
+  qa: [
+    { category: "testing", label: "Test Design" },
+    { category: "debugging", label: "Debugging" },
+    { category: "performance", label: "Perf Testing" },
+    { category: "api_design", label: "API Testing" },
+    { category: "security", label: "Security" },
+    { category: "systems_design", label: "Test Infra" },
+  ],
 };
 
 /** Languages shown per track in the identity selector */
@@ -90,6 +99,7 @@ export const TRACK_LANGUAGES: Record<Track, Language[]> = {
   mobile: ["swift", "kotlin"],
   data: ["python"],
   devops: ["typescript"],
+  qa: ["python", "typescript"],
 };
 
 export const DAILY_ROUND_COUNT = 5;

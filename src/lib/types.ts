@@ -1,4 +1,4 @@
-export type Track = "backend" | "frontend" | "fullstack" | "mobile" | "devops" | "data";
+export type Track = "backend" | "frontend" | "fullstack" | "mobile" | "devops" | "data" | "qa";
 
 export type Language =
   | "javascript"

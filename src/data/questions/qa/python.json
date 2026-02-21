@@ -1,0 +1,682 @@
+[
+  {
+    "id": "py-qa-001",
+    "track": "qa",
+    "language": "python",
+    "category": "testing",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the bug in this test.",
+    "code": "import pytest\n\n@pytest.fixture\ndef db_conn():\n    conn = create_connection()\n    yield conn\n\ndef test_insert(db_conn):\n    db_conn.execute('INSERT INTO users VALUES (1, \"Alice\")')\n    db_conn.commit()\n    assert db_conn.execute('SELECT count(*) FROM users').fetchone()[0] == 1",
+    "options": [
+      "The fixture never closes the connection after yield",
+      "db_conn.commit() should be db_conn.connection.commit()",
+      "pytest.fixture is missing scope='function'"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-002",
+    "track": "qa",
+    "language": "python",
+    "category": "testing",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this test do?",
+    "code": "import pytest\n\n@pytest.mark.parametrize('input,expected', [\n    (2, 4),\n    (0, 0),\n    (-3, 9),\n])\ndef test_square(input, expected):\n    assert input ** 2 == expected",
+    "options": [
+      "Runs one test with three assertions",
+      "Fails because 'input' is a Python builtin",
+      "Runs three separate tests, one per parameter set"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-003",
+    "track": "qa",
+    "language": "python",
+    "category": "testing",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this mock fail?",
+    "code": "from unittest.mock import patch\nfrom myapp.views import get_user_count\n\n@patch('myapp.models.User.objects.count')\ndef test_user_count(mock_count):\n    mock_count.return_value = 5\n    result = get_user_count()\n    assert result == 5",
+    "options": [
+      "Must patch where it's looked up: 'myapp.views.User.objects.count'",
+      "patch() can't mock chained attributes like objects.count",
+      "return_value should be set inside the test, not on the decorator"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-004",
+    "track": "qa",
+    "language": "python",
+    "category": "testing",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this change improve?",
+    "code": "# Before\ndef test_parse_date():\n    assert parse_date('2024-01-15') == date(2024, 1, 15)\n    assert parse_date('bad') is None\n\n# After\ndef test_parse_valid_date():\n    assert parse_date('2024-01-15') == date(2024, 1, 15)\n\ndef test_parse_invalid_date_returns_none():\n    assert parse_date('bad') is None",
+    "options": [
+      "Runs faster because tests execute in parallel",
+      "Each test has one reason to fail, improving diagnostics",
+      "Avoids a bug where the second assert is skipped"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-005",
+    "track": "qa",
+    "language": "python",
+    "category": "testing",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the fixture scoping bug.",
+    "code": "import pytest\n\n@pytest.fixture(scope='module')\ndef shared_list():\n    return []\n\ndef test_append(shared_list):\n    shared_list.append(1)\n    assert len(shared_list) == 1\n\ndef test_empty(shared_list):\n    assert len(shared_list) == 0",
+    "options": [
+      "Module-scoped fixture is shared — test_empty sees [1], not []",
+      "Lists can't be returned from fixtures, use yield instead",
+      "scope='module' requires autouse=True to work"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-006",
+    "track": "qa",
+    "language": "python",
+    "category": "testing",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "How many tests run?",
+    "code": "import pytest\n\n@pytest.fixture(params=['sqlite', 'postgres'])\ndef db_engine(request):\n    return create_engine(request.param)\n\n@pytest.mark.parametrize('user', ['alice', 'bob'])\ndef test_create_user(db_engine, user):\n    result = db_engine.insert(user)\n    assert result.ok",
+    "options": [
+      "2 tests — one per user",
+      "4 tests — cartesian product of engines and users",
+      "2 tests — one per engine, users are combined"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-007",
+    "track": "qa",
+    "language": "python",
+    "category": "testing",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does monkeypatch fail here?",
+    "code": "import os\n\ndef test_env_var(monkeypatch):\n    monkeypatch.setenv('API_KEY', 'test-key')\n    from myapp.config import Settings\n    settings = Settings()\n    assert settings.api_key == 'test-key'\n\n# myapp/config.py\nAPI_KEY = os.environ.get('API_KEY', 'default')\nclass Settings:\n    api_key = API_KEY",
+    "options": [
+      "monkeypatch.setenv doesn't work with os.environ.get",
+      "API_KEY is read at module import time, before monkeypatch runs",
+      "Settings() creates a new instance that ignores class variables"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-008",
+    "track": "qa",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Why is this test flaky?",
+    "code": "import time\n\ndef test_cache_expiry():\n    cache = Cache(ttl=1)\n    cache.set('key', 'value')\n    time.sleep(1)\n    assert cache.get('key') is None",
+    "options": [
+      "Cache doesn't support string values",
+      "cache.get returns '' not None for expired keys",
+      "sleep(1) may not exceed TTL due to timing precision"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-009",
+    "track": "qa",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this traceback indicate?",
+    "code": "# Traceback:\n# test_api.py::test_login FAILED\n# E   AssertionError: assert 401 == 200\n# E   + where 401 = <Response [401]>.status_code\n#\n# test_api.py:12: AssertionError\n# --- Captured log ---\n# WARNING  auth:middleware.py:34 Token expired for user_id=5",
+    "options": [
+      "The server is down and returning 401 for all requests",
+      "The test uses an expired auth token",
+      "The endpoint URL is wrong, causing a redirect to login"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-010",
+    "track": "qa",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the assertion bug.",
+    "code": "def test_user_creation():\n    user = create_user('alice', 'alice@test.com')\n    assert(user.name == 'alice', 'Name should be alice')\n    assert(user.email == 'alice@test.com', 'Email should match')",
+    "options": [
+      "create_user returns None, so user.name raises AttributeError",
+      "assert with a tuple is always truthy — parens create a tuple, not grouping",
+      "String comparison needs .strip() to handle whitespace"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-011",
+    "track": "qa",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this test pass incorrectly?",
+    "code": "def test_raises_on_invalid():\n    try:\n        validate_email('not-an-email')\n    except ValueError:\n        pass\n    # Test passes if no exception or if ValueError raised",
+    "options": [
+      "validate_email silently returns None for invalid inputs",
+      "Test has no assertion — passes whether exception is raised or not",
+      "try/except blocks can't be used in pytest tests"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-012",
+    "track": "qa",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this fix address?",
+    "code": "# Before\ndef test_concurrent_writes():\n    results = []\n    for i in range(100):\n        results.append(write_to_db(i))\n    assert all(r.ok for r in results)\n\n# After\ndef test_concurrent_writes():\n    with ThreadPoolExecutor(max_workers=10) as ex:\n        futures = [ex.submit(write_to_db, i) for i in range(100)]\n        results = [f.result() for f in futures]\n    assert all(r.ok for r in results)",
+    "options": [
+      "The original test was too slow due to sequential execution",
+      "The original wasn't testing concurrency — writes were sequential",
+      "ThreadPoolExecutor prevents database connection exhaustion"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-013",
+    "track": "qa",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 1,
+    "type": "bug",
+    "prompt": "Find the bug in this test.",
+    "code": "def test_division():\n    result = divide(10, 3)\n    assert result == 3.33",
+    "options": [
+      "divide() may raise ZeroDivisionError",
+      "Floating-point comparison — 10/3 != 3.33 exactly",
+      "result is an int because of integer division"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-014",
+    "track": "qa",
+    "language": "python",
+    "category": "debugging",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Why does this test leak state?",
+    "code": "import pytest\nfrom unittest.mock import patch\n\nclass TestUserService:\n    @patch('app.services.send_email')\n    def test_register(self, mock_email):\n        register_user('alice@test.com')\n        mock_email.assert_called_once()\n\n    def test_welcome_email_sent(self):\n        register_user('bob@test.com')\n        # Expects real email service, but patch may linger",
+    "options": [
+      "Class-based tests share state through self",
+      "patch decorator doesn't stop if test raises an exception",
+      "Method arg order is wrong — self must come after mock_email"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-015",
+    "track": "qa",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this locust test measure?",
+    "code": "from locust import HttpUser, task, between\n\nclass WebUser(HttpUser):\n    wait_time = between(1, 3)\n\n    @task(3)\n    def view_items(self):\n        self.client.get('/api/items')\n\n    @task(1)\n    def create_item(self):\n        self.client.post('/api/items', json={'name': 'x'})",
+    "options": [
+      "3 GET requests then 1 POST in strict sequence",
+      "4 total requests per user per second",
+      "GETs are 3x more likely than POSTs, with 1-3s waits"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-016",
+    "track": "qa",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "slow",
+    "prompt": "What's the performance testing problem?",
+    "code": "from locust import HttpUser, task\n\nclass LoadTest(HttpUser):\n    @task\n    def test_endpoint(self):\n        resp = self.client.get('/api/data')\n        data = resp.json()\n        assert len(data['items']) == 100\n        for item in data['items']:\n            self.client.get(f'/api/items/{item[\"id\"]}')",
+    "options": [
+      "resp.json() is slow for large payloads",
+      "Each task iteration fires 101 requests, hiding real per-endpoint metrics",
+      "assert in a load test stops the entire test run on failure"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-017",
+    "track": "qa",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Find the benchmarking bug.",
+    "code": "import time\n\ndef benchmark_sort():\n    data = list(range(10000))\n    start = time.time()\n    sorted(data)\n    end = time.time()\n    print(f'Sort took {end - start:.4f}s')\n\nbenchmark_sort()",
+    "options": [
+      "time.time() lacks precision — use time.perf_counter()",
+      "sorted() returns a new list but data is already sorted",
+      "Both A and B — already-sorted input + imprecise timer"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-018",
+    "track": "qa",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 4,
+    "type": "scales",
+    "prompt": "Which load test approach scales better?",
+    "code": "# Option A: Locust\nclass User(HttpUser):\n    @task\n    def browse(self):\n        self.client.get('/page')\n\n# Option B: Threading\ndef load_test():\n    threads = []\n    for _ in range(1000):\n        t = Thread(target=requests.get, args=('http://app/page',))\n        threads.append(t)\n        t.start()",
+    "options": [
+      "B — threads give true parallelism for I/O bound work",
+      "Both scale equally for HTTP load testing",
+      "A — Locust uses gevent coroutines, handling thousands of users efficiently"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-019",
+    "track": "qa",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this response time check do?",
+    "code": "from locust import HttpUser, task\n\nclass APIUser(HttpUser):\n    @task\n    def get_health(self):\n        with self.client.get('/health', catch_response=True) as resp:\n            if resp.elapsed.total_seconds() > 0.5:\n                resp.failure('Response too slow')\n            elif resp.status_code != 200:\n                resp.failure(f'Status {resp.status_code}')",
+    "options": [
+      "Logs slow responses but doesn't affect pass/fail metrics",
+      "Stops the entire load test if any response exceeds 500ms",
+      "Marks requests over 500ms or non-200 as failures in Locust stats"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-020",
+    "track": "qa",
+    "language": "python",
+    "category": "performance",
+    "difficulty": 5,
+    "type": "diff",
+    "prompt": "What does this change improve?",
+    "code": "# Before\n@pytest.fixture\ndef benchmark_data():\n    return [random.randint(0, 1000) for _ in range(100000)]\n\n# After\n@pytest.fixture\ndef benchmark_data():\n    rng = random.Random(42)\n    return [rng.randint(0, 1000) for _ in range(100000)]",
+    "options": [
+      "Uses less memory by creating a local Random instance",
+      "random.Random(42) generates numbers faster than module-level random",
+      "Seeded RNG ensures reproducible benchmark data across runs"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-021",
+    "track": "qa",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the API test bug.",
+    "code": "import requests\n\ndef test_create_user():\n    resp = requests.post('http://localhost:8000/users',\n        data={'name': 'Alice', 'email': 'a@b.com'})\n    assert resp.status_code == 201\n    assert resp.json()['name'] == 'Alice'",
+    "options": [
+      "Using data= sends form-encoded, not JSON — use json= instead",
+      "requests.post needs headers={'Accept': 'application/json'}",
+      "resp.json() fails if Content-Type isn't set on the response"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-022",
+    "track": "qa",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "bug",
+    "prompt": "Why does this mock leak?",
+    "code": "import responses\nimport requests\n\n@responses.activate\ndef test_fetch_users():\n    responses.add(responses.GET, 'http://api.example.com/users',\n        json=[{'id': 1}], status=200)\n    result = fetch_users()\n    assert len(result) == 1\n\ndef test_real_api_call():\n    resp = requests.get('http://api.example.com/users')\n    assert resp.status_code == 200",
+    "options": [
+      "@responses.activate scope ends after test_fetch_users, so test_real_api_call hits the real API",
+      "responses.add persists globally — test_real_api_call still gets the mock",
+      "responses library can't mock GET requests with JSON bodies"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-023",
+    "track": "qa",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this schema validation check?",
+    "code": "from jsonschema import validate\n\nschema = {\n    'type': 'object',\n    'required': ['id', 'name'],\n    'properties': {\n        'id': {'type': 'integer'},\n        'name': {'type': 'string', 'minLength': 1}\n    },\n    'additionalProperties': False\n}\n\nvalidate({'id': 1, 'name': 'Alice', 'role': 'admin'}, schema)",
+    "options": [
+      "Passes — role is a string so it matches the schema",
+      "Raises ValidationError — additionalProperties forbids 'role'",
+      "Raises SchemaError — 'role' isn't in properties"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-024",
+    "track": "qa",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the contract test flaw.",
+    "code": "def test_user_endpoint_contract():\n    resp = requests.get(f'{BASE_URL}/users/1')\n    data = resp.json()\n    assert 'id' in data\n    assert 'name' in data\n    assert 'email' in data\n    assert isinstance(data['id'], int)",
+    "options": [
+      "Only checks key presence, not value types for name and email",
+      "resp.json() should use resp.content for contract testing",
+      "Checking isinstance on JSON data is unreliable"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-025",
+    "track": "qa",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 1,
+    "type": "output",
+    "prompt": "What does this test verify?",
+    "code": "def test_delete_user():\n    resp = requests.delete(f'{BASE_URL}/users/999')\n    assert resp.status_code == 404\n\n    create_resp = requests.post(f'{BASE_URL}/users',\n        json={'name': 'Test'})\n    user_id = create_resp.json()['id']\n\n    del_resp = requests.delete(f'{BASE_URL}/users/{user_id}')\n    assert del_resp.status_code == 204",
+    "options": [
+      "DELETE returns 404 for missing users, 204 for existing ones",
+      "The API prevents deleting user 999 specifically",
+      "POST and DELETE use the same endpoint format"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-026",
+    "track": "qa",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What does this refactor improve?",
+    "code": "# Before\ndef test_auth_flow():\n    resp = requests.post(f'{URL}/login',\n        json={'user': 'admin', 'pass': 'secret'})\n    token = resp.json()['token']\n    headers = {'Authorization': f'Bearer {token}'}\n    r = requests.get(f'{URL}/me', headers=headers)\n    assert r.status_code == 200\n\n# After\n@pytest.fixture\ndef auth_headers():\n    resp = requests.post(f'{URL}/login',\n        json={'user': 'admin', 'pass': 'secret'})\n    return {'Authorization': f'Bearer {resp.json()[\"token\"]}'}",
+    "options": [
+      "Avoids re-authenticating in every test by caching the token",
+      "Fixture runs in parallel, making auth faster",
+      "Extracts auth setup into a reusable fixture, reducing duplication"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-027",
+    "track": "qa",
+    "language": "python",
+    "category": "api_design",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the race condition bug.",
+    "code": "def test_idempotent_payment():\n    payload = {'order_id': 'abc', 'amount': 100}\n    resp1 = requests.post(f'{URL}/pay', json=payload)\n    resp2 = requests.post(f'{URL}/pay', json=payload)\n    assert resp1.status_code == 201\n    assert resp2.status_code == 200\n    assert get_total_charged('abc') == 100",
+    "options": [
+      "Both requests are sequential — doesn't test concurrent idempotency",
+      "resp2 should return 409 Conflict, not 200",
+      "get_total_charged may see 200 due to eventual consistency"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-028",
+    "track": "qa",
+    "language": "python",
+    "category": "security",
+    "difficulty": 2,
+    "type": "bug",
+    "prompt": "Find the SQL injection vulnerability.",
+    "code": "def test_search_users(client):\n    resp = client.get(f'/search?q=alice')\n    assert resp.status_code == 200\n\n# app.py\n@app.get('/search')\ndef search(q: str):\n    query = f\"SELECT * FROM users WHERE name LIKE '%{q}%'\"\n    return db.execute(text(query)).fetchall()",
+    "options": [
+      "LIKE queries are inherently slow and should use full-text search",
+      "f-string in SQL allows injection — use parameterized queries",
+      "text() already sanitizes the query string"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-029",
+    "track": "qa",
+    "language": "python",
+    "category": "security",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What vulnerability does this test detect?",
+    "code": "def test_xss_in_comments(client):\n    payload = '<script>alert(\"xss\")</script>'\n    client.post('/comments', json={'body': payload})\n    resp = client.get('/comments')\n    assert '&lt;script&gt;' in resp.text\n    assert '<script>' not in resp.text",
+    "options": [
+      "Tests that JavaScript execution is blocked by CSP headers",
+      "Verifies the comment was rejected by the server",
+      "Checks that HTML entities are escaped to prevent stored XSS"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-030",
+    "track": "qa",
+    "language": "python",
+    "category": "security",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the auth testing flaw.",
+    "code": "def test_admin_endpoint(client):\n    resp = client.get('/admin/users',\n        headers={'Authorization': 'Bearer admin-token'})\n    assert resp.status_code == 200\n\ndef test_admin_blocked_for_user(client):\n    resp = client.get('/admin/users',\n        headers={'Authorization': 'Bearer user-token'})\n    assert resp.status_code == 403",
+    "options": [
+      "Tests use hardcoded tokens that may not exist in the test database",
+      "Missing test for unauthenticated access (no token at all)",
+      "Both A and B — hardcoded tokens and missing no-auth test"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-031",
+    "track": "qa",
+    "language": "python",
+    "category": "security",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which is the more thorough security test?",
+    "code": "# Option A\ndef test_password_stored_hashed(db):\n    create_user('alice', 'P@ssw0rd')\n    user = db.query(User).filter_by(name='alice').first()\n    assert user.password != 'P@ssw0rd'\n\n# Option B\ndef test_password_stored_hashed(db):\n    create_user('alice', 'P@ssw0rd')\n    user = db.query(User).filter_by(name='alice').first()\n    assert user.password != 'P@ssw0rd'\n    assert user.password.startswith('$2b$')",
+    "options": [
+      "A — checking inequality is sufficient for hashing verification",
+      "B — also verifies bcrypt format, not just that value changed",
+      "Both are flawed — should test via login, not DB inspection"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-032",
+    "track": "qa",
+    "language": "python",
+    "category": "security",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this security test check?",
+    "code": "def test_rate_limiting(client):\n    for i in range(20):\n        resp = client.post('/login',\n            json={'user': 'admin', 'pass': f'wrong{i}'})\n    assert resp.status_code == 429",
+    "options": [
+      "Checks that the account is locked after 20 failed attempts",
+      "Tests that all 20 login attempts fail with wrong passwords",
+      "Verifies the server returns 429 Too Many Requests after brute-force attempts"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-033",
+    "track": "qa",
+    "language": "python",
+    "category": "security",
+    "difficulty": 5,
+    "type": "bug",
+    "prompt": "Find the SSRF vulnerability.",
+    "code": "# Test\ndef test_fetch_url(client):\n    resp = client.post('/fetch',\n        json={'url': 'https://example.com'})\n    assert resp.status_code == 200\n\n# app.py\n@app.post('/fetch')\ndef fetch(data: dict):\n    resp = requests.get(data['url'])\n    return {'content': resp.text[:1000]}",
+    "options": [
+      "No URL validation — attacker can request internal services like http://169.254.169.254",
+      "requests.get has no timeout and will hang on slow URLs",
+      "resp.text[:1000] may split a multi-byte character incorrectly"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-034",
+    "track": "qa",
+    "language": "python",
+    "category": "security",
+    "difficulty": 3,
+    "type": "diff",
+    "prompt": "What security issue does this fix?",
+    "code": "# Before\n@app.get('/users/{user_id}')\ndef get_user(user_id: int):\n    return db.query(User).get(user_id)\n\n# After\n@app.get('/users/{user_id}')\ndef get_user(user_id: int, current_user = Depends(get_current_user)):\n    user = db.query(User).get(user_id)\n    if user.org_id != current_user.org_id:\n        raise HTTPException(403)\n    return user",
+    "options": [
+      "Prevents IDOR — users can no longer access data from other orgs",
+      "Adds authentication to a previously public endpoint",
+      "Fixes SQL injection by validating user_id as integer"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-035",
+    "track": "qa",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "scales",
+    "prompt": "Which test strategy scales better in CI?",
+    "code": "# Option A: Run all tests\npytest tests/ -v\n\n# Option B: Parallel by CPU count\npytest tests/ -v -n auto\n\n# Option C: Parallel + split by timing\npytest tests/ -v -n auto --splitting-algorithm=least_duration",
+    "options": [
+      "A — simple and avoids flaky parallel issues",
+      "B — auto-detects CPUs and distributes evenly",
+      "C — timing-based splits give the most balanced parallelism"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-036",
+    "track": "qa",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "diff",
+    "prompt": "What does this CI change fix?",
+    "code": "# Before (.github/workflows/test.yml)\n# - run: pytest tests/\n\n# After\n# - run: pytest tests/ --junitxml=results.xml\n# - uses: dorny/test-reporter@v1\n#   if: always()\n#   with:\n#     name: Test Results\n#     path: results.xml\n#     reporter: java-junit",
+    "options": [
+      "Generates test reports visible in GitHub PR checks even on failure",
+      "Converts Python tests to JUnit format for Java CI compatibility",
+      "Uploads test results as build artifacts for download"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-037",
+    "track": "qa",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 3,
+    "type": "output",
+    "prompt": "What does this coverage configuration do?",
+    "code": "# pyproject.toml\n[tool.coverage.run]\nbranch = true\nsource = ['myapp']\n\n[tool.coverage.report]\nfail_under = 80\nexclude_lines = [\n    'pragma: no cover',\n    'if TYPE_CHECKING:',\n    'if __name__ == .__main__.:'\n]",
+    "options": [
+      "Generates an HTML coverage report excluding test files",
+      "Measures line coverage only and fails below 80%",
+      "Enforces 80% branch coverage, excluding type-checking and main blocks"
+    ],
+    "correct": 2,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-038",
+    "track": "qa",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 4,
+    "type": "bug",
+    "prompt": "Find the test data management bug.",
+    "code": "import pytest\n\n@pytest.fixture(scope='session')\ndef db():\n    engine = create_engine(DATABASE_URL)\n    Base.metadata.create_all(engine)\n    session = Session(engine)\n    yield session\n    session.close()\n    Base.metadata.drop_all(engine)",
+    "options": [
+      "Session-scoped DB means tests share state and can't run independently",
+      "create_all should be called after Session() is created",
+      "drop_all will fail because the session is already closed"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-039",
+    "track": "qa",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 5,
+    "type": "scales",
+    "prompt": "Which test isolation pattern is best?",
+    "code": "# A: Truncate tables\n@pytest.fixture(autouse=True)\ndef clean_db(db):\n    yield\n    for table in reversed(Base.metadata.sorted_tables):\n        db.execute(table.delete())\n    db.commit()\n\n# B: Transaction rollback\n@pytest.fixture(autouse=True)\ndef txn(db):\n    conn = db.connection()\n    txn = conn.begin_nested()\n    yield db\n    txn.rollback()",
+    "options": [
+      "A — truncation is more reliable across all DB engines",
+      "B — rollback is faster and guarantees isolation without I/O",
+      "Both are equivalent — the only difference is syntax"
+    ],
+    "correct": 1,
+    "timeLimitMs": 20000
+  },
+  {
+    "id": "py-qa-040",
+    "track": "qa",
+    "language": "python",
+    "category": "systems_design",
+    "difficulty": 2,
+    "type": "output",
+    "prompt": "What does this conftest.py do?",
+    "code": "# tests/conftest.py\nimport pytest\n\ndef pytest_collection_modifyitems(items):\n    for item in items:\n        if 'slow' in item.keywords:\n            item.add_marker(\n                pytest.mark.skipif(\n                    not pytest.config.getoption('--runslow'),\n                    reason='need --runslow option'))",
+    "options": [
+      "Skips tests marked @pytest.mark.slow unless --runslow flag is passed",
+      "Removes slow tests from the collection entirely",
+      "Runs slow tests last to prioritize fast feedback"
+    ],
+    "correct": 0,
+    "timeLimitMs": 20000
+  }
+]

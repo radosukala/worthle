@@ -18,6 +18,8 @@ import pythonData from "@/data/questions/data/python.json";
 import typescriptDevops from "@/data/questions/devops/typescript.json";
 import csharpBackend from "@/data/questions/backend/csharp.json";
 import csharpFullstack from "@/data/questions/fullstack/csharp.json";
+import pythonQa from "@/data/questions/qa/python.json";
+import typescriptQa from "@/data/questions/qa/typescript.json";
 
 type QuestionPool = Record<string, Question[]>;
 
@@ -49,6 +51,10 @@ const pools: QuestionPool = {
 
   // DevOps
   "devops:typescript": typescriptDevops as Question[],
+
+  // QA
+  "qa:python": pythonQa as Question[],
+  "qa:typescript": typescriptQa as Question[],
 };
 
 // For languages/tracks without dedicated questions, fall back to the closest match
@@ -114,6 +120,17 @@ const FALLBACK_MAP: Record<string, string> = {
   "data:kotlin": "data:python",
   "data:php": "data:python",
   "data:ruby": "data:python",
+
+  // QA → fall back to python qa
+  "qa:javascript": "qa:typescript",
+  "qa:rust": "qa:python",
+  "qa:go": "qa:python",
+  "qa:java": "qa:python",
+  "qa:csharp": "qa:typescript",
+  "qa:swift": "qa:python",
+  "qa:kotlin": "qa:python",
+  "qa:php": "qa:python",
+  "qa:ruby": "qa:python",
 };
 
 function shuffleArray<T>(array: T[]): T[] {
