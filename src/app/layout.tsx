@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import "./globals.css";
 
@@ -53,6 +54,7 @@ export default function RootLayout({
       <body className="bg-bg font-[family-name:var(--font-mono)] antialiased">
         <ThemeToggle />
         {children}
+        <Analytics />
       </body>
     </html>
   );

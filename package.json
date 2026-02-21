@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/radosukala/worthle#readme",
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
     "d3": "^7.9.0",
     "framer-motion": "^12.34.3",
     "next": "^16.1.6",
